@@ -9,7 +9,6 @@
 #include "general_graph_optimizor.h"
 
 #include "binary_data_log.h"
-#include "backend_log.h"
 
 namespace VIO {
 
@@ -79,14 +78,14 @@ struct BackendVertices {
     std::vector<uint32_t> all_features_id;
     std::vector<std::unique_ptr<Vertex<DorF>>> all_features_invdep;
 
-    std::vector<std::unique_ptr<Vertex<DorF>>> all_new_frames_v_wi;
-    std::vector<std::unique_ptr<Vertex<DorF>>> all_new_frames_ba;
-    std::vector<std::unique_ptr<Vertex<DorF>>> all_new_frames_bg;
+    std::vector<std::unique_ptr<Vertex<DorF>>> all_frames_v_wi;
+    std::vector<std::unique_ptr<Vertex<DorF>>> all_frames_ba;
+    std::vector<std::unique_ptr<Vertex<DorF>>> all_frames_bg;
 };
 
 struct BackendEdges {
     std::vector<std::unique_ptr<Edge<DorF>>> all_prior_factors;
-    std::vector<std::unique_ptr<Edge<DorF>>> all_visual_reproj_factors;
+    std::vector<std::unique_ptr<Edge<DorF>>> all_visual_factors;
     std::vector<std::unique_ptr<Edge<DorF>>> all_imu_factors;
 };
 
@@ -106,88 +105,16 @@ public:
     bool RunOnce();
     void Reset();
     void ResetToReintialize();
-    bool Configuration(const std::string &log_file_name);
 
     // Backend log recorder.
+    bool Configuration(const std::string &log_file_name);
     void RegisterLogPackages();
 
     // Backend initializor.
     bool TryToInitialize();
-    bool ConvertNewFramesToCovisibleGraphForInitialization();
-    bool EstimatePureRotationOfCameraFrame(const uint32_t ref_frame_id,
-                                           const uint32_t cur_frame_id,
-                                           const uint32_t min_frame_id,
-                                           std::vector<Vec2> &ref_norm_xy,
-                                           std::vector<Vec2> &cur_norm_xy,
-                                           Quat &q_cr);
-    // Estimate gyro bias for initialization.
-    bool EstimateGyroBiasAndRotationForInitialization();
-    bool EstimateGyroBiasByMethodOneForInitialization();
-    bool EstimateGyroBiasByMethodTwoForInitialization();
-    bool EstimateGyroBiasByMethodThreeForInitialization();
-    // Estimate velocity and gravity for initialization.
-    bool EstimateVelocityAndGravityForInitialization(Vec3 &gravity_i0);
-    bool SelectTwoFramesWithMaxParallax(CovisibleGraphType *local_map, const FeatureType &feature, int32_t &frame_id_l, int32_t &frame_id_r);
-    bool ComputeImuPreintegrationBasedOnFirstFrameForInitialization(std::vector<ImuPreintegrateBlock<>> &imu_blocks);
-    bool ConstructLigtFunction(const std::vector<ImuPreintegrateBlock<>> &imu_blocks, Mat6 &A, Vec6 &b, float &Q);
-    bool RefineGravityForInitialization(const Mat &M, const Vec &m, const float Q, const float gravity_mag, Vec &rhs);
-    bool PropagateAllBasedOnFirstCameraFrameForInitializaion(const std::vector<ImuPreintegrateBlock<>> &imu_blocks, const Vec3 &v_i0i0, const Vec3 &gravity_i0);
-    bool TransformAllStatesToWorldFrameForInitialization(const Vec3 &gravity_i0);
 
     // Backend estimator.
     bool TryToEstimate();
-    TMat2<DorF> GetVisualObserveInformationMatrix();
-
-    // Backend maginalizor.
-    BackendMarginalizeType DecideMarginalizeType();
-    bool TryToMarginalize();
-    bool MarginalizeOldestFrame();
-    bool MarginalizeSubnewFrame();
-
-    // Support for backend estimator and marginalizor.
-    void ClearBackendGraph();
-    void ConvertCameraPoseAndExtrinsicToVertices();
-    bool AddPriorFactorWhenNoPrior();
-    bool ConvertFeatureInvdepAndAddVisualFactorForEstimation();
-    bool ConvertFeatureInvdepAndAddVisualFactorForMarginalization();
-    bool ConvertFeatureInvdepAndAddVisualFactor(const FeatureType &feature, const float invdep, const TMat2<DorF> &visual_info_matrix, const uint32_t max_frame_id);
-    void ConvertImuMotionStatesToVertices();
-    bool AddImuPreintegrationFactorForEstimation(const uint32_t idx_offset);
-    bool AddImuPreintegrationFactorForMarginalization(const uint32_t idx_offset);
-    void ConstructGraphOptimizationProblem(const uint32_t idx_offset, Graph<DorF> &problem);
-    void UpdateAllStatesAfterEstimation(const Graph<DorF> &problem, const uint32_t idx_offset);
-
-    // Backend data processor.
-    void RecomputeImuPreintegration();
-    bool TriangulizeAllNewVisualFeatures();
-    bool TriangulizeAllVisualFeatures();
-    bool TriangulizeVisualFeature(std::vector<Quat> &q_wc_vec,
-                                  std::vector<Vec3> &p_wc_vec,
-                                  std::vector<Vec2> &norm_xy_vec,
-                                  FeatureType &feature);
-    bool ControlLocalMapDimension();
-    void UpdateBackendStates();
-    bool AddNewestFrameWithBiasIntoLocalMap();
-
-    // Backend log recorder.
-    void RecordBackendLogStates();
-    void RecordBackendLogStatus();
-    void RecordBackendLogCostTime();
-    void RecordBackendLogPriorInformation();
-
-    // Backend selfcheck.
-    bool CheckGraphOptimizationFactors();
-    bool CheckGraphOptimizationFactors(std::vector<std::unique_ptr<Edge<DorF>>> &edges);
-
-    // Backend visualizor.
-    RgbPixel GetFeatureColor(const FeatureType &feature);
-    void ShowFeaturePairsBetweenTwoFrames(const uint32_t ref_frame_id, const uint32_t cur_frame_id, const bool use_rectify = false, const int32_t delay_ms = 0);
-    void ShowAllFramesWithBias(const bool use_rectify = false, const int32_t delay_ms = 0);
-    void ShowLocalMapFramesAndFeatures(const int32_t feature_id = -1, const int32_t camera_id = 0, const bool use_rectify = false, const int32_t delay_ms = 0);
-    void ShowLocalMapInWorldFrame(const int32_t delay_ms, const bool block_in_loop = false);
-    void ShowMatrixImage(const std::string &title, const TMat<DorF> &matrix);
-    void ShowSimpleInformationOfVisualLocalMap();
-    void ShowTinyInformationOfVisualLocalMap();
 
     // Reference for member variables.
     BackendOptions &options() { return options_; }
@@ -219,9 +146,6 @@ private:
 
     // Record log.
     BinaryDataLog logger_;
-    BackendLogStates log_package_states_;
-    BackendLogStatus log_package_status_;
-    BackendLogCostTime log_package_cost_time_;
 
     // Signal flags.
     bool should_quit_ = false;  // You can kill all relative threads by checking this flag.

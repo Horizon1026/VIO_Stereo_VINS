@@ -14,7 +14,7 @@
 using namespace SLAM_VISUALIZOR;
 
 VIO::Vio vio;
-double time_stamp_offset = 1403638518.0;
+double time_stamp_offset = 1403636579.0;
 
 void PublishImuData(const std::string &csv_file_path,
                     const float period_ms) {
@@ -134,13 +134,7 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         }
 
         if (vio.backend()->should_quit()) {
-            // for (const auto &pair : vio.data_manager()->visual_local_map()->features()) {
-            //     vio.backend()->ShowLocalMapFramesAndFeatures(pair.second.id(), 0, true, 0);
-            // }
-            vio.backend()->ShowLocalMapInWorldFrame(30, true);
             break;
-        } else if (vio.backend()->states().is_initialized) {
-            vio.backend()->ShowLocalMapInWorldFrame(1, false);
         }
 
         if (!res) {
@@ -159,9 +153,6 @@ int main(int argc, char **argv) {
     if (argc == 2) {
         dataset_root_dir = argv[1];
     }
-
-    // Config std::cout print into files.
-    // std::cout.rdbuf(g_txt_log.rdbuf());
 
     // Fill configuration of vio.
     ReportInfo(YELLOW ">> Test vio on " << dataset_root_dir << "." RESET_COLOR);
@@ -216,10 +207,6 @@ int main(int argc, char **argv) {
 
     // Config vio.
     vio.ConfigAllComponents();
-
-    // Config visualizor 3d.
-    Visualizor3D::camera_view().q_wc = Quat(1.0, -1.0, 0, 0).normalized();
-    Visualizor3D::camera_view().p_wc.y() = -3.0f;
 
     // Start threads for data pipeline and vio node.
     const float imu_timeout_ms = 3.5f;
