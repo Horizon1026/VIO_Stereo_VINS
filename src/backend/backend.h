@@ -112,6 +112,7 @@ public:
 
     // Backend initializor.
     bool TryToInitialize();
+    bool PrepareForPureVisualSfm();
 
     // Backend estimator.
     bool TryToEstimate();

@@ -23,6 +23,11 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
+    if (!PrepareForPureVisualSfm()) {
+        ReportError("[Backend] Backend failed to prepare for pure visual SFM.");
+        return false;
+    }
+
     // Debug.
     should_quit_ = true;
 

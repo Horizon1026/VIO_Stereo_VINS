@@ -100,11 +100,9 @@ private:
     // Options for data manager.
     DataManagerOptions options_;
 
-    // All keyframes and map points.
-    // Keyframes : [ p_wc, q_wc ]
-    // Feature Points : [ p_w | invdep ]
+    // All frames and map points.
     std::unique_ptr<CovisibleGraphType> visual_local_map_ = std::make_unique<CovisibleGraphType>();
-    // All non-keyframes with bias.
+    // All frames with bias.
     std::deque<FrameWithBias> frames_with_bias_;
     // Camera extrinsics.
     std::vector<CameraExtrinsic> camera_extrinsics_;
