@@ -15,7 +15,10 @@ bool Backend::TryToInitialize() {
 
     // Check if imu motion is enough.
     const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
-    ReportDebug("imu_accel_variance " << imu_accel_variance);
+    if (imu_accel_variance < kMinValidImuAccelVarianceForMonoInitialization) {
+        ReportWarn("[Backend] Backend cannot initialize for lack of imu motion.");
+        return false;
+    }
 
     // Convert all frames into a covisible graph.
     if (!data_manager_->ConvertAllFramesWithBiasToLocalMap()) {
