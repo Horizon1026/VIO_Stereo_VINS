@@ -101,6 +101,43 @@ bool DataManager::SelfCheckVisualLocalMap() {
     return true;
 }
 
+bool DataManager::ConvertAllFramesWithBiasToLocalMap() {
+    RETURN_FALSE_IF(visual_local_map_ == nullptr);
+    visual_local_map_->Clear();
+
+    int32_t frame_id = 1;
+    for (const auto &frame : frames_with_bias_) {
+        if (frame.visual_measure == nullptr) {
+            ReportError("[DataManager] Cannot find visual measurement in frames_with_bias_.");
+            return false;
+        }
+
+        std::vector<MatImg> raw_images;
+        if (frame.packed_measure != nullptr) {
+            if (frame.packed_measure->left_image != nullptr) {
+                raw_images.emplace_back(frame.packed_measure->left_image->image);
+            }
+            if (frame.packed_measure->right_image != nullptr) {
+                raw_images.emplace_back(frame.packed_measure->right_image->image);
+            }
+        }
+
+        visual_local_map_->AddNewFrameWithFeatures(frame.visual_measure->features_id,
+                                                   frame.visual_measure->observes_per_frame,
+                                                   frame.time_stamp_s,
+                                                   frame_id,
+                                                   raw_images);
+        ++frame_id;
+    }
+
+    if (!visual_local_map_->SelfCheck()) {
+        ReportError("[DataManager] Visual local map self check failed in ConvertAllFramesWithBiasToLocalMap().");
+        return false;
+    }
+
+    return true;
+}
+
 bool DataManager::SelfCheckFramesWithBias() {
     // Iterate each frame with bias.
     for (const auto &frame_with_bias : frames_with_bias_) {

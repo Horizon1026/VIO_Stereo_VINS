@@ -22,7 +22,6 @@ using namespace SENSOR_MODEL;
 /* Options for Data Manager. */
 struct DataManagerOptions {
     uint32_t kMaxStoredKeyFrames = 0;
-    uint32_t kMaxStoredNewFrames = 0;
     bool kEnableRecordBinaryCurveLog = false;
 };
 
@@ -50,6 +49,10 @@ struct FrameWithBias {
     // Measurement of raw imu(gyro, acc), raw image(left, right) and visual features.
     std::unique_ptr<PackedMeasurement> packed_measure = nullptr;
     std::unique_ptr<FrontendOutputData> visual_measure = nullptr;
+    // States based on imu.
+    Vec3 p_wi = Vec3::Zero();
+    Quat q_wi = Quat::Identity();
+    Vec3 v_wi = Vec3::Zero();
 };
 
 /* Class Data Manager Declaration. */
@@ -70,6 +73,9 @@ public:
     // Transform packed measurements to a new frame.
     bool ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure,
                         std::unique_ptr<FrontendOutputData> &new_visual_measure);
+
+    // Convert all frames with bias into visual local map.
+    bool ConvertAllFramesWithBiasToLocalMap();
 
     // Reference for member variables.
     DataManagerOptions &options() { return options_; }

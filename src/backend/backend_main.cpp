@@ -10,6 +10,19 @@ bool Backend::RunOnce() {
         ReportError("[Backend] Backend cannot link with data manager.");
         return false;
     }
+    TickTock timer;
+
+    if (!states_.is_initialized) {
+        timer.TockTickInMillisecond();
+        const bool res = TryToInitialize();
+        if (res) {
+            states_.is_initialized = true;
+            ReportInfo(GREEN "[Backend] Backend succeed to initialize within " << timer.TockTickInMillisecond() << " ms." RESET_COLOR);
+        } else {
+            ResetToReintialize();
+            ReportWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
+        }
+    }
 
     return true;
 }
