@@ -24,6 +24,10 @@ bool Backend::RunOnce() {
         }
     }
 
+    // Check data manager components.
+    data_manager_->SelfCheckVisualLocalMap();
+    data_manager_->SelfCheckFramesWithBias();
+
     return true;
 }
 
@@ -32,7 +36,7 @@ void Backend::Reset() {
 }
 
 void Backend::ResetToReintialize() {
-
+    data_manager_->visual_local_map()->Clear();
 }
 
 }

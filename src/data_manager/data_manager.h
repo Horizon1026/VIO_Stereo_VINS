@@ -77,6 +77,9 @@ public:
     // Convert all frames with bias into visual local map.
     bool ConvertAllFramesWithBiasToLocalMap();
 
+    // Compute imu accel variance.
+    float ComputeImuAccelVariance();
+
     // Visualizor of managed data.
     RgbPixel GetFeatureColor(const FeatureType &feature);
     void ShowFeaturePairsBetweenTwoFrames(const uint32_t ref_frame_id, const uint32_t cur_frame_id, const int32_t delay_ms = 0);

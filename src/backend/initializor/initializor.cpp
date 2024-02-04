@@ -3,11 +3,19 @@
 
 namespace VIO {
 
+namespace {
+    const float kMinValidImuAccelVarianceForMonoInitialization = 0.4f;
+}
+
 bool Backend::TryToInitialize() {
     if (data_manager_->frames_with_bias().size() < data_manager_->options().kMaxStoredKeyFrames) {
         ReportWarn("[Backend] Backend cannot initialize for lack of new frames.");
         return false;
     }
+
+    // Check if imu motion is enough.
+    const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
+    ReportDebug("imu_accel_variance " << imu_accel_variance);
 
     // Convert all frames into a covisible graph.
     if (!data_manager_->ConvertAllFramesWithBiasToLocalMap()) {
@@ -16,9 +24,7 @@ bool Backend::TryToInitialize() {
     }
 
     // Debug.
-    data_manager_->ShowLocalMapFramesAndFeatures();
-    data_manager_->ShowAllFramesWithBias();
-    data_manager_->ShowFeaturePairsBetweenTwoFrames(1, 3, 0);
+    should_quit_ = true;
 
     return true;
 }
