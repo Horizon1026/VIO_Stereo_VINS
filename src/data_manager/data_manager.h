@@ -67,19 +67,9 @@ public:
     bool SelfCheckVisualLocalMap();
     bool SelfCheckFramesWithBias();
 
-    // Record log.
-    void TriggerLogRecording(const float time_stamp_s);
-    void RecordLocalMap(const float time_stamp_s);
-    void RecordCovisibleGraph(const float time_stamp_s);
-
     // Transform packed measurements to a new frame.
     bool ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure,
                         std::unique_ptr<FrontendOutputData> &new_visual_measure);
-
-    // Get specified frame id.
-    uint32_t GetNewestKeyframeId();
-    // Get specified frame timestamp.
-    float GetNewestStateTimeStamp();
 
     // Reference for member variables.
     DataManagerOptions &options() { return options_; }
