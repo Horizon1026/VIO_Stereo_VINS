@@ -29,6 +29,16 @@ if ( NOT TARGET lib_object_pool )
     add_subdirectory( ${SLAM_UTILITY_PATH}/data_struct/object_pool ${PROJECT_SOURCE_DIR}/build/lib_object_pool )
 endif()
 
+# Add visualizor.
+set( VISUALIZOR_2D_PATH ${PROJECT_SOURCE_DIR}/../Visualizor2D )
+if ( NOT TARGET lib_image_visualizor )
+    add_subdirectory( ${VISUALIZOR_2D_PATH}/src ${PROJECT_SOURCE_DIR}/build/lib_image_visualizor )
+endif()
+set( VISUALIZOR_3D_PATH ${PROJECT_SOURCE_DIR}/../Visualizor3D )
+if ( NOT TARGET lib_3d_visualizor )
+    add_subdirectory( ${VISUALIZOR_3D_PATH}/src ${PROJECT_SOURCE_DIR}/build/lib_3d_visualizor )
+endif()
+
 # Add data loader.
 set( DATA_LOADER_PATH ${PROJECT_SOURCE_DIR}/../VIO_Stereo_VINS/src/data_loader )
 if ( NOT TARGET lib_vio_stereo_vins_data_loader )
@@ -64,4 +74,7 @@ target_link_libraries( lib_vio_stereo_vins_data_manager
     lib_covisible_graph
     lib_object_pool
     lib_imu_model
+
+    lib_image_visualizor
+    lib_3d_visualizor
 )

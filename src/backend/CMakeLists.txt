@@ -59,16 +59,6 @@ if ( NOT TARGET lib_polynomial_solver )
     add_subdirectory( ${SLAM_SOLVER_PATH}/polynomial_solver ${PROJECT_SOURCE_DIR}/build/lib_polynomial_solver )
 endif()
 
-# Add visualizor.
-set( VISUALIZOR_2D_PATH ${PROJECT_SOURCE_DIR}/../Visualizor2D )
-if ( NOT TARGET lib_image_visualizor )
-    add_subdirectory( ${VISUALIZOR_2D_PATH}/src ${PROJECT_SOURCE_DIR}/build/lib_image_visualizor )
-endif()
-set( VISUALIZOR_3D_PATH ${PROJECT_SOURCE_DIR}/../Visualizor3D )
-if ( NOT TARGET lib_3d_visualizor )
-    add_subdirectory( ${VISUALIZOR_3D_PATH}/src ${PROJECT_SOURCE_DIR}/build/lib_3d_visualizor )
-endif()
-
 # Add visual frontend.
 set( VISUAL_FRONTEND_PATH ${PROJECT_SOURCE_DIR}/../VIO_Stereo_VINS/src/frontend )
 if ( NOT TARGET lib_vio_stereo_vins_frontend )
@@ -101,8 +91,6 @@ target_link_libraries( lib_vio_stereo_vins_backend
     lib_vision_geometry_relative_rotation
 
     lib_binary_data_log
-    lib_image_visualizor
-    lib_3d_visualizor
 
     lib_general_graph_optimizor
     lib_polynomial_solver

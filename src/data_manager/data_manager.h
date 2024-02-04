@@ -77,6 +77,16 @@ public:
     // Convert all frames with bias into visual local map.
     bool ConvertAllFramesWithBiasToLocalMap();
 
+    // Visualizor of managed data.
+    RgbPixel GetFeatureColor(const FeatureType &feature);
+    void ShowFeaturePairsBetweenTwoFrames(const uint32_t ref_frame_id, const uint32_t cur_frame_id, const int32_t delay_ms = 0);
+    void ShowAllFramesWithBias(const int32_t delay_ms = 0);
+    void ShowLocalMapFramesAndFeatures(const int32_t feature_id = -1, const int32_t camera_id = 0, const int32_t delay_ms = 0);
+    void ShowLocalMapInWorldFrame(const int32_t delay_ms, const bool block_in_loop = false);
+    void ShowSimpleInformationOfVisualLocalMap();
+    void ShowTinyInformationOfVisualLocalMap();
+    void ShowMatrixImage(const std::string &title, const Mat &matrix);
+
     // Reference for member variables.
     DataManagerOptions &options() { return options_; }
     CovisibleGraphType *visual_local_map() { return visual_local_map_.get(); }

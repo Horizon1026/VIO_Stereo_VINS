@@ -15,6 +15,11 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
+    // Debug.
+    data_manager_->ShowLocalMapFramesAndFeatures();
+    data_manager_->ShowAllFramesWithBias();
+    data_manager_->ShowFeaturePairsBetweenTwoFrames(1, 3, 0);
+
     return true;
 }
 
