@@ -95,6 +95,14 @@ bool Backend::PrepareForPureVisualSfm() {
         }
     }
 
+    // Estimate pose of each frame between these two frame.
+    for (int32_t frame_id = ref_frame_id + 1; frame_id < cur_frame_id; ++frame_id) {
+        if (!TryToSolveFramePoseByFeaturesObservedByItself(frame_id)) {
+            ReportWarn("[Backend] Backend failed to estimate frame pose between frame [" << ref_frame_id << "] and [" << cur_frame_id << "].");
+            return false;
+        }
+    }
+
     return true;
 }
 
