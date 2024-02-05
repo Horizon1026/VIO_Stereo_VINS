@@ -9,7 +9,7 @@ namespace {
 
 bool Backend::TryToInitialize() {
     if (data_manager_->frames_with_bias().size() < data_manager_->options().kMaxStoredKeyFrames) {
-        ReportWarn("[Backend] Backend cannot initialize for lack of new frames.");
+        ReportWarn("[Backend] Backend cannot initialize for lack of frames.");
         return false;
     }
 
@@ -30,6 +30,8 @@ bool Backend::TryToInitialize() {
         ReportError("[Backend] Backend failed to prepare for pure visual SFM.");
         return false;
     }
+
+    data_manager_->ShowLocalMapFramesAndFeatures();
 
     // Debug.
     should_quit_ = true;

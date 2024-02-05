@@ -55,6 +55,12 @@ struct FrameWithBias {
     Vec3 v_wi = Vec3::Zero();
 };
 
+/* Definition of Corresbondence between Frames. */
+struct FramesCorresbondence {
+    int32_t num_of_covisible_features = 0;
+    float average_parallax = 0.0f;
+};
+
 /* Class Data Manager Declaration. */
 class DataManager final {
 
@@ -80,8 +86,10 @@ public:
     // Compute imu accel variance.
     float ComputeImuAccelVariance();
 
+    // Compute correspondence between two frames.
+    FramesCorresbondence GetCorresbondence(const int32_t frame_id_i, const int32_t frame_id_j);
+
     // Visualizor of managed data.
-    RgbPixel GetFeatureColor(const FeatureType &feature);
     void ShowFeaturePairsBetweenTwoFrames(const uint32_t ref_frame_id, const uint32_t cur_frame_id, const int32_t delay_ms = 0);
     void ShowAllFramesWithBias(const int32_t delay_ms = 0);
     void ShowLocalMapFramesAndFeatures(const int32_t feature_id = -1, const int32_t camera_id = 0, const int32_t delay_ms = 0);
@@ -95,6 +103,10 @@ public:
     CovisibleGraphType *visual_local_map() { return visual_local_map_.get(); }
     std::deque<FrameWithBias> &frames_with_bias() { return frames_with_bias_; }
     std::vector<CameraExtrinsic> &camera_extrinsics() { return camera_extrinsics_; }
+
+private:
+    // Support for visualizor of managed data.
+    RgbPixel GetFeatureColor(const FeatureType &feature);
 
 private:
     // Options for data manager.

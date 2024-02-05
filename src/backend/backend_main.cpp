@@ -15,6 +15,7 @@ bool Backend::RunOnce() {
     if (!states_.is_initialized) {
         timer.TockTickInMillisecond();
         const bool res = TryToInitialize();
+        data_manager_->ShowTinyInformationOfVisualLocalMap();
         if (res) {
             states_.is_initialized = true;
             ReportInfo(GREEN "[Backend] Backend succeed to initialize within " << timer.TockTickInMillisecond() << " ms." RESET_COLOR);
@@ -37,6 +38,10 @@ void Backend::Reset() {
 
 void Backend::ResetToReintialize() {
     data_manager_->visual_local_map()->Clear();
+
+    while (data_manager_->frames_with_bias().size() >= data_manager_->options().kMaxStoredKeyFrames) {
+        data_manager_->frames_with_bias().pop_front();
+    }
 }
 
 }

@@ -123,5 +123,27 @@ float DataManager::ComputeImuAccelVariance() {
     return variance;
 }
 
+// Compute correspondence between two frames.
+FramesCorresbondence DataManager::GetCorresbondence(const int32_t frame_id_i, const int32_t frame_id_j) {
+    FramesCorresbondence corres;
+
+    // Get covisible features only in left camera.
+    std::vector<FeatureType *> covisible_features;
+    if (!visual_local_map_->GetCovisibleFeatures(frame_id_i, frame_id_j, covisible_features)) {
+        ReportError("[DataManager] Failed to get covisible features between frame " << frame_id_i << " and " << frame_id_j << ".");
+        return corres;
+    }
+
+    // Compute average parallax.
+    for (const auto &feature_ptr : covisible_features) {
+        const auto observe_i = feature_ptr->observe(frame_id_i).front().raw_pixel_uv;
+        const auto observe_j = feature_ptr->observe(frame_id_j).front().raw_pixel_uv;
+        corres.average_parallax += (observe_i - observe_j).norm();
+    }
+    corres.average_parallax /= static_cast<float>(covisible_features.size());
+    corres.num_of_covisible_features = static_cast<float>(covisible_features.size());
+
+    return corres;
+}
 
 }
