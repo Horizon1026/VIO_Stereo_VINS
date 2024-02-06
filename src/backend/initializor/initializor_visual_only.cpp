@@ -34,7 +34,9 @@ bool Backend::PrepareForPureVisualSfm() {
         return false;
     } else {
         // Debug.
-        ReportDebug("[Backend] Find frame " << cur_frame_id << " with best corresbondence with the first frame.");
+        ReportDebug("[Backend] Find frame " << cur_frame_id << " with best corresbondence with the first frame." <<
+            " Number of covisible features [" << best_corres.num_of_covisible_features << "]," <<
+            " average parallax [" << best_corres.average_parallax << "/" << kMinValidAverageParallaxForPureVisualSfm << "].");
         data_manager_->ShowFeaturePairsBetweenTwoFrames(ref_frame_id, cur_frame_id);
     }
 
@@ -97,9 +99,28 @@ bool Backend::PrepareForPureVisualSfm() {
 
     // Estimate pose of each frame between these two frame.
     for (int32_t frame_id = ref_frame_id + 1; frame_id < cur_frame_id; ++frame_id) {
-        if (!TryToSolveFramePoseByFeaturesObservedByItself(frame_id)) {
+        const auto prev_frame_ptr = data_manager_->visual_local_map()->frame(frame_id - 1);
+        if (!TryToSolveFramePoseByFeaturesObservedByItself(frame_id, prev_frame_ptr->p_wc(), prev_frame_ptr->q_wc())) {
             ReportWarn("[Backend] Backend failed to estimate frame pose between frame [" << ref_frame_id << "] and [" << cur_frame_id << "].");
             return false;
+        }
+    }
+
+    // Triangulize all features observed in other frames. And estimate pose of other frames.
+    for (auto &frame : data_manager_->visual_local_map()->frames()) {
+        CONTINUE_IF(frame.id() <= static_cast<uint32_t>(cur_frame_id));
+
+        if (!TryToSolveFramePoseByFeaturesObservedByItself(frame.id())) {
+            ReportWarn("[Backend] Backend failed to estimate pose of frame [" << frame.id() << "].");
+            return false;
+        }
+
+        for (auto &pair : frame.features()) {
+            auto feature_ptr = pair.second;
+            CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
+
+            TryToSolveFeaturePositionByFramesObservingIt(feature_ptr->id(), feature_ptr->first_frame_id(),
+                std::min(feature_ptr->final_frame_id(), frame.id()));
         }
     }
 

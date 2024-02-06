@@ -31,10 +31,10 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
-    data_manager_->ShowLocalMapFramesAndFeatures();
-
     // Debug.
+    data_manager_->ShowLocalMapFramesAndFeatures();
     should_quit_ = true;
+    data_manager_->ShowLocalMapInWorldFrame(30, true);
 
     return true;
 }
