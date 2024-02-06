@@ -26,8 +26,15 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
+    // Compute initialized value of visual local map.
     if (!PrepareForPureVisualSfm()) {
         ReportError("[Backend] Backend failed to prepare for pure visual SFM.");
+        return false;
+    }
+
+    // Perform pure visual bundle adjustment.
+    if (!PerformPureVisualBundleAdjustment()) {
+        ReportError("[Backend] Backend failed to perform pure visual bundle adjustment.");
         return false;
     }
 

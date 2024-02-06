@@ -127,4 +127,9 @@ bool Backend::PrepareForPureVisualSfm() {
     return true;
 }
 
+bool Backend::PerformPureVisualBundleAdjustment() {
+
+    return true;
+}
+
 }

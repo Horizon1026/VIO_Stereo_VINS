@@ -123,6 +123,7 @@ public:
     // Backend initializor.
     bool TryToInitialize();
     bool PrepareForPureVisualSfm();
+    bool PerformPureVisualBundleAdjustment();
 
     // Backend estimator.
     bool TryToEstimate();
