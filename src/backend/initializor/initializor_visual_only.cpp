@@ -7,7 +7,7 @@
 namespace VIO {
 
 namespace {
-    constexpr float kMinValidAverageParallaxForPureVisualSfm = 15.0f;
+    constexpr float kMinValidAverageParallaxForPureVisualSfm = 18.0f;
     constexpr int32_t kMinValidCovisibleFeaturesNumberForPureVisualSfm = 30;
 }
 
@@ -33,11 +33,9 @@ bool Backend::PrepareForPureVisualSfm() {
             " average parallax [" << best_corres.average_parallax << "/" << kMinValidAverageParallaxForPureVisualSfm << "].");
         return false;
     } else {
-        // Debug.
-        ReportDebug("[Backend] Find frame " << cur_frame_id << " with best corresbondence with the first frame." <<
+        ReportInfo("[Backend] Find frame " << cur_frame_id << " with best corresbondence with the first frame." <<
             " Number of covisible features [" << best_corres.num_of_covisible_features << "]," <<
             " average parallax [" << best_corres.average_parallax << "/" << kMinValidAverageParallaxForPureVisualSfm << "].");
-        data_manager_->ShowFeaturePairsBetweenTwoFrames(ref_frame_id, cur_frame_id);
     }
 
     // Extract covisible features and observations between these two frames.
