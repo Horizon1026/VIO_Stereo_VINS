@@ -18,6 +18,7 @@ namespace VIO {
 
 using namespace SLAM_UTILITY;
 using namespace SENSOR_MODEL;
+using DorF = float;
 
 /* Options for Data Manager. */
 struct DataManagerOptions {
@@ -44,7 +45,7 @@ struct CameraExtrinsic {
 using FrameType = VisualFrame<FeatureType>;
 struct FrameWithBias {
     // Imu bias of accel and gyro is inside imu_preint_block.
-    ImuPreintegrateBlock<> imu_preint_block;
+    ImuPreintegrateBlock<DorF> imu_preint_block;
     float time_stamp_s = 0.0f;
     // Measurement of raw imu(gyro, acc), raw image(left, right) and visual features.
     std::unique_ptr<PackedMeasurement> packed_measure = nullptr;

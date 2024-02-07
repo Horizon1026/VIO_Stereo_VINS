@@ -13,6 +13,9 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
+    // Debug.
+    should_quit_ = true;
+
     // Check if imu motion is enough.
     const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
     if (imu_accel_variance < kMinValidImuAccelVarianceForMonoInitialization) {
@@ -33,13 +36,10 @@ bool Backend::TryToInitialize() {
     }
 
     // Perform pure visual bundle adjustment.
-    if (!PerformPureVisualBundleAdjustment()) {
+    if (!PerformPureVisualBundleAdjustment(false)) {
         ReportError("[Backend] Backend failed to perform pure visual bundle adjustment.");
         return false;
     }
-
-    // Debug.
-    should_quit_ = true;
     data_manager_->ShowLocalMapInWorldFrame(30, true);
 
     return true;

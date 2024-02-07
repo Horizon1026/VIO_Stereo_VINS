@@ -32,7 +32,7 @@ class EdgeImuPreintegrationBetweenRelativePose : public Edge<Scalar> {
 //              [imu bias_g 1, bias_g1]
 
 public:
-    EdgeImuPreintegrationBetweenRelativePose(const ImuPreintegrateBlock<> &imu_block,
+    EdgeImuPreintegrationBetweenRelativePose(const ImuPreintegrateBlock<DorF> &imu_block,
                                              const Vec3 &gravity_w) : Edge<Scalar>(15, 10) {
         linear_point_.p_ij = imu_block.p_ij().cast<Scalar>();
         linear_point_.q_ij = imu_block.q_ij().cast<Scalar>();

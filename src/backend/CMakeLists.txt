@@ -1,4 +1,5 @@
 aux_source_directory( . AUX_SRC_VIO_STEREO_VINS_BACKEND )
+aux_source_directory( graph_manager AUX_SRC_VIO_STEREO_VINS_BACKEND_GRAPH_MANAGER )
 aux_source_directory( initializor AUX_SRC_VIO_STEREO_VINS_BACKEND_INITIALIZOR )
 aux_source_directory( estimator AUX_SRC_VIO_STEREO_VINS_BACKEND_ESTIMATOR )
 
@@ -68,11 +69,15 @@ endif()
 # Create library.
 add_library( lib_vio_stereo_vins_backend
     ${AUX_SRC_VIO_STEREO_VINS_BACKEND}
+    ${AUX_SRC_VIO_STEREO_VINS_BACKEND_GRAPH_MANAGER}
     ${AUX_SRC_VIO_STEREO_VINS_BACKEND_INITIALIZOR}
     ${AUX_SRC_VIO_STEREO_VINS_BACKEND_ESTIMATOR}
 )
 target_include_directories( lib_vio_stereo_vins_backend
-    PUBLIC . estimator
+    PUBLIC .
+           graph_manager
+           initializor
+           estimator
 )
 target_link_libraries( lib_vio_stereo_vins_backend
     lib_slam_utility_datatype

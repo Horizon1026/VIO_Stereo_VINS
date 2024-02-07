@@ -75,6 +75,8 @@ struct BackendVertices {
     std::vector<uint32_t> all_frames_id;
     std::vector<std::unique_ptr<Vertex<DorF>>> all_frames_p_wi;
     std::vector<std::unique_ptr<VertexQuat<DorF>>> all_frames_q_wi;
+    std::vector<std::unique_ptr<Vertex<DorF>>> all_frames_p_wc;
+    std::vector<std::unique_ptr<VertexQuat<DorF>>> all_frames_q_wc;
 
     std::vector<uint32_t> all_features_id;
     std::vector<std::unique_ptr<Vertex<DorF>>> all_features_invdep;
@@ -119,11 +121,30 @@ public:
                                                       const int32_t min_frame_id = -1,
                                                       const int32_t max_frame_id = kMaxInt32,
                                                       const bool use_multi_view = false);
+    TMat2<DorF> GetVisualObserveInformationMatrix();
+
+    // Backend graph manager.
+    void ClearGraph();
+    void ConstructGraphOptimizationProblem(Graph<DorF> &problem);
+    void ConstructPureVisualGraphOptimizationProblem(Graph<DorF> &problem);
+    void AddAllCameraExtrinsicsToGraph();
+    void AddAllCameraPosesInLocalMapToGraph();
+    bool AllFeatureInvdepAndVisualFactorsToGraph(const FeatureType &feature,
+                                                 const float invdep,
+                                                 const TMat2<DorF> &visual_info_matrix,
+                                                 const uint32_t max_frame_id,
+                                                 const bool use_multi_view = false);
+    bool AllFeatureInvdepAndVisualFactorsWithCameraExtrinsicsToGraph(const FeatureType &feature,
+                                                                     const float invdep,
+                                                                     const TMat2<DorF> &visual_info_matrix,
+                                                                     const uint32_t max_frame_id,
+                                                                     const bool use_multi_view = false);
+    bool AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex, const bool use_multi_view = false);
 
     // Backend initializor.
     bool TryToInitialize();
     bool PrepareForPureVisualSfm();
-    bool PerformPureVisualBundleAdjustment();
+    bool PerformPureVisualBundleAdjustment(const bool use_multi_view = false);
 
     // Backend estimator.
     bool TryToEstimate();

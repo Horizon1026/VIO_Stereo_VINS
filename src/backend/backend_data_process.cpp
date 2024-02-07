@@ -8,6 +8,14 @@
 
 namespace VIO {
 
+TMat2<DorF> Backend::GetVisualObserveInformationMatrix() {
+    const auto &camera_model = visual_frontend_->camera_models().front();
+    const DorF residual_in_pixel = 1.0;
+    const TVec2<DorF> visual_observe_info_vec = TVec2<DorF>(camera_model->fx() * camera_model->fx(),
+        camera_model->fy() * camera_model->fy()) / residual_in_pixel;
+    return visual_observe_info_vec.asDiagonal();
+}
+
 bool Backend::TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
                                                             const Vec3 init_p_wc,
                                                             const Quat init_q_wc) {
