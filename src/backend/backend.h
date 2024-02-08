@@ -122,6 +122,9 @@ public:
                                                       const int32_t max_frame_id = kMaxInt32,
                                                       const bool use_multi_view = false);
     TMat2<DorF> GetVisualObserveInformationMatrix();
+    void RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
+                                         const Vec3 &bias_gyro,
+                                         FrameWithBias &frame_with_bias);
 
     // Backend graph manager.
     void ClearGraph();
@@ -145,6 +148,7 @@ public:
     bool TryToInitialize();
     bool PrepareForPureVisualSfm();
     bool PerformPureVisualBundleAdjustment(const bool use_multi_view = false);
+    bool EstimateGyroBias();
 
     // Backend estimator.
     bool TryToEstimate();

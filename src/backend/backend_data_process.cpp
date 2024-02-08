@@ -16,6 +16,23 @@ TMat2<DorF> Backend::GetVisualObserveInformationMatrix() {
     return visual_observe_info_vec.asDiagonal();
 }
 
+void Backend::RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
+                                              const Vec3 &bias_gyro,
+                                              FrameWithBias &frame_with_bias) {
+    frame_with_bias.imu_preint_block.Reset();
+    frame_with_bias.imu_preint_block.bias_accel() = bias_accel;
+    frame_with_bias.imu_preint_block.bias_gyro() = bias_gyro;
+    frame_with_bias.imu_preint_block.SetImuNoiseSigma(imu_model_->options().kAccelNoise,
+                                                      imu_model_->options().kGyroNoise,
+                                                      imu_model_->options().kAccelRandomWalk,
+                                                      imu_model_->options().kGyroRandomWalk);
+
+    const uint32_t max_idx = frame_with_bias.packed_measure->imus.size();
+    for (uint32_t i = 1; i < max_idx; ++i) {
+        frame_with_bias.imu_preint_block.Propagate(*frame_with_bias.packed_measure->imus[i - 1], *frame_with_bias.packed_measure->imus[i]);
+    }
+}
+
 bool Backend::TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
                                                             const Vec3 init_p_wc,
                                                             const Quat init_q_wc) {

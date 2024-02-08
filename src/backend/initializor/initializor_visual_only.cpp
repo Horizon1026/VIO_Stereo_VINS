@@ -7,7 +7,7 @@
 namespace VIO {
 
 namespace {
-    constexpr float kMinValidAverageParallaxForPureVisualSfm = 18.0f;
+    constexpr float kMinValidAverageParallaxForPureVisualSfm = 16.0f;
     constexpr int32_t kMinValidCovisibleFeaturesNumberForPureVisualSfm = 30;
 }
 

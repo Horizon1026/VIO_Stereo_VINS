@@ -40,7 +40,12 @@ bool Backend::TryToInitialize() {
         ReportError("[Backend] Backend failed to perform pure visual bundle adjustment.");
         return false;
     }
-    data_manager_->ShowLocalMapInWorldFrame(30, true);
+
+    // Estimate bias of gyro by visual frame poses.
+    if (!EstimateGyroBias()) {
+        ReportError("[Backend] Backend failed to estimate bias of gyro.");
+        return false;
+    }
 
     return true;
 }
