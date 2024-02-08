@@ -128,6 +128,7 @@ public:
                                          const Vec3 &bias_gyro,
                                          FrameWithBias &frame_with_bias);
     bool SyncTwcToTwiInLocalMap();
+    bool SyncTwiToTwcInLocalMap();
 
     // Backend graph manager.
     void ClearGraph();
@@ -136,6 +137,7 @@ public:
     void AddAllCameraExtrinsicsToGraph();
     void AddAllCameraPosesInLocalMapToGraph();
     void AddAllImuPosesInLocalMapToGraph();
+    void AddAllImuMotionStatesInLocalMapToGraph();
     bool AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const FeatureType &feature,
                                                               const float invdep,
                                                               const TMat2<DorF> &visual_info_matrix,
@@ -147,6 +149,7 @@ public:
                                                            const uint32_t max_frame_id,
                                                            const bool use_multi_view = false);
     bool AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex, const bool use_multi_view = false);
+    bool AddImuFactorsToGraph();
     bool AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph();
 
     // Backend initializor.

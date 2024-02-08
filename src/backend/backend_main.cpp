@@ -53,15 +53,19 @@ void Backend::Reset() {
 
     // Clear states flag.
     status_.is_initialized = false;
+    states_.prior.is_valid = false;
 }
 
 void Backend::ResetToReintialize() {
-    status_.is_initialized = false;
+    // Clear data manager.
     data_manager_->visual_local_map()->Clear();
-
     while (data_manager_->frames_with_bias().size() >= data_manager_->options().kMaxStoredKeyFrames) {
         data_manager_->frames_with_bias().pop_front();
     }
+
+    // Clear states flag.
+    status_.is_initialized = false;
+    states_.prior.is_valid = false;
 }
 
 }

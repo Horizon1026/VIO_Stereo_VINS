@@ -64,6 +64,31 @@ void Backend::ConstructVioGraphOptimizationProblem(Graph<DorF> &problem) {
     for (auto &edge : graph_.edges.all_imu_factors) {
         problem.AddEdge(edge.get());
     }
+
+    // Report information.
+    ReportInfo("[Backend] Full vio adds [Vertices] " <<
+        graph_.vertices.all_cameras_p_ic.size() << " p_ic, " <<
+        graph_.vertices.all_cameras_q_ic.size() << " q_ic, " <<
+        graph_.vertices.all_frames_p_wi.size() << " p_wi, " <<
+        graph_.vertices.all_frames_q_wi.size() << " q_wi, " <<
+        graph_.vertices.all_frames_v_wi.size() << " v_wi, " <<
+        graph_.vertices.all_frames_ba.size() << " ba, " <<
+        graph_.vertices.all_frames_bg.size() << " bg, " <<
+        graph_.vertices.all_features_invdep.size() << " invdep.");
+    ReportInfo("[Backend] Full vio adds [Edges] " <<
+        graph_.edges.all_prior_factors.size() << " prior pose factors, " <<
+        graph_.edges.all_visual_factors.size() << " visual factors, " <<
+        graph_.edges.all_imu_factors.size() << " imu factors.");
+
+    // Add prior information if it is valid.
+    if (states_.prior.is_valid) {
+        problem.prior_hessian() = states_.prior.hessian;
+        problem.prior_bias() = states_.prior.bias;
+        problem.prior_jacobian_t_inv() = states_.prior.jacobian_t_inv;
+        problem.prior_residual() = states_.prior.residual;
+        ReportInfo("[Backend] Before estimation, prior residual squared norm is " <<
+            problem.prior_residual().squaredNorm());
+    }
 }
 
 void Backend::ConstructPureVisualGraphOptimizationProblem(Graph<DorF> &problem) {
@@ -129,6 +154,27 @@ void Backend::AddAllImuPosesInLocalMapToGraph() {
         graph_.vertices.all_frames_q_wi.emplace_back(std::make_unique<VertexQuat<DorF>>(4, 3));
         graph_.vertices.all_frames_q_wi.back()->param() << frame_with_bias.q_wi.w(), frame_with_bias.q_wi.x(), frame_with_bias.q_wi.y(), frame_with_bias.q_wi.z();
         graph_.vertices.all_frames_q_wi.back()->name() = std::string("q_wi") + std::to_string(frame_id);
+
+        ++frame_id;
+    }
+}
+
+void Backend::AddAllImuMotionStatesInLocalMapToGraph() {
+    // [Vertices] Imu velocity of each frame.
+    // [Vertices] Imu bias of accel and gyro in each frame.
+    uint32_t frame_id = data_manager_->visual_local_map()->frames().front().id();
+    for (const auto &frame_with_bias : data_manager_->frames_with_bias()) {
+        graph_.vertices.all_frames_v_wi.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
+        graph_.vertices.all_frames_v_wi.back()->param() = frame_with_bias.v_wi.cast<DorF>();
+        graph_.vertices.all_frames_v_wi.back()->name() = std::string("v_wi") + std::to_string(frame_id);
+
+        graph_.vertices.all_frames_ba.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
+        graph_.vertices.all_frames_ba.back()->param() = frame_with_bias.imu_preint_block.bias_accel().cast<DorF>();
+        graph_.vertices.all_frames_ba.back()->name() = std::string("bias_a") + std::to_string(frame_id);
+
+        graph_.vertices.all_frames_bg.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
+        graph_.vertices.all_frames_bg.back()->param() = frame_with_bias.imu_preint_block.bias_gyro().cast<DorF>();
+        graph_.vertices.all_frames_bg.back()->name() = std::string("bias_g") + std::to_string(frame_id);
 
         ++frame_id;
     }
@@ -300,7 +346,72 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
     return true;
 }
 
+bool Backend::AddImuFactorsToGraph() {
+    RETURN_TRUE_IF(data_manager_->frames_with_bias().size() < 2);
+
+    // [Edges] Imu preintegration block factors.
+    int32_t index = 0;
+    for (auto it = std::next(data_manager_->frames_with_bias().begin()); it != data_manager_->frames_with_bias().end(); ++it, ++index) {
+        // Add edges of imu preintegration between relative imu pose and motion states.
+        const auto &frame_with_bias = *it;
+
+        graph_.edges.all_imu_factors.emplace_back(std::make_unique<EdgeImuPreintegrationBetweenRelativePose<DorF>>(
+            frame_with_bias.imu_preint_block, options_.kGravityInWordFrame));
+        auto &imu_factor = graph_.edges.all_imu_factors.back();
+        imu_factor->SetVertex(graph_.vertices.all_frames_p_wi[index].get(), 0);
+        imu_factor->SetVertex(graph_.vertices.all_frames_q_wi[index].get(), 1);
+        imu_factor->SetVertex(graph_.vertices.all_frames_v_wi[index].get(), 2);
+        imu_factor->SetVertex(graph_.vertices.all_frames_ba[index].get(), 3);
+        imu_factor->SetVertex(graph_.vertices.all_frames_bg[index].get(), 4);
+        imu_factor->SetVertex(graph_.vertices.all_frames_p_wi[index + 1].get(), 5);
+        imu_factor->SetVertex(graph_.vertices.all_frames_q_wi[index + 1].get(), 6);
+        imu_factor->SetVertex(graph_.vertices.all_frames_v_wi[index + 1].get(), 7);
+        imu_factor->SetVertex(graph_.vertices.all_frames_ba[index + 1].get(), 8);
+        imu_factor->SetVertex(graph_.vertices.all_frames_bg[index + 1].get(), 9);
+        imu_factor->name() = std::string("imu factor [") + std::to_string(index + 1) + std::string("~") + std::to_string(index + 2) + std::string("]");
+        RETURN_FALSE_IF(!imu_factor->SelfCheck());
+    }
+
+    return true;
+}
+
 bool Backend::AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph() {
+    RETURN_TRUE_IF(states_.prior.is_valid);
+    RETURN_FALSE_IF(graph_.vertices.all_frames_p_wi.empty() || graph_.vertices.all_frames_q_wi.empty());
+
+    // [Edges] Imu pose prior factor. (In order to fix first imu pose)
+    graph_.edges.all_prior_factors.emplace_back(std::make_unique<EdgePriorPose<DorF>>());
+    auto &prior_factor = graph_.edges.all_prior_factors.back();
+    prior_factor->SetVertex(graph_.vertices.all_frames_p_wi.front().get(), 0);
+    prior_factor->SetVertex(graph_.vertices.all_frames_q_wi.front().get(), 1);
+
+    TMat<DorF> obv = TVec7<DorF>::Zero();
+    obv.block(0, 0, 3, 1) = graph_.vertices.all_frames_p_wi.front()->param();
+    obv.block(3, 0, 4, 1) = graph_.vertices.all_frames_q_wi.front()->param();
+    prior_factor->observation() = obv;
+
+    prior_factor->information() = TMat6<DorF>::Identity() * 1e6;
+    prior_factor->name() = std::string("prior pose");
+    RETURN_FALSE_IF(!prior_factor->SelfCheck());
+
+    // [Edges] Camera extrinsic prior factor.
+    RETURN_TRUE_IF(data_manager_->camera_extrinsics().empty());
+    for (uint32_t i = 0; i < graph_.vertices.all_cameras_p_ic.size(); ++i) {
+        graph_.edges.all_prior_factors.emplace_back(std::make_unique<EdgePriorPose<DorF>>());
+        auto &prior_factor = graph_.edges.all_prior_factors.back();
+        prior_factor->SetVertex(graph_.vertices.all_cameras_p_ic[i].get(), 0);
+        prior_factor->SetVertex(graph_.vertices.all_cameras_q_ic[i].get(), 1);
+
+        TMat<DorF> obv = TVec7<DorF>::Zero();
+        obv.block(0, 0, 3, 1) = graph_.vertices.all_cameras_p_ic[i]->param();
+        obv.block(3, 0, 4, 1) = graph_.vertices.all_cameras_q_ic[i]->param();
+        prior_factor->observation() = obv;
+
+        prior_factor->information() = TMat6<DorF>::Identity() * 1e6;
+        prior_factor->name() = std::string("prior extrinsic ") + std::to_string(i);
+        RETURN_FALSE_IF(!prior_factor->SelfCheck());
+    }
+
     return true;
 }
 

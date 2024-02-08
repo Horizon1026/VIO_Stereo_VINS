@@ -159,7 +159,6 @@ bool Backend::PerformPureVisualBundleAdjustment(const bool use_multi_view) {
         frame_ptr->q_wc() = Quat(param_q(0), param_q(1), param_q(2), param_q(3));
     }
 
-    uint32_t solved_feature_cnt = 0;
     for (uint32_t i = 0; i < graph_.vertices.all_features_id.size(); ++i) {
         auto feature_ptr = data_manager_->visual_local_map()->feature(graph_.vertices.all_features_id[i]);
         const auto &frame_ptr = data_manager_->visual_local_map()->frame(feature_ptr->first_frame_id());
@@ -174,7 +173,6 @@ bool Backend::PerformPureVisualBundleAdjustment(const bool use_multi_view) {
             feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
         } else {
             feature_ptr->status() = FeatureSolvedStatus::kSolved;
-            ++solved_feature_cnt;
         }
         feature_ptr->param() = frame_ptr->q_wc() * p_c + frame_ptr->p_wc();
     }
