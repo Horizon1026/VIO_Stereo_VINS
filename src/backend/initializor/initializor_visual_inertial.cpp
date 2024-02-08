@@ -27,7 +27,7 @@ bool Backend::EstimateGyroBias() {
     // Solve incremental function.
     const Vec3 delta_bias_gyro = hessian.ldlt().solve(bias);
     RETURN_FALSE_IF(std::isnan(delta_bias_gyro.sum()));
-    ReportColorInfo("[Backend] Estimate bias of gyro " << LogVec(delta_bias_gyro));
+    ReportColorInfo("[Backend] Backend estimated bias of gyro " << LogVec(delta_bias_gyro) << ".");
 
     // Update bias of gyro and do preintegration.
     for (auto &frame_with_bias : data_manager_->frames_with_bias()) {

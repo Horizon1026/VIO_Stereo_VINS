@@ -35,8 +35,35 @@ void Backend::ClearGraph() {
     graph_.edges.all_imu_factors.clear();
 }
 
-void Backend::ConstructGraphOptimizationProblem(Graph<DorF> &problem) {
+void Backend::ConstructVioGraphOptimizationProblem(Graph<DorF> &problem) {
     // Add all vertices into graph.
+    for (uint32_t i = 0; i < graph_.vertices.all_cameras_p_ic.size(); ++i) {
+        problem.AddVertex(graph_.vertices.all_cameras_p_ic[i].get());
+        problem.AddVertex(graph_.vertices.all_cameras_q_ic[i].get());
+    }
+
+    const uint32_t pose_num = graph_.vertices.all_frames_p_wi.size();
+    for (uint32_t i = 0; i < pose_num; ++i) {
+        problem.AddVertex(graph_.vertices.all_frames_p_wi[i].get());
+        problem.AddVertex(graph_.vertices.all_frames_q_wi[i].get());
+        problem.AddVertex(graph_.vertices.all_frames_v_wi[i].get());
+        problem.AddVertex(graph_.vertices.all_frames_ba[i].get());
+        problem.AddVertex(graph_.vertices.all_frames_bg[i].get());
+    }
+    for (auto &vertex : graph_.vertices.all_features_invdep) {
+        problem.AddVertex(vertex.get(), false);
+    }
+
+    // Add all edges into graph.
+    for (auto &edge : graph_.edges.all_prior_factors) {
+        problem.AddEdge(edge.get());
+    }
+    for (auto &edge : graph_.edges.all_visual_factors) {
+        problem.AddEdge(edge.get());
+    }
+    for (auto &edge : graph_.edges.all_imu_factors) {
+        problem.AddEdge(edge.get());
+    }
 }
 
 void Backend::ConstructPureVisualGraphOptimizationProblem(Graph<DorF> &problem) {
@@ -91,11 +118,27 @@ void Backend::AddAllCameraPosesInLocalMapToGraph() {
     }
 }
 
-bool Backend::AllFeatureInvdepAndVisualFactorsToGraph(const FeatureType &feature,
-                                                      const float invdep,
-                                                      const TMat2<DorF> &visual_info_matrix,
-                                                      const uint32_t max_frame_id,
-                                                      const bool use_multi_view) {
+void Backend::AddAllImuPosesInLocalMapToGraph() {
+    // [Vertices] Imu pose of each frame.
+    uint32_t frame_id = data_manager_->visual_local_map()->frames().front().id();
+    for (const auto &frame_with_bias : data_manager_->frames_with_bias()) {
+        graph_.vertices.all_frames_p_wi.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
+        graph_.vertices.all_frames_p_wi.back()->param() = frame_with_bias.p_wi.cast<DorF>();
+        graph_.vertices.all_frames_p_wi.back()->name() = std::string("p_wi") + std::to_string(frame_id);
+
+        graph_.vertices.all_frames_q_wi.emplace_back(std::make_unique<VertexQuat<DorF>>(4, 3));
+        graph_.vertices.all_frames_q_wi.back()->param() << frame_with_bias.q_wi.w(), frame_with_bias.q_wi.x(), frame_with_bias.q_wi.y(), frame_with_bias.q_wi.z();
+        graph_.vertices.all_frames_q_wi.back()->name() = std::string("q_wi") + std::to_string(frame_id);
+
+        ++frame_id;
+    }
+}
+
+bool Backend::AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const FeatureType &feature,
+                                                                   const float invdep,
+                                                                   const TMat2<DorF> &visual_info_matrix,
+                                                                   const uint32_t max_frame_id,
+                                                                   const bool use_multi_view) {
     // Determine the range of all observations of this feature.
     const uint32_t min_frame_id = feature.first_frame_id();
     const uint32_t offset = data_manager_->visual_local_map()->frames().front().id();
@@ -136,14 +179,13 @@ bool Backend::AllFeatureInvdepAndVisualFactorsToGraph(const FeatureType &feature
     return true;
 }
 
-bool Backend::AllFeatureInvdepAndVisualFactorsWithCameraExtrinsicsToGraph(const FeatureType &feature,
-                                                      const float invdep,
-                                                      const TMat2<DorF> &visual_info_matrix,
-                                                      const uint32_t max_frame_id,
-                                                      const bool use_multi_view) {
+bool Backend::AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureType &feature,
+                                                                const float invdep,
+                                                                const TMat2<DorF> &visual_info_matrix,
+                                                                const uint32_t max_frame_id,
+                                                                const bool use_multi_view) {
     // Determine the range of all observations of this feature.
     const uint32_t min_frame_id = feature.first_frame_id();
-    const uint32_t idx_offset = min_frame_id - data_manager_->visual_local_map()->frames().front().id() + 1;
 
     // Add vertex of feature invdep.
     graph_.vertices.all_features_id.emplace_back(feature.id());
@@ -187,10 +229,10 @@ bool Backend::AllFeatureInvdepAndVisualFactorsWithCameraExtrinsicsToGraph(const 
         graph_.edges.all_visual_factors.emplace_back(std::make_unique<EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesOneCamera<DorF>>());
         auto &visual_reproj_factor = graph_.edges.all_visual_factors.back();
         visual_reproj_factor->SetVertex(graph_.vertices.all_features_invdep.back().get(), 0);
-        visual_reproj_factor->SetVertex(graph_.vertices.all_frames_p_wi[min_frame_id - idx_offset].get(), 1);
-        visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wi[min_frame_id - idx_offset].get(), 2);
-        visual_reproj_factor->SetVertex(graph_.vertices.all_frames_p_wi[idx - idx_offset].get(), 3);
-        visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wi[idx - idx_offset].get(), 4);
+        visual_reproj_factor->SetVertex(graph_.vertices.all_frames_p_wi[min_frame_id - 1].get(), 1);
+        visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wi[min_frame_id - 1].get(), 2);
+        visual_reproj_factor->SetVertex(graph_.vertices.all_frames_p_wi[idx - 1].get(), 3);
+        visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wi[idx - 1].get(), 4);
         visual_reproj_factor->SetVertex(graph_.vertices.all_cameras_p_ic[0].get(), 5);
         visual_reproj_factor->SetVertex(graph_.vertices.all_cameras_q_ic[0].get(), 6);
         visual_reproj_factor->observation() = observe_vector.cast<DorF>();
@@ -208,10 +250,10 @@ bool Backend::AllFeatureInvdepAndVisualFactorsWithCameraExtrinsicsToGraph(const 
             graph_.edges.all_visual_factors.emplace_back(std::make_unique<EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesTwoCamera<DorF>>());
             auto &visual_reproj_factor = graph_.edges.all_visual_factors.back();
             visual_reproj_factor->SetVertex(graph_.vertices.all_features_invdep.back().get(), 0);
-            visual_reproj_factor->SetVertex(graph_.vertices.all_frames_p_wi[min_frame_id - idx_offset].get(), 1);
-            visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wi[min_frame_id - idx_offset].get(), 2);
-            visual_reproj_factor->SetVertex(graph_.vertices.all_frames_p_wi[idx - idx_offset].get(), 3);
-            visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wi[idx - idx_offset].get(), 4);
+            visual_reproj_factor->SetVertex(graph_.vertices.all_frames_p_wi[min_frame_id - 1].get(), 1);
+            visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wi[min_frame_id - 1].get(), 2);
+            visual_reproj_factor->SetVertex(graph_.vertices.all_frames_p_wi[idx - 1].get(), 3);
+            visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wi[idx - 1].get(), 4);
             visual_reproj_factor->SetVertex(graph_.vertices.all_cameras_p_ic[0].get(), 5);
             visual_reproj_factor->SetVertex(graph_.vertices.all_cameras_q_ic[0].get(), 6);
             visual_reproj_factor->SetVertex(graph_.vertices.all_cameras_p_ic[i].get(), 7);
@@ -249,12 +291,16 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
 
         // Convert feature invdep to vertices, and add visual factors.
         if (add_factors_with_cam_ex) {
-            RETURN_FALSE_IF(!AllFeatureInvdepAndVisualFactorsWithCameraExtrinsicsToGraph(feature, invdep, visual_info_matrix, feature.final_frame_id(), use_multi_view));
+            RETURN_FALSE_IF(!AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(feature, invdep, visual_info_matrix, feature.final_frame_id(), use_multi_view));
         } else {
-            RETURN_FALSE_IF(!AllFeatureInvdepAndVisualFactorsToGraph(feature, invdep, visual_info_matrix, feature.final_frame_id(), use_multi_view));
+            RETURN_FALSE_IF(!AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(feature, invdep, visual_info_matrix, feature.final_frame_id(), use_multi_view));
         }
     }
 
+    return true;
+}
+
+bool Backend::AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph() {
     return true;
 }
 

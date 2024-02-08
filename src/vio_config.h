@@ -79,7 +79,7 @@ struct VioOptionsOfDataLoader {
 };
 
 struct VioOptionsOfDataManager {
-    uint32_t max_num_of_stored_key_frames = 8;
+    uint32_t max_num_of_stored_key_frames = 6;
     bool enable_recording_curve_binlog = true;
     std::string log_file_name = "data_manager.binlog";
     std::vector<Mat3> all_R_ic = {};

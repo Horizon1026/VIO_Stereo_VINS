@@ -38,13 +38,25 @@ enum class BackendMarginalizeType : uint8_t {
     kMarginalizeSubnewFrame = 2,
 };
 
-struct BackendStates {
+struct BackendStatus {
     // Status bits.
     struct {
         uint32_t is_initialized : 1;
         uint32_t reserved : 31;
     };
     BackendMarginalizeType marginalize_type = BackendMarginalizeType::kNotMarginalize;
+};
+
+struct BackendStates {
+    // Motion states.
+    struct {
+        Vec3 p_wi = Vec3::Zero();
+        Quat q_wi = Quat::Identity();
+        Vec3 v_wi = Vec3::Zero();
+        Vec3 ba = Vec3::Zero();
+        Vec3 bg = Vec3::Zero();
+        float time_stamp_s = 0.0f;
+    } motion;
 
     // Prior information.
     struct {
@@ -55,16 +67,6 @@ struct BackendStates {
         TMat<DorF> jacobian_t_inv;
         TVec<DorF> residual;
     } prior;
-
-    // Motion states.
-    struct {
-        Vec3 p_wi = Vec3::Zero();
-        Quat q_wi = Quat::Identity();
-        Vec3 v_wi = Vec3::Zero();
-        Vec3 ba = Vec3::Zero();
-        Vec3 bg = Vec3::Zero();
-        float time_stamp_s = 0.0f;
-    } motion;
 };
 
 /* Vertices and edges for estimation and marginalization. */
@@ -129,21 +131,23 @@ public:
 
     // Backend graph manager.
     void ClearGraph();
-    void ConstructGraphOptimizationProblem(Graph<DorF> &problem);
+    void ConstructVioGraphOptimizationProblem(Graph<DorF> &problem);
     void ConstructPureVisualGraphOptimizationProblem(Graph<DorF> &problem);
     void AddAllCameraExtrinsicsToGraph();
     void AddAllCameraPosesInLocalMapToGraph();
-    bool AllFeatureInvdepAndVisualFactorsToGraph(const FeatureType &feature,
-                                                 const float invdep,
-                                                 const TMat2<DorF> &visual_info_matrix,
-                                                 const uint32_t max_frame_id,
-                                                 const bool use_multi_view = false);
-    bool AllFeatureInvdepAndVisualFactorsWithCameraExtrinsicsToGraph(const FeatureType &feature,
-                                                                     const float invdep,
-                                                                     const TMat2<DorF> &visual_info_matrix,
-                                                                     const uint32_t max_frame_id,
-                                                                     const bool use_multi_view = false);
+    void AddAllImuPosesInLocalMapToGraph();
+    bool AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const FeatureType &feature,
+                                                              const float invdep,
+                                                              const TMat2<DorF> &visual_info_matrix,
+                                                              const uint32_t max_frame_id,
+                                                              const bool use_multi_view = false);
+    bool AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureType &feature,
+                                                           const float invdep,
+                                                           const TMat2<DorF> &visual_info_matrix,
+                                                           const uint32_t max_frame_id,
+                                                           const bool use_multi_view = false);
     bool AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex, const bool use_multi_view = false);
+    bool AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph();
 
     // Backend initializor.
     bool TryToInitialize();
@@ -155,7 +159,7 @@ public:
     bool SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii, const float &scale);
 
     // Backend estimator.
-    bool TryToEstimate();
+    bool TryToEstimate(const bool use_multi_view);
 
     // Reference for member variables.
     BackendOptions &options() { return options_; }
@@ -174,6 +178,8 @@ private:
     // Options of backend.
     BackendOptions options_;
 
+    // Flags of status of backend.
+    BackendStatus status_;
     // Motion and prior states of backend.
     BackendStates states_;
 

@@ -201,7 +201,7 @@ void DataManager::ShowAllFramesWithBias(const int32_t delay_ms) {
     Visualizor::WaitKey(delay_ms);
 }
 
-void DataManager::ShowLocalMapInWorldFrame(const int32_t delay_ms, const bool block_in_loop) {
+void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
     Visualizor3D::Clear();
 
     // Add word frame.
@@ -263,7 +263,7 @@ void DataManager::ShowLocalMapInWorldFrame(const int32_t delay_ms, const bool bl
     // Refresh screen.
     const int32_t delay = delay_ms < 1 ? 0 : delay_ms;
     do {
-        Visualizor3D::Refresh("Visualizor 3D", delay);
+        Visualizor3D::Refresh(title, delay);
     } while (!Visualizor3D::ShouldQuit() && block_in_loop);
 }
 

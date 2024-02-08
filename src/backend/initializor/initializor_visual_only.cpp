@@ -128,23 +128,20 @@ bool Backend::PrepareForPureVisualSfm() {
 bool Backend::PerformPureVisualBundleAdjustment(const bool use_multi_view) {
     // Clear all vectors of vertices and edges.
     ClearGraph();
-
     // [Vertices] Camera pose of each frame in local map.
     AddAllCameraPosesInLocalMapToGraph();
-
     // [Vertices] Inverse depth of each feature.
     // [Edges] Visual reprojection factor.
     const bool add_factors_with_cam_ex = false;
     AddAllFeatureInvdepsAndVisualFactorsToGraph(add_factors_with_cam_ex, use_multi_view);
-
-    // Construct visual bundle adjustment problem.
-    Graph<DorF> graph_optimization_problem;
-    ConstructPureVisualGraphOptimizationProblem(graph_optimization_problem);
-
     // Fix first two camera frame position.
     for (uint32_t i = 0; i < 2; ++i) {
         graph_.vertices.all_frames_p_wc[i]->SetFixed(true);
     }
+
+    // Construct pure visual bundle adjustment problem.
+    Graph<DorF> graph_optimization_problem;
+    ConstructPureVisualGraphOptimizationProblem(graph_optimization_problem);
 
     // Construct solver to solve this problem.
     SolverLm<DorF> solver;

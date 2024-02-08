@@ -12,8 +12,6 @@ bool Backend::TryToInitialize() {
         ReportWarn("[Backend] Backend cannot initialize for lack of frames.");
         return false;
     }
-    // Debug.
-    should_quit_ = true;
 
     // Check if imu motion is enough.
     const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
@@ -70,8 +68,6 @@ bool Backend::TryToInitialize() {
         ReportError("[Backend] Backend failed to sync states after initialization.");
         return false;
     }
-
-    data_manager_->ShowLocalMapInWorldFrame(30, true);
 
     return true;
 }

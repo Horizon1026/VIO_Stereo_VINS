@@ -12,16 +12,31 @@ bool Backend::RunOnce() {
     }
     TickTock timer;
 
-    if (!states_.is_initialized) {
+    if (!status_.is_initialized) {
         timer.TockTickInMillisecond();
         const bool res = TryToInitialize();
         if (res) {
-            states_.is_initialized = true;
+            status_.is_initialized = true;
             ReportColorInfo("[Backend] Backend succeed to initialize within " << timer.TockTickInMillisecond() << " ms.");
+
         } else {
             ResetToReintialize();
             ReportWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
         }
+    }
+
+    if (status_.is_initialized) {
+        timer.TockTickInMillisecond();
+        const bool res = TryToEstimate(true);
+        if (res) {
+            ReportColorInfo("[Backend] Backend succeed to estimate within " << timer.TockTickInMillisecond() << " ms.");
+        } else {
+            ResetToReintialize();
+            ReportWarn("[Backend] Backend failed to estimate. All states will be reset for reinitialization.");
+        }
+
+        // Debug.
+        should_quit_ = true;
     }
 
     // Check data manager components.
@@ -32,10 +47,16 @@ bool Backend::RunOnce() {
 }
 
 void Backend::Reset() {
+    // Clear data manager.
+    data_manager_->visual_local_map()->Clear();
+    data_manager_->frames_with_bias().clear();
 
+    // Clear states flag.
+    status_.is_initialized = false;
 }
 
 void Backend::ResetToReintialize() {
+    status_.is_initialized = false;
     data_manager_->visual_local_map()->Clear();
 
     while (data_manager_->frames_with_bias().size() >= data_manager_->options().kMaxStoredKeyFrames) {
