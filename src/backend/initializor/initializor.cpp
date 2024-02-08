@@ -78,7 +78,7 @@ bool Backend::TryToInitialize() {
 
 bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii, const float &scale) {
     const Vec3 &g_c0 = gravity_c0;
-    const Vec3 &g_w = options_.kGravityInWordFrame();
+    const Vec3 &g_w = options_.kGravityInWordFrame;
 
     // Compute rotation matrix from first camera frame to world frame.
     const float norm = (g_c0.cross(g_w)).norm();
@@ -97,9 +97,9 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
 
     // Recovery all feature states in visual_local_map.
     for (auto &pair : data_manager_->visual_local_map()->features()) {
-        auto &feature_ptr = pair.second;
-        CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kSolved);
-        feature_ptr->param() = q_wc0 * feature_ptr->param() * scale;
+        auto &feature = pair.second;
+        CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved);
+        feature.param() = q_wc0 * feature.param() * scale;
     }
 
     // Recovery all imu states in frames_with_bias.
