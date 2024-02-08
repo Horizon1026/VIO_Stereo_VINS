@@ -150,8 +150,8 @@ public:
     bool PrepareForPureVisualSfm();
     bool PerformPureVisualBundleAdjustment(const bool use_multi_view = false);
     bool EstimateGyroBias();
-    bool EstimateVelocityGravityScaleIn3Dof();
-    bool EstimateVelocityGravityScaleIn2Dof();
+    bool EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale);
+    bool EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii);
 
     // Backend estimator.
     bool TryToEstimate();

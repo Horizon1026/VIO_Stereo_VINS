@@ -39,7 +39,7 @@ bool Backend::EstimateGyroBias() {
     return true;
 }
 
-bool Backend::EstimateVelocityGravityScaleIn3Dof() {
+bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale) {
     const int32_t size = data_manager_->frames_with_bias().size() * 3 + 3 + 1;
     Mat A = Mat::Zero(size, size);
     Vec b = Vec::Zero(size);
@@ -52,19 +52,19 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof() {
     for (auto it = data_manager_->frames_with_bias().cbegin(); std::next(it) != data_manager_->frames_with_bias().cend(); ++it) {
         const auto &cam_frame_i = data_manager_->visual_local_map()->frame(frame_id_i);
         const auto &cam_frame_j = data_manager_->visual_local_map()->frame(frame_id_i + 1);
-
         const auto &imu_frame_i = *it;
         const auto &imu_frame_j = *std::next(it);
 
-        Mat6x10 H = Mat6x10::Zero();
-        Vec6 z = Vec6::Zero();
-        Mat6 Q = Mat6::Identity();
-
+        // Extract all states needed.
         const float &dt = imu_frame_j.imu_preint_block.integrate_time_s();
         const Vec3 &p_wc_i = cam_frame_i->p_wc();
         const Vec3 &p_wc_j = cam_frame_j->p_wc();
         const Mat3 R_iw_i = imu_frame_i.q_wi.inverse().toRotationMatrix();
         const Mat3 R_wi_j = imu_frame_j.q_wi.toRotationMatrix();
+
+        Mat6x10 H = Mat6x10::Zero();
+        Vec6 z = Vec6::Zero();
+        Mat6 Q = Mat6::Identity();
 
         // Construct sub incremental function.
         H.block<3, 3>(0, 0) = - dt * Mat3::Identity();
@@ -79,7 +79,7 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof() {
         Vec sub_b = H.transpose() * Q * z;
 
         // Construct full incremental function.
-        uint32_t index = frame_id_i - data_manager_->visual_local_map()->frames().front().id();
+        const uint32_t index = frame_id_i - data_manager_->visual_local_map()->frames().front().id();
         A.block<6, 6>(index * 3, index * 3) += sub_A.topLeftCorner<6, 6>();
         b.segment<6>(index * 3) += sub_b.head<6>();
         A.bottomRightCorner<4, 4>() += sub_A.bottomRightCorner<4, 4>();
@@ -92,9 +92,8 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof() {
 
     // Solve incremental function.
     const Vec x = A.ldlt().solve(b);
-    const float scale = x.tail<1>()[0];
-    const Vec3 gravity_c0 = x.segment<3>(size - 4);
-    const Vec all_v_ii = x.head(size - 4);
+    gravity_c0 = x.segment<3>(size - 4);
+    scale = x.tail<1>()[0];
     ReportColorInfo("[Backend] Backend estimate scale [" << scale << "]" <<
         ", gravity_c0 " << LogVec(gravity_c0) << " with norm [" << gravity_c0.norm() << "].");
 
@@ -103,7 +102,78 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof() {
     return true;
 }
 
-bool Backend::EstimateVelocityGravityScaleIn2Dof() {
+bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii) {
+    const int32_t size = data_manager_->frames_with_bias().size() * 3 + 2 + 1;
+    Mat A = Mat::Zero(size, size);
+    Vec b = Vec::Zero(size);
+    Vec x = Vec::Zero(size);
+
+    // Extract camera extrinsics.
+    const Vec3 &p_ic = data_manager_->camera_extrinsics().front().p_ic;
+
+    // Fix 1-dof of gravity vector.
+    const float gravity_norm = options_.kGravityInWordFrame.norm();
+    Vec3 estimated_gravity_c0 = gravity_c0.normalized() * gravity_norm;
+    const Mat3x2 basic = Utility::TangentBase(estimated_gravity_c0);
+
+    // Iterate severial times to estimate states.
+    const int32_t max_iteration = 3;
+    for (int32_t iter = 0; iter < max_iteration; ++iter) {
+        // Construct incremental function.
+        uint32_t frame_id_i = data_manager_->visual_local_map()->frames().front().id();
+        for (auto it = data_manager_->frames_with_bias().cbegin(); std::next(it) != data_manager_->frames_with_bias().cend(); ++it) {
+            const auto &cam_frame_i = data_manager_->visual_local_map()->frame(frame_id_i);
+            const auto &cam_frame_j = data_manager_->visual_local_map()->frame(frame_id_i + 1);
+            const auto &imu_frame_i = *it;
+            const auto &imu_frame_j = *std::next(it);
+
+            // Extract all states needed.
+            const float &dt = imu_frame_j.imu_preint_block.integrate_time_s();
+            const Vec3 &p_wc_i = cam_frame_i->p_wc();
+            const Vec3 &p_wc_j = cam_frame_j->p_wc();
+            const Mat3 R_iw_i = imu_frame_i.q_wi.inverse().toRotationMatrix();
+            const Mat3 R_wi_j = imu_frame_j.q_wi.toRotationMatrix();
+
+            Mat6x9 H = Mat6x9::Zero();
+            Vec6 z = Vec6::Zero();
+            Mat6 Q = Mat6::Identity();
+
+            // Construct sub incremental function.
+            H.block<3, 3>(0, 0) = - dt * Mat3::Identity();
+            H.block<3, 2>(0, 6) = 0.5 * R_iw_i * dt * dt * basic;
+            H.block<3, 1>(0, 8) = R_iw_i * (p_wc_j - p_wc_i);
+            H.block<3, 3>(3, 0) = - Mat3::Identity();
+            H.block<3, 3>(3, 3) = R_iw_i * R_wi_j;
+            H.block<3, 2>(3, 6) = R_iw_i * basic * dt;
+            z.block<3, 1>(0, 0) = imu_frame_j.imu_preint_block.p_ij() - p_ic + R_iw_i * R_wi_j * p_ic;
+            z.block<3, 1>(3, 0) = imu_frame_j.imu_preint_block.v_ij() - R_iw_i * dt * estimated_gravity_c0;
+            Mat sub_A = H.transpose() * Q * H;
+            Vec sub_b = H.transpose() * Q * z;
+
+            // Construct full incremental function.
+            const uint32_t index = frame_id_i - data_manager_->visual_local_map()->frames().front().id();
+            A.block<6, 6>(index * 3, index * 3) += sub_A.topLeftCorner<6, 6>();
+            b.segment<6>(index * 3) += sub_b.head<6>();
+            A.bottomRightCorner<3, 3>() += sub_A.bottomRightCorner<3, 3>();
+            b.tail<3>() += sub_b.tail<3>();
+            A.block<6, 3>(index * 3, size - 3) += sub_A.topRightCorner<6, 3>();
+            A.block<3, 6>(size - 3, index * 3) += sub_A.bottomLeftCorner<3, 6>();
+
+            ++frame_id_i;
+        }
+
+        // Solve incremental function.
+        x = A.ldlt().solve(b);
+        const Vec2 delta_gravity = x.segment<2>(size - 3);
+        estimated_gravity_c0 = (estimated_gravity_c0 + basic * delta_gravity).normalized() * gravity_norm;
+
+        BREAK_IF(delta_gravity.squaredNorm() < 1e-6f);
+    }
+
+    // Extract estimation result.
+    all_v_ii = x.segment(0, size - 3);
+    gravity_c0 = estimated_gravity_c0;
+    ReportColorInfo("[Backend] Backend refined gravity_c0 " << LogVec(gravity_c0) << " with norm [" << gravity_c0.norm() << "].");
 
     return true;
 }

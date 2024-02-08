@@ -53,11 +53,14 @@ bool Backend::TryToInitialize() {
     }
 
     // Estimate velocity of each frame, with gravity vector and scale factor.
-    if (!EstimateVelocityGravityScaleIn3Dof()) {
+    Vec3 gravity_c0 = Vec3::Zero();
+    Vec all_v_ii = Vec3::Zero();
+    float scale = 0.0f;
+    if (!EstimateVelocityGravityScaleIn3Dof(gravity_c0, scale)) {
         ReportError("[Backend] Backend failed to estimate velocity, gravity and scale in 3-dof.");
         return false;
     }
-    if (!EstimateVelocityGravityScaleIn2Dof()) {
+    if (!EstimateVelocityGravityScaleIn2Dof(gravity_c0, all_v_ii)) {
         ReportError("[Backend] Backend failed to estimate velocity, gravity and scale in 2-dof.");
         return false;
     }
