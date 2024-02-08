@@ -45,7 +45,6 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof() {
     Vec b = Vec::Zero(size);
 
     // Extract camera extrinsics.
-    const Quat &q_ic = data_manager_->camera_extrinsics().front().q_ic;
     const Vec3 &p_ic = data_manager_->camera_extrinsics().front().p_ic;
 
     // Construct incremental function.
@@ -64,8 +63,8 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof() {
         const float &dt = imu_frame_j.imu_preint_block.integrate_time_s();
         const Vec3 &p_wc_i = cam_frame_i->p_wc();
         const Vec3 &p_wc_j = cam_frame_j->p_wc();
-        const Mat3 R_iw_i = imu_frame_i.q_wi().inverse().toRotationMatrix();
-        const Mat3 R_wi_j = imu_frame_j.q_wi().toRotationMatrix();
+        const Mat3 R_iw_i = imu_frame_i.q_wi.inverse().toRotationMatrix();
+        const Mat3 R_wi_j = imu_frame_j.q_wi.toRotationMatrix();
 
         // Construct sub incremental function.
         H.block<3, 3>(0, 0) = - dt * Mat3::Identity();
@@ -97,8 +96,7 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof() {
     const Vec3 gravity_c0 = x.segment<3>(size - 4);
     const Vec all_v_ii = x.head(size - 4);
     ReportColorInfo("[Backend] Backend estimate scale [" << scale << "]" <<
-        ", gravity_c0 " << LogVec(gravity_c0) <<
-        ", all_v_ii " << LogVec(all_v_ii) << ".");
+        ", gravity_c0 " << LogVec(gravity_c0) << " with norm [" << gravity_c0.norm() << "].");
 
     // Check invalidation.
     RETURN_FALSE_IF(scale < 0 || std::fabs(gravity_c0.norm() - options_.kGravityInWordFrame.norm()) > 1.0f);

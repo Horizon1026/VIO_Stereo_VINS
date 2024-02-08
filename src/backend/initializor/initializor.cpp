@@ -8,13 +8,12 @@ namespace {
 }
 
 bool Backend::TryToInitialize() {
-    // Debug.
-    should_quit_ = true;
-
     if (data_manager_->frames_with_bias().size() < data_manager_->options().kMaxStoredKeyFrames) {
         ReportWarn("[Backend] Backend cannot initialize for lack of frames.");
         return false;
     }
+    // Debug.
+    should_quit_ = true;
 
     // Check if imu motion is enough.
     const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
