@@ -44,8 +44,10 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     solver.problem() = &graph_optimization_problem;
     solver.Solve(states_.prior.is_valid);
 
-    data_manager_->ShowLocalMapInWorldFrame("Estimation result", 30, true);
+    // Update all states in visual_local_map and frames_with_bias.
+    RETURN_FALSE_IF(!SyncGraphVerticesToDataManager(graph_optimization_problem));
 
+    data_manager_->ShowLocalMapInWorldFrame("Estimation result", 30, true);
     return true;
 }
 

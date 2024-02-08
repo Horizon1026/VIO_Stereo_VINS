@@ -415,4 +415,64 @@ bool Backend::AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph() {
     return true;
 }
 
+bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
+    // Update all camera extrinsics.
+    for (uint32_t i = 0; i < graph_.vertices.all_cameras_p_ic.size(); ++i) {
+        data_manager_->camera_extrinsics()[i].p_ic = graph_.vertices.all_cameras_p_ic[i]->param().cast<float>();
+        data_manager_->camera_extrinsics()[i].q_ic.w() = graph_.vertices.all_cameras_q_ic[i]->param()(0);
+        data_manager_->camera_extrinsics()[i].q_ic.x() = graph_.vertices.all_cameras_q_ic[i]->param()(1);
+        data_manager_->camera_extrinsics()[i].q_ic.y() = graph_.vertices.all_cameras_q_ic[i]->param()(2);
+        data_manager_->camera_extrinsics()[i].q_ic.z() = graph_.vertices.all_cameras_q_ic[i]->param()(3);
+    }
+
+    // Update all imu poses and motion states.
+    uint32_t index = 0;
+    for (auto &frame_with_bias : data_manager_->frames_with_bias()) {
+        frame_with_bias.p_wi = graph_.vertices.all_frames_p_wi[index]->param().cast<float>();
+        frame_with_bias.q_wi.w() = graph_.vertices.all_frames_q_wi[index]->param()(0);
+        frame_with_bias.q_wi.x() = graph_.vertices.all_frames_q_wi[index]->param()(1);
+        frame_with_bias.q_wi.y() = graph_.vertices.all_frames_q_wi[index]->param()(2);
+        frame_with_bias.q_wi.z() = graph_.vertices.all_frames_q_wi[index]->param()(3);
+        frame_with_bias.v_wi = graph_.vertices.all_frames_v_wi[index]->param().cast<float>();
+
+        RecomputeImuPreintegrationBlock(graph_.vertices.all_frames_ba[index]->param().cast<float>(),
+            graph_.vertices.all_frames_bg[index]->param().cast<float>(), frame_with_bias);
+        ++index;
+    }
+
+    // Update all camera poses.
+    RETURN_FALSE_IF(!SyncTwiToTwcInLocalMap());
+
+    // Update all feature position.
+    for (uint32_t i = 0; i < graph_.vertices.all_features_id.size(); ++i) {
+        auto feature_ptr = data_manager_->visual_local_map()->feature(graph_.vertices.all_features_id[i]);
+        const auto &frame_ptr = data_manager_->visual_local_map()->frame(feature_ptr->first_frame_id());
+        const auto &norm_xy = feature_ptr->observes().front()[0].rectified_norm_xy;
+        const float invdep = graph_.vertices.all_features_invdep[i]->param()(0);
+        Vec3 p_c = Vec3(norm_xy.x(), norm_xy.y(), 1.0f) / invdep;
+
+        if (std::isnan(p_c.z()) || std::isinf(p_c.z())) {
+            p_c = Vec3(norm_xy.x(), norm_xy.y(), 1.0f) * options_.kDefaultFeatureDepthInMeter;
+            feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
+        } else if (p_c.z() < options_.kMinValidFeatureDepthInMeter) {
+            feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
+        } else {
+            feature_ptr->status() = FeatureSolvedStatus::kSolved;
+        }
+        feature_ptr->param() = frame_ptr->q_wc() * p_c + frame_ptr->p_wc();
+    }
+
+    // Update prior information.
+    if (states_.prior.is_valid) {
+        states_.prior.hessian = problem.prior_hessian();
+        states_.prior.bias = problem.prior_bias();
+        states_.prior.jacobian_t_inv = problem.prior_jacobian_t_inv();
+        states_.prior.residual = problem.prior_residual();
+        ReportInfo("[Backend] After estimation, prior residual squared norm [" <<
+            problem.prior_residual().squaredNorm() << "].");
+    }
+
+    return true;
+}
+
 }

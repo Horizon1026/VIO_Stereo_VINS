@@ -151,6 +151,7 @@ public:
     bool AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex, const bool use_multi_view = false);
     bool AddImuFactorsToGraph();
     bool AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph();
+    bool SyncGraphVerticesToDataManager(const Graph<DorF> &problem);
 
     // Backend initializor.
     bool TryToInitialize();
