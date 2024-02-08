@@ -207,6 +207,7 @@ int main(int argc, char **argv) {
 
     // Config vio.
     vio.ConfigAllComponents();
+    LogFixPercision(4);
 
     // Config visualizor 3d.
     Visualizor3D::camera_view().q_wc = Quat(1.0, -1.0, 0, 0).normalized();

@@ -289,14 +289,19 @@ void DataManager::ShowSimpleInformationOfVisualLocalMap() {
 void DataManager::ShowTinyInformationOfVisualLocalMap() {
     ReportInfo("[DataManager] Visual local map:");
     for (const auto &frame : visual_local_map_->frames()) {
-        ReportInfo(" - frame " << frame.id() << " at " << frame.time_stamp_s() << "s, " <<
-            " q_wc " << LogQuat(frame.q_wc()) << ", p_wc " << LogVec(frame.p_wc()) <<
-            ", v_w " << LogVec(frame.v_w()));
+        ReportInfo(" - cam frame " << frame.id() <<
+            " at " << frame.time_stamp_s() << "s" <<
+            ", q_wc " << LogQuat(frame.q_wc()) <<
+            ", p_wc " << LogVec(frame.p_wc()) <<
+            ", v_wc " << LogVec(frame.v_w()));
     }
     for (const auto &frame : frames_with_bias_) {
-        ReportInfo(" - frame with bias at " << frame.time_stamp_s << "s, " <<
-            "bias a " << LogVec(frame.imu_preint_block.bias_accel()) << ", bias g " <<
-            LogVec(frame.imu_preint_block.bias_gyro()));
+        ReportInfo(" - imu frame at " << frame.time_stamp_s << "s, " <<
+            " q_wi " << LogQuat(frame.q_wi) <<
+            ", p_wi " << LogVec(frame.p_wi) <<
+            ", v_wi " << LogVec(frame.v_wi) <<
+            ", bias_a " << LogVec(frame.imu_preint_block.bias_accel()) <<
+            ", bias_g " << LogVec(frame.imu_preint_block.bias_gyro()));
     }
 }
 

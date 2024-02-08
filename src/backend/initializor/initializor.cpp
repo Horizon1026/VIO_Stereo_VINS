@@ -41,6 +41,13 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
+    // Sync motion states.
+    if (!SyncTwcToTwiInLocalMap()) {
+        ReportError("[Backend] Backend failed to sync motion states.");
+        return false;
+    }
+    data_manager_->ShowTinyInformationOfVisualLocalMap();
+
     // Estimate bias of gyro by visual frame poses.
     if (!EstimateGyroBias()) {
         ReportError("[Backend] Backend failed to estimate bias of gyro.");

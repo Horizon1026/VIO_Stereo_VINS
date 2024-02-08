@@ -14,31 +14,31 @@ namespace VIO {
 
 bool Vio::ConfigAllComponents() {
     if (!ConfigComponentOfDataManager()) {
-        ReportError(RED "[Vio] Failed to configure data manager." RESET_COLOR);
+        ReportColorError( "[Vio] Failed to configure data manager.");
         return false;
     } else {
-        ReportInfo(GREEN "[Vio] Data manager configured." RESET_COLOR);
+        ReportColorInfo( "[Vio] Data manager configured.");
     }
 
     if (!ConfigComponentOfDataLoader()) {
-        ReportError(RED "[Vio] Failed to configure data loader." RESET_COLOR);
+        ReportColorError( "[Vio] Failed to configure data loader.");
         return false;
     } else {
-        ReportInfo(GREEN "[Vio] Data loader configured." RESET_COLOR);
+        ReportColorInfo( "[Vio] Data loader configured.");
     }
 
     if (!ConfigComponentOfFrontend()) {
-        ReportError(RED "[Vio] Failed to configure visual frontend." RESET_COLOR);
+        ReportColorError( "[Vio] Failed to configure visual frontend.");
         return false;
     } else {
-        ReportInfo(GREEN "[Vio] Visual frontend configured." RESET_COLOR);
+        ReportColorInfo( "[Vio] Visual frontend configured.");
     }
 
     if (!ConfigComponentOfBackend()) {
-        ReportError(RED "[Vio] Failed to configure backend." RESET_COLOR);
+        ReportColorError( "[Vio] Failed to configure backend.");
         return false;
     } else {
-        ReportInfo(GREEN "[Vio] Backend configured." RESET_COLOR);
+        ReportColorInfo( "[Vio] Backend configured.");
     }
 
     return true;

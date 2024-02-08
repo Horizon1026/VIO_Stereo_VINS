@@ -33,6 +33,27 @@ void Backend::RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
     }
 }
 
+bool Backend::SyncTwcToTwiInLocalMap() {
+    if (data_manager_->camera_extrinsics().empty()) {
+        ReportError("[Backend] Backend failed to sync states bases on imu frame.");
+        return false;
+    }
+
+    // Extract camera extrinsics.
+    const Quat &q_ic = data_manager_->camera_extrinsics().front().q_ic;
+    const Vec3 &p_ic = data_manager_->camera_extrinsics().front().p_ic;
+
+    // T_wi = T_wc * T_ic.inv.
+    auto it = data_manager_->frames_with_bias().begin();
+    for (const auto &frame : data_manager_->visual_local_map()->frames()) {
+        RETURN_FALSE_IF(it == data_manager_->frames_with_bias().end());
+        Utility::ComputeTransformTransformInverse(frame.p_wc(), frame.q_wc(), p_ic, q_ic, it->p_wi, it->q_wi);
+        ++it;
+    }
+
+    return true;
+}
+
 bool Backend::TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
                                                             const Vec3 init_p_wc,
                                                             const Quat init_q_wc) {

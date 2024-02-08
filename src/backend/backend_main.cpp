@@ -15,10 +15,9 @@ bool Backend::RunOnce() {
     if (!states_.is_initialized) {
         timer.TockTickInMillisecond();
         const bool res = TryToInitialize();
-        data_manager_->ShowTinyInformationOfVisualLocalMap();
         if (res) {
             states_.is_initialized = true;
-            ReportInfo(GREEN "[Backend] Backend succeed to initialize within " << timer.TockTickInMillisecond() << " ms." RESET_COLOR);
+            ReportColorInfo("[Backend] Backend succeed to initialize within " << timer.TockTickInMillisecond() << " ms.");
         } else {
             ResetToReintialize();
             ReportWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
