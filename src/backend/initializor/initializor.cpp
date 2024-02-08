@@ -8,13 +8,13 @@ namespace {
 }
 
 bool Backend::TryToInitialize() {
+    // Debug.
+    should_quit_ = true;
+
     if (data_manager_->frames_with_bias().size() < data_manager_->options().kMaxStoredKeyFrames) {
         ReportWarn("[Backend] Backend cannot initialize for lack of frames.");
         return false;
     }
-
-    // Debug.
-    should_quit_ = true;
 
     // Check if imu motion is enough.
     const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
@@ -46,11 +46,20 @@ bool Backend::TryToInitialize() {
         ReportError("[Backend] Backend failed to sync motion states.");
         return false;
     }
-    data_manager_->ShowTinyInformationOfVisualLocalMap();
 
     // Estimate bias of gyro by visual frame poses.
     if (!EstimateGyroBias()) {
         ReportError("[Backend] Backend failed to estimate bias of gyro.");
+        return false;
+    }
+
+    // Estimate velocity of each frame, with gravity vector and scale factor.
+    if (!EstimateVelocityGravityScaleIn3Dof()) {
+        ReportError("[Backend] Backend failed to estimate velocity, gravity and scale in 3-dof.");
+        return false;
+    }
+    if (!EstimateVelocityGravityScaleIn2Dof()) {
+        ReportError("[Backend] Backend failed to estimate velocity, gravity and scale in 2-dof.");
         return false;
     }
 
