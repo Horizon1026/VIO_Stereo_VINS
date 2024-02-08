@@ -152,6 +152,7 @@ public:
     bool EstimateGyroBias();
     bool EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale);
     bool EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii);
+    bool SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii, const float &scale);
 
     // Backend estimator.
     bool TryToEstimate();
