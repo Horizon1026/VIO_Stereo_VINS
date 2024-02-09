@@ -72,6 +72,11 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
 }
 
 bool Backend::MarginalizeSubnewFrame(const bool use_multi_view) {
+    if (!states_.prior.is_valid) {
+        ReportInfo("[Backend] Prior information is invalid, no need to discard subnew prior information.");
+        return true;
+    }
+
     return true;
 }
 

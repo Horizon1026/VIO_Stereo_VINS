@@ -247,6 +247,7 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
     for (auto &pair : newest_cam_frame.features()) {
         const auto &feature_id = pair.first;
         const auto &feature_ptr = pair.second;
+        CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
         TryToSolveFeaturePositionByFramesObservingIt(feature_id, feature_ptr->first_frame_id(),
             feature_ptr->final_frame_id(), false);
     }

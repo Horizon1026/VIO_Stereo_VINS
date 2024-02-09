@@ -18,10 +18,6 @@ bool Backend::RunOnce() {
             ReportError("[Backend] Backend failed to add newest frame and do states prediction.");
             ResetToReintialize();
         }
-
-        // Debug.
-        signals_.should_quit = true;
-        data_manager_->ShowLocalMapInWorldFrame("Estimation result", 30, true);
     }
 
     if (!status_.is_initialized) {
@@ -68,6 +64,12 @@ bool Backend::RunOnce() {
     // Check data manager components.
     data_manager_->SelfCheckVisualLocalMap();
     data_manager_->SelfCheckFramesWithBias();
+
+    // Debug.
+    if (data_manager_->visual_local_map()->frames().size() > 10) {
+        signals_.should_quit = true;
+        data_manager_->ShowLocalMapInWorldFrame("Estimation result", 30, true);
+    }
 
     return true;
 }
