@@ -57,10 +57,10 @@ void PublishImuData(const std::string &csv_file_path,
         // Waiting for next timestamp.
         while (timer.TockInMillisecond() < period_ms || vio.data_loader()->IsImuBufferFull()) {
             usleep(100);
-            BREAK_IF(vio.backend()->should_quit());
+            BREAK_IF(vio.backend()->signals().should_quit);
         }
 
-        BREAK_IF(vio.backend()->should_quit());
+        BREAK_IF(vio.backend()->signals().should_quit);
     }
 
     file.close();
@@ -110,10 +110,10 @@ void PublishCameraData(const std::string &csv_file_path,
         // Waiting for next timestamp.
         while (timer.TockInMillisecond() < period_ms || vio.data_loader()->IsImageBufferFull()) {
             usleep(100);
-            BREAK_IF(vio.backend()->should_quit());
+            BREAK_IF(vio.backend()->signals().should_quit);
         }
 
-        BREAK_IF(vio.backend()->should_quit());
+        BREAK_IF(vio.backend()->signals().should_quit);
     }
 
     file.close();
@@ -130,10 +130,10 @@ void TestRunVio(const uint32_t max_wait_ticks) {
             ++valid_steps;
         }
         if (valid_steps > max_valid_steps) {
-            vio.backend()->should_quit() = true;
+            vio.backend()->signals().should_quit = true;
         }
 
-        if (vio.backend()->should_quit()) {
+        if (vio.backend()->signals().should_quit) {
             break;
         }
 

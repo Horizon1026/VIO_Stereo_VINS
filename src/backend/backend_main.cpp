@@ -13,17 +13,19 @@ bool Backend::RunOnce() {
     TickTock timer;
 
     if (status_.is_initialized) {
+        // Process newest visual and imu measurements.
         if (!AddNewestFrameWithStatesPredictionToLocalMap()) {
             ReportError("[Backend] Backend failed to add newest frame and do states prediction.");
             ResetToReintialize();
         }
 
         // Debug.
-        should_quit_ = true;
+        signals_.should_quit = true;
         data_manager_->ShowLocalMapInWorldFrame("Estimation result", 30, true);
     }
 
     if (!status_.is_initialized) {
+        // Try to initialize vio if not initialized.
         timer.TockTickInMillisecond();
         const bool res = TryToInitialize();
         if (res) {
@@ -36,16 +38,32 @@ bool Backend::RunOnce() {
     }
 
     if (status_.is_initialized) {
+        // Try to do graph optimization if vio has initialized.
         timer.TockTickInMillisecond();
-        const bool res = TryToEstimate(true);
-        if (res) {
+        const bool estimate_res = TryToEstimate(true);
+        if (estimate_res) {
             ReportColorInfo("[Backend] Backend succeed to estimate within " << timer.TockTickInMillisecond() << " ms.");
         } else {
             ResetToReintialize();
             ReportWarn("[Backend] Backend failed to estimate. All states will be reset for reinitialization.");
         }
 
+        // Decide marginalization type.
+        status_.marginalize_type = DecideMarginalizeType();
+
+        // Try to do marginalization if neccessary.
+        timer.TockTickInMillisecond();
+        const bool marginalize_res = TryToMarginalize(true);
+        if (marginalize_res) {
+            ReportColorInfo("[Backend] Backend succeed to marginalize within " << timer.TockTickInMillisecond() << " ms.");
+        } else {
+            ResetToReintialize();
+            ReportWarn("[Backend] Backend failed to marginalize. All states will be reset for reinitialization.");
+        }
     }
+
+    // Show information of visual local map.
+    data_manager_->ShowTinyInformationOfVisualLocalMap();
 
     // Check data manager components.
     data_manager_->SelfCheckVisualLocalMap();

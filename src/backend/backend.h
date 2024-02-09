@@ -39,12 +39,18 @@ enum class BackendMarginalizeType : uint8_t {
 };
 
 struct BackendStatus {
-    // Status bits.
     struct {
         uint32_t is_initialized : 1;
         uint32_t reserved : 31;
     };
     BackendMarginalizeType marginalize_type = BackendMarginalizeType::kNotMarginalize;
+};
+
+struct BackendSignals {
+    struct {
+        uint32_t should_quit : 1;
+        uint32_t reserved : 31;
+    };
 };
 
 struct BackendStates {
@@ -115,6 +121,21 @@ public:
     bool Configuration(const std::string &log_file_name);
     void RegisterLogPackages();
 
+    // Reference for member variables.
+    BackendOptions &options() { return options_; }
+    VisualFrontend *&visual_frontend() { return visual_frontend_; }
+    DataManager *&data_manager() { return data_manager_; }
+    std::unique_ptr<Imu> &imu_model() { return imu_model_; }
+    BackendSignals &signals() { return signals_; }
+
+    // Const reference for member variables.
+    const BackendOptions &options() const { return options_; }
+    const std::unique_ptr<Imu> &imu_model() const { return imu_model_; }
+    const BackendStatus &status() const { return status_; }
+    const BackendStates &states() const { return states_; }
+    const BackendSignals &signals() const { return signals_; }
+
+private:
     // Backend data processor.
     bool TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
                                                        const Vec3 init_p_wc = Vec3::Zero(),
@@ -165,19 +186,10 @@ public:
 
     // Backend estimator.
     bool TryToEstimate(const bool use_multi_view);
-
-    // Reference for member variables.
-    BackendOptions &options() { return options_; }
-    VisualFrontend *&visual_frontend() { return visual_frontend_; }
-    DataManager *&data_manager() { return data_manager_; }
-    std::unique_ptr<Imu> &imu_model() { return imu_model_; }
-    bool &should_quit() { return should_quit_; }
-
-    // Const reference for member variables.
-    const BackendOptions &options() const { return options_; }
-    const std::unique_ptr<Imu> &imu_model() const { return imu_model_; }
-    const bool &should_quit() const { return should_quit_; }
-    const BackendStates &states() const { return states_; }
+    BackendMarginalizeType DecideMarginalizeType();
+    bool TryToMarginalize(const bool use_multi_view);
+    bool MarginalizeOldestFrame(const bool use_multi_view);
+    bool MarginalizeSubnewFrame(const bool use_multi_view);
 
 private:
     // Options of backend.
@@ -187,6 +199,8 @@ private:
     BackendStatus status_;
     // Motion and prior states of backend.
     BackendStates states_;
+    // Signals of backend.
+    BackendSignals signals_;
 
     // Graph of backend.
     BackendGraph graph_;
