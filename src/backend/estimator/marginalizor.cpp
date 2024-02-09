@@ -68,6 +68,31 @@ bool Backend::TryToMarginalize(const bool use_multi_view) {
 }
 
 bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
+    // Clear all vectors of vertices and edges.
+    ClearGraph();
+    // [Vertices] Camera extrinsics.
+    AddAllCameraExtrinsicsToGraph();
+    // [Vertices] Imu pose of each frame in local map.
+    AddAllImuPosesInLocalMapToGraph();
+    // [Vertices] Imu velocity of each frame.
+    // [Vertices] Imu bias of accel and gyro in each frame.
+    AddAllImuMotionStatesInLocalMapToGraph();
+    // [Vertices] Inverse depth of each feature observed in oldest frame.
+    // [Edges] Visual reprojection factor.
+    RETURN_FALSE_IF(!AddFeatureFirstObserveInOldestFrameAndVisualFactorsToGraph(use_multi_view));
+    // [Edges] Imu pose prior factor. (In order to fix first imu pose)
+    // [Edges] Camera extrinsic prior factor.
+    RETURN_FALSE_IF(!AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph());
+    // [Edges] Imu preintegration block factors.
+    const bool only_add_oldest_one = true;
+    RETURN_FALSE_IF(!AddImuFactorsToGraph(only_add_oldest_one));
+
+    // Construct full visual-inertial problem.
+    Graph<DorF> graph_optimization_problem;
+    ConstructVioGraphOptimizationProblem(graph_optimization_problem);
+
+
+
     return true;
 }
 

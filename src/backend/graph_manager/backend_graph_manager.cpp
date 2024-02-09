@@ -346,7 +346,40 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
     return true;
 }
 
-bool Backend::AddImuFactorsToGraph() {
+bool Backend::AddFeatureFirstObserveInOldestFrameAndVisualFactorsToGraph(const bool use_multi_view) {
+    // Compute information matrix of visual observation.
+    const TMat2<DorF> visual_info_matrix = GetVisualObserveInformationMatrix();
+
+    // Extract index of the oldest frame in visual_local_map;
+    const auto oldest_frame_id = data_manager_->visual_local_map()->frames().front().id();
+
+    // [Vertices] Inverse depth of each feature.
+    // [Edges] Visual reprojection factor.
+    for (const auto &pair : data_manager_->visual_local_map()->features()) {
+        const auto &feature = pair.second;
+        // Select features which is first observed in oldest frame in visual_local_map.
+        CONTINUE_IF(feature.first_frame_id() != oldest_frame_id);
+        // Select features which has at least two observations.
+        CONTINUE_IF(use_multi_view && feature.observes().size() < 2 && feature.observes().front().size() < 2)
+        CONTINUE_IF(!use_multi_view && feature.observes().size() < 2);
+        // Select features which is solved successfully.
+        CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved);
+
+        // Compute inverse depth by p_w of this feature.
+        const auto &frame = data_manager_->visual_local_map()->frame(feature.first_frame_id());
+        const Vec3 p_c = frame->q_wc().inverse() * (feature.param() - frame->p_wc());
+        CONTINUE_IF(p_c.z() < options_.kMinValidFeatureDepthInMeter);
+        const float invdep = 1.0f / p_c.z();
+        CONTINUE_IF(std::isinf(invdep) || std::isnan(invdep));
+
+        // Convert feature invdep to vertices, and add visual factors.
+        RETURN_FALSE_IF(!AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(feature, invdep, visual_info_matrix, feature.final_frame_id(), use_multi_view));
+    }
+
+    return true;
+}
+
+bool Backend::AddImuFactorsToGraph(const bool only_add_oldest_one) {
     RETURN_TRUE_IF(data_manager_->frames_with_bias().size() < 2);
 
     // [Edges] Imu preintegration block factors.
@@ -370,6 +403,8 @@ bool Backend::AddImuFactorsToGraph() {
         imu_factor->SetVertex(graph_.vertices.all_frames_bg[index + 1].get(), 9);
         imu_factor->name() = std::string("imu factor [") + std::to_string(index + 1) + std::string("~") + std::to_string(index + 2) + std::string("]");
         RETURN_FALSE_IF(!imu_factor->SelfCheck());
+
+        BREAK_IF(only_add_oldest_one);
     }
 
     return true;

@@ -30,7 +30,8 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     // [Edges] Camera extrinsic prior factor.
     RETURN_FALSE_IF(!AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph());
     // [Edges] Imu preintegration block factors.
-    RETURN_FALSE_IF(!AddImuFactorsToGraph());
+    const bool only_add_oldest_one = false;
+    RETURN_FALSE_IF(!AddImuFactorsToGraph(only_add_oldest_one));
 
     // Construct full visual-inertial problem.
     Graph<DorF> graph_optimization_problem;
