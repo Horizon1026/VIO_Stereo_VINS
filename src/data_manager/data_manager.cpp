@@ -72,8 +72,7 @@ bool DataManager::ConvertAllFramesWithBiasToLocalMap() {
         visual_local_map_->AddNewFrameWithFeatures(frame.visual_measure->features_id,
                                                    frame.visual_measure->observes_per_frame,
                                                    frame.time_stamp_s,
-                                                   frame_id,
-                                                   raw_images);
+                                                   frame_id, raw_images);
         ++frame_id;
     }
 

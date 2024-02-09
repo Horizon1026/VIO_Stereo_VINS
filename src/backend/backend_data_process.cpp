@@ -185,4 +185,73 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     return true;
 }
 
+bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
+    // Check validation. Frames_with_bias must have one more frame than visual_local_map.
+    if (data_manager_->visual_local_map()->frames().size() + 1 != data_manager_->frames_with_bias().size()) {
+        ReportError("[Backend] Size of frames in local map and in frames_with_bias is not match. [" <<
+            data_manager_->visual_local_map()->frames().size() + 1 << "] != [" <<
+            data_manager_->frames_with_bias().size() << "].");
+        return false;
+    }
+
+    // Extract newest frame with bias.
+    auto &newest_frame_with_bias = data_manager_->frames_with_bias().back();
+    if (newest_frame_with_bias.visual_measure == nullptr) {
+        ReportError("[Backend] Backend find newest_frame_with_bias.visual_measure to be nullptr.");
+        return false;
+    }
+
+    // Preintegrate newest imu measurements.
+    auto it = std::next(data_manager_->frames_with_bias().rbegin());
+    if (it == data_manager_->frames_with_bias().rend()) {
+        ReportError("[Backend] Backend failed to extract subnew frame with bias.");
+        return false;
+    }
+    auto &subnew_frame_with_bias = *it;
+    const Vec3 &bias_accel = subnew_frame_with_bias.imu_preint_block.bias_accel();
+    const Vec3 &bias_gyro = subnew_frame_with_bias.imu_preint_block.bias_gyro();
+    RecomputeImuPreintegrationBlock(bias_accel, bias_gyro, newest_frame_with_bias);
+
+    // Predict pose and velocity of newest frame based on imu frame.
+    const float dt = newest_frame_with_bias.imu_preint_block.integrate_time_s();
+    newest_frame_with_bias.p_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.p_ij() +
+        subnew_frame_with_bias.p_wi + subnew_frame_with_bias.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
+    newest_frame_with_bias.q_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.q_ij();
+    newest_frame_with_bias.v_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.v_ij() +
+        subnew_frame_with_bias.v_wi - options_.kGravityInWordFrame * dt;
+
+    // Add new frame into visual_local_map.
+    std::vector<MatImg> raw_images;
+    if (options_.kEnableLocalMapStoreRawImages && newest_frame_with_bias.packed_measure != nullptr) {
+        if (newest_frame_with_bias.packed_measure->left_image != nullptr) {
+            raw_images.emplace_back(newest_frame_with_bias.packed_measure->left_image->image);
+        }
+        if (newest_frame_with_bias.packed_measure->right_image != nullptr) {
+            raw_images.emplace_back(newest_frame_with_bias.packed_measure->right_image->image);
+        }
+    }
+    const auto &newest_cam_frame_id = data_manager_->visual_local_map()->frames().back().id() + 1;
+    data_manager_->visual_local_map()->AddNewFrameWithFeatures(newest_frame_with_bias.visual_measure->features_id,
+                                                               newest_frame_with_bias.visual_measure->observes_per_frame,
+                                                               newest_frame_with_bias.time_stamp_s,
+                                                               newest_cam_frame_id, raw_images);
+
+    // Sync imu pose to camera pose.
+    const Quat &q_ic = data_manager_->camera_extrinsics().front().q_ic;
+    const Vec3 &p_ic = data_manager_->camera_extrinsics().front().p_ic;
+    auto &newest_cam_frame = data_manager_->visual_local_map()->frames().back();
+    Utility::ComputeTransformTransform(newest_frame_with_bias.p_wi, newest_frame_with_bias.q_wi,
+        p_ic, q_ic, newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
+
+    // Try to triangulize all new features observed in newest frame.
+    for (auto &pair : newest_cam_frame.features()) {
+        const auto &feature_id = pair.first;
+        const auto &feature_ptr = pair.second;
+        TryToSolveFeaturePositionByFramesObservingIt(feature_id, feature_ptr->first_frame_id(),
+            feature_ptr->final_frame_id(), false);
+    }
+
+    return true;
+}
+
 }

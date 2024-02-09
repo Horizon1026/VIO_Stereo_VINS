@@ -129,6 +129,7 @@ public:
                                          FrameWithBias &frame_with_bias);
     bool SyncTwcToTwiInLocalMap();
     bool SyncTwiToTwcInLocalMap();
+    bool AddNewestFrameWithStatesPredictionToLocalMap();
 
     // Backend graph manager.
     void ClearGraph();

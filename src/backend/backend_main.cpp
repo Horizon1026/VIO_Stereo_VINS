@@ -12,13 +12,23 @@ bool Backend::RunOnce() {
     }
     TickTock timer;
 
+    if (status_.is_initialized) {
+        if (!AddNewestFrameWithStatesPredictionToLocalMap()) {
+            ReportError("[Backend] Backend failed to add newest frame and do states prediction.");
+            ResetToReintialize();
+        }
+
+        // Debug.
+        should_quit_ = true;
+        data_manager_->ShowLocalMapInWorldFrame("Estimation result", 30, true);
+    }
+
     if (!status_.is_initialized) {
         timer.TockTickInMillisecond();
         const bool res = TryToInitialize();
         if (res) {
             status_.is_initialized = true;
             ReportColorInfo("[Backend] Backend succeed to initialize within " << timer.TockTickInMillisecond() << " ms.");
-
         } else {
             ResetToReintialize();
             ReportWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
@@ -35,8 +45,6 @@ bool Backend::RunOnce() {
             ReportWarn("[Backend] Backend failed to estimate. All states will be reset for reinitialization.");
         }
 
-        // Debug.
-        should_quit_ = true;
     }
 
     // Check data manager components.

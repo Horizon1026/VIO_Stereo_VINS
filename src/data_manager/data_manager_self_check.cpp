@@ -73,12 +73,6 @@ bool DataManager::SelfCheckFramesWithBias() {
 
         // Check timestamp of imu and images.
         const auto latest_imu_time_stamp_s = frame_with_bias.packed_measure->imus.back()->time_stamp_s;
-        const auto oldest_imu_time_stamp_s = frame_with_bias.packed_measure->imus.front()->time_stamp_s;
-        if (latest_imu_time_stamp_s - oldest_imu_time_stamp_s > 0.055f) {
-            ReportError("[DataManager] Frames with bias self check imus, imu timestamp error [" <<
-                latest_imu_time_stamp_s << "] - [" << oldest_imu_time_stamp_s << "] > 0.055f.");
-            return false;
-        }
         if (frame_with_bias.packed_measure->left_image != nullptr) {
             const auto left_image_time_stamp_s = frame_with_bias.packed_measure->left_image->time_stamp_s;
             if (latest_imu_time_stamp_s != left_image_time_stamp_s) {

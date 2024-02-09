@@ -38,7 +38,7 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
 
     // Construct solver to solve this problem.
     SolverLm<DorF> solver;
-    solver.options().kEnableReportEachIteration = options_.kEnableReportAllInformation;
+    solver.options().kEnableReportEachIteration = false;
     solver.options().kMaxConvergedSquaredStepLength = static_cast<DorF>(1e-4);
     solver.options().kMaxCostTimeInSecond = 0.05f;
     solver.problem() = &graph_optimization_problem;
@@ -46,8 +46,6 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
 
     // Update all states in visual_local_map and frames_with_bias.
     RETURN_FALSE_IF(!SyncGraphVerticesToDataManager(graph_optimization_problem));
-
-    data_manager_->ShowLocalMapInWorldFrame("Estimation result", 30, true);
     return true;
 }
 
