@@ -355,4 +355,26 @@ bool Backend::ControlSizeOfLocalMap() {
     return true;
 }
 
+void Backend::UpdateBackendStates() {
+    states_.motion.time_stamp_s = data_manager_->frames_with_bias().empty() ? 0.0f :
+        data_manager_->frames_with_bias().back().time_stamp_s;
+
+    if (!status_.is_initialized) {
+        states_.prior.is_valid = false;
+        states_.motion.p_wi.setZero();
+        states_.motion.q_wi.setIdentity();
+        states_.motion.v_wi.setZero();
+        states_.motion.ba.setZero();
+        states_.motion.bg.setZero();
+        return;
+    }
+
+    const auto &newest_frame_with_bias = data_manager_->frames_with_bias().back();
+    states_.motion.p_wi = newest_frame_with_bias.p_wi;
+    states_.motion.q_wi = newest_frame_with_bias.q_wi;
+    states_.motion.v_wi = newest_frame_with_bias.v_wi;
+    states_.motion.ba = newest_frame_with_bias.imu_preint_block.bias_accel();
+    states_.motion.bg = newest_frame_with_bias.imu_preint_block.bias_gyro();
+}
+
 }

@@ -16,8 +16,10 @@ bool Backend::RunOnce() {
         // Process newest visual and imu measurements.
         timer.TockTickInMillisecond();
         const bool res = AddNewestFrameWithStatesPredictionToLocalMap();
+        log_package_cost_time_.add_new_frame_into_local_map = timer.TockTickInMillisecond();
         if (res) {
-            ReportColorInfo("[Backend] Backend succeed to add newest frame with states prediction within " << timer.TockTickInMillisecond() << " ms.");
+            ReportColorInfo("[Backend] Backend succeed to add newest frame with states prediction within " <<
+                log_package_cost_time_.add_new_frame_into_local_map << " ms.");
         } else {
             ResetToReintialize();
             ReportColorError("[Backend] Backend failed to add newest frame and do states prediction.");
@@ -28,21 +30,25 @@ bool Backend::RunOnce() {
         // Try to initialize vio if not initialized.
         timer.TockTickInMillisecond();
         const bool res = TryToInitialize();
+        log_package_cost_time_.initialize = timer.TockTickInMillisecond();
         if (res) {
             status_.is_initialized = true;
-            ReportColorInfo("[Backend] Backend succeed to initialize within " << timer.TockTickInMillisecond() << " ms.");
+            ReportColorInfo("[Backend] Backend succeed to initialize within " << log_package_cost_time_.initialize << " ms.");
         } else {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
         }
+    } else {
+        log_package_cost_time_.initialize = 0.0f;
     }
 
     if (status_.is_initialized) {
         // Try to do graph optimization if vio has initialized.
         timer.TockTickInMillisecond();
         const bool estimate_res = TryToEstimate(true);
+        log_package_cost_time_.estimate = timer.TockTickInMillisecond();
         if (estimate_res) {
-            ReportColorInfo("[Backend] Backend succeed to estimate within " << timer.TockTickInMillisecond() << " ms.");
+            ReportColorInfo("[Backend] Backend succeed to estimate within " << log_package_cost_time_.estimate << " ms.");
         } else {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to estimate. All states will be reset for reinitialization.");
@@ -54,23 +60,29 @@ bool Backend::RunOnce() {
         // Try to do marginalization if neccessary.
         timer.TockTickInMillisecond();
         const bool marginalize_res = TryToMarginalize(true);
+        log_package_cost_time_.marginalize = timer.TockTickInMillisecond();
         if (marginalize_res) {
-            ReportColorInfo("[Backend] Backend succeed to marginalize within " << timer.TockTickInMillisecond() << " ms.");
+            ReportColorInfo("[Backend] Backend succeed to marginalize within " << log_package_cost_time_.marginalize << " ms.");
         } else {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to marginalize. All states will be reset for reinitialization.");
         }
+    } else {
+        log_package_cost_time_.estimate = 0.0f;
+        log_package_cost_time_.marginalize = 0.0f;
     }
 
     // Control the dimension of local map.
     RETURN_FALSE_IF(!ControlSizeOfLocalMap());
 
-    // Check data manager components.
-    data_manager_->SelfCheckVisualLocalMap();
-    data_manager_->SelfCheckFramesWithBias();
+    // Update backend states for output.
+    UpdateBackendStates();
 
-    // Debug.
-    data_manager_->ShowLocalMapInWorldFrame("Estimation result", 1, false);
+    // Record logs.
+    RecordBackendLogStates();
+    RecordBackendLogStatus();
+    RecordBackendLogCostTime();
+    RecordBackendLogPriorInformation();
 
     return true;
 }

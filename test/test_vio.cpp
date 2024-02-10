@@ -134,7 +134,10 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         }
 
         if (vio.backend()->signals().should_quit) {
+            vio.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 50, true);
             break;
+        } else {
+            vio.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 1, false);
         }
 
         if (!res) {

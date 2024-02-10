@@ -120,7 +120,6 @@ public:
 
     // Backend log recorder.
     bool Configuration(const std::string &log_file_name);
-    void RegisterLogPackages();
 
     // Reference for member variables.
     BackendOptions &options() { return options_; }
@@ -137,6 +136,13 @@ public:
     const BackendSignals &signals() const { return signals_; }
 
 private:
+    // Backend log recorder.
+    void RegisterLogPackages();
+    void RecordBackendLogStates();
+    void RecordBackendLogStatus();
+    void RecordBackendLogCostTime();
+    void RecordBackendLogPriorInformation();
+
     // Backend data processor.
     bool TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
                                                        const Vec3 init_p_wc = Vec3::Zero(),
@@ -153,6 +159,7 @@ private:
     bool SyncTwiToTwcInLocalMap();
     bool AddNewestFrameWithStatesPredictionToLocalMap();
     bool ControlSizeOfLocalMap();
+    void UpdateBackendStates();
 
     // Backend graph manager.
     void ClearGraph();
