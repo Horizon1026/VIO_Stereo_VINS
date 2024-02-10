@@ -214,17 +214,11 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
 
     // Predict pose and velocity of newest frame based on imu frame.
     const float dt = newest_frame_with_bias.imu_preint_block.integrate_time_s();
-    if (dt < data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
-        newest_frame_with_bias.p_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.p_ij() +
-            subnew_frame_with_bias.p_wi + subnew_frame_with_bias.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
-        newest_frame_with_bias.q_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.q_ij();
-        newest_frame_with_bias.v_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.v_ij() +
-            subnew_frame_with_bias.v_wi - options_.kGravityInWordFrame * dt;
-    } else {
-        newest_frame_with_bias.p_wi = states_.motion.p_wi;
-        newest_frame_with_bias.q_wi = states_.motion.q_wi;
-        newest_frame_with_bias.v_wi = states_.motion.v_wi;
-    }
+    newest_frame_with_bias.p_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.p_ij() +
+        subnew_frame_with_bias.p_wi + subnew_frame_with_bias.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
+    newest_frame_with_bias.q_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.q_ij();
+    newest_frame_with_bias.v_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.v_ij() +
+        subnew_frame_with_bias.v_wi - options_.kGravityInWordFrame * dt;
 
     // Add new frame into visual_local_map.
     std::vector<MatImg> raw_images;

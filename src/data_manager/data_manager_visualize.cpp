@@ -296,8 +296,10 @@ void DataManager::ShowTinyInformationOfVisualLocalMap() {
             ", v_wc " << LogVec(frame.v_w()));
     }
     for (const auto &frame : frames_with_bias_) {
+        const auto &imus_vector = frame.packed_measure->imus;
         ReportInfo(" - imu frame at " << frame.time_stamp_s << "s, " <<
-            " q_wi " << LogQuat(frame.q_wi) <<
+            "imu [" << imus_vector.front()->time_stamp_s << " ~ " << imus_vector.back()->time_stamp_s << "]s" <<
+            ", q_wi " << LogQuat(frame.q_wi) <<
             ", p_wi " << LogVec(frame.p_wi) <<
             ", v_wi " << LogVec(frame.v_wi) <<
             ", bias_a " << LogVec(frame.imu_preint_block.bias_accel()) <<
