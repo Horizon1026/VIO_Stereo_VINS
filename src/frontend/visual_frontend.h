@@ -1,5 +1,5 @@
-#ifndef _VIO_STEREO_BASALT_FRONTEND_H_
-#define _VIO_STEREO_BASALT_FRONTEND_H_
+#ifndef _VIO_STEREO_VINS_FRONTEND_H_
+#define _VIO_STEREO_VINS_FRONTEND_H_
 
 #include "frontend.h"
 #include "frontend_output.h"
@@ -14,4 +14,4 @@ using VisualFrontend = FrontendStereo;
 
 }
 
-#endif // end of _VIO_STEREO_BASALT_FRONTEND_H_
+#endif // end of _VIO_STEREO_VINS_FRONTEND_H_

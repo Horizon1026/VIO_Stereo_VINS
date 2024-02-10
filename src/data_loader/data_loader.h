@@ -1,5 +1,5 @@
-#ifndef _VIO_STEREO_BASALT_DATA_LOADER_H_
-#define _VIO_STEREO_BASALT_DATA_LOADER_H_
+#ifndef _VIO_STEREO_VINS_DATA_LOADER_H_
+#define _VIO_STEREO_VINS_DATA_LOADER_H_
 
 #include "datatype_basic.h"
 #include "datatype_image.h"
@@ -112,4 +112,4 @@ private:
 
 }
 
-#endif // end of _VIO_STEREO_BASALT_DATA_LOADER_H_
+#endif // end of _VIO_STEREO_VINS_DATA_LOADER_H_

@@ -1,5 +1,5 @@
-#ifndef _VIO_STEREO_BASALT_DATA_MANAGER_H_
-#define _VIO_STEREO_BASALT_DATA_MANAGER_H_
+#ifndef _VIO_STEREO_VINS_DATA_MANAGER_H_
+#define _VIO_STEREO_VINS_DATA_MANAGER_H_
 
 #include "datatype_basic.h"
 #include "covisible_graph.h"
@@ -128,4 +128,4 @@ private:
 
 }
 
-#endif // end of _VIO_STEREO_BASALT_DATA_MANAGER_H_
+#endif // end of _VIO_STEREO_VINS_DATA_MANAGER_H_

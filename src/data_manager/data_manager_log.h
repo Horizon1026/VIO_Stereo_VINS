@@ -1,5 +1,5 @@
-#ifndef _VIO_STEREO_BASALT_DATA_MANAGER_LOG_H_
-#define _VIO_STEREO_BASALT_DATA_MANAGER_LOG_H_
+#ifndef _VIO_STEREO_VINS_DATA_MANAGER_LOG_H_
+#define _VIO_STEREO_VINS_DATA_MANAGER_LOG_H_
 
 #include "datatype_basic.h"
 
@@ -42,4 +42,4 @@ struct DataManagerCovisibleGraphLog {
 
 }
 
-#endif // end of _VIO_STEREO_BASALT_DATA_MANAGER_LOG_H_
+#endif // end of _VIO_STEREO_VINS_DATA_MANAGER_LOG_H_

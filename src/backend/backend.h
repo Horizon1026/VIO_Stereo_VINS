@@ -1,5 +1,5 @@
-#ifndef _VIO_STEREO_BASALT_BACKEND_H_
-#define _VIO_STEREO_BASALT_BACKEND_H_
+#ifndef _VIO_STEREO_VINS_BACKEND_H_
+#define _VIO_STEREO_VINS_BACKEND_H_
 
 #include "datatype_basic.h"
 
@@ -10,6 +10,7 @@
 #include "general_graph_optimizor.h"
 
 #include "binary_data_log.h"
+#include "backend_log.h"
 
 namespace VIO {
 
@@ -214,6 +215,9 @@ private:
 
     // Record log.
     BinaryDataLog logger_;
+    BackendLogStates log_package_states_;
+    BackendLogStatus log_package_status_;
+    BackendLogCostTime log_package_cost_time_;
 
     // Signal flags.
     bool should_quit_ = false;  // You can kill all relative threads by checking this flag.
@@ -221,4 +225,4 @@ private:
 
 }
 
-#endif // end of _VIO_STEREO_BASALT_BACKEND_H_
+#endif // end of _VIO_STEREO_VINS_BACKEND_H_

@@ -1,5 +1,5 @@
-#ifndef _VIO_STEREO_BASALT_H_
-#define _VIO_STEREO_BASALT_H_
+#ifndef _VIO_STEREO_VINS_H_
+#define _VIO_STEREO_VINS_H_
 
 #include "vio_config.h"
 
