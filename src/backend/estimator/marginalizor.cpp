@@ -110,6 +110,7 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
 
     marger.problem()->VerticesInformation();
     data_manager_->ShowMatrixImage("hessian", marger.problem()->hessian());
+    data_manager_->ShowMatrixImage("reverse hessian", marger.reverse_hessian());
     data_manager_->ShowMatrixImage("prior hessian", marger.problem()->prior_hessian());
     data_manager_->ShowLocalMapInWorldFrame("Estimation result", 50, true);
 
