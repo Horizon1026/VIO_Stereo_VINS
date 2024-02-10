@@ -221,9 +221,9 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
         newest_frame_with_bias.v_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.v_ij() +
             subnew_frame_with_bias.v_wi - options_.kGravityInWordFrame * dt;
     } else {
-        newest_frame_with_bias.p_wi = subnew_frame_with_bias.p_wi;
-        newest_frame_with_bias.q_wi = subnew_frame_with_bias.q_wi;
-        newest_frame_with_bias.v_wi = subnew_frame_with_bias.v_wi;
+        newest_frame_with_bias.p_wi = states_.motion.p_wi;
+        newest_frame_with_bias.q_wi = states_.motion.q_wi;
+        newest_frame_with_bias.v_wi = states_.motion.v_wi;
     }
 
     // Add new frame into visual_local_map.

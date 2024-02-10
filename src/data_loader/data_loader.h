@@ -52,8 +52,11 @@ public:
     ~DataLoader() = default;
 
     void Clear();
+
+    // Record log.
     bool Configuration(const std::string &log_file_name);
     void RegisterLogPackages();
+    void RecordPackedMeasurementLog(const PackedMeasurement &measure);
 
     // Push measurements into dataloader.
     bool PushImuMeasurement(const Vec3 &accel,
