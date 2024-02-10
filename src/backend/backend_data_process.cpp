@@ -255,7 +255,7 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
         const auto &feature_ptr = pair.second;
         CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
         TryToSolveFeaturePositionByFramesObservingIt(feature_id, feature_ptr->first_frame_id(),
-            feature_ptr->final_frame_id(), false);
+            feature_ptr->final_frame_id(), true);
     }
 
     return true;
@@ -290,7 +290,7 @@ bool Backend::ControlSizeOfLocalMap() {
             subnew_frame.packed_measure->right_image = std::move(newest_frame.packed_measure->right_image);
             // Process imu measurements.
             const uint32_t max_idx = newest_frame.packed_measure->imus.size();
-            if (subnew_frame.imu_preint_block.integrate_time_s() + newest_frame.imu_preint_block.integrate_time_s() >
+            if (subnew_frame.imu_preint_block.integrate_time_s() + newest_frame.imu_preint_block.integrate_time_s() >=
                 data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
                 // If integration time is too long, only integrate the incremental part.
                 for (uint32_t i = 1; i < max_idx; ++i) {

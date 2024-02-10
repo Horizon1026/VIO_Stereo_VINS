@@ -61,7 +61,7 @@ struct VioOptionsOfBackend {
     Vec3 gravity_w = Vec3(0.0f, 0.0f, 9.8f);
     float max_valid_feature_depth_in_meter = 120.0f;
     float min_valid_feature_depth_in_meter = 0.05f;
-    float default_feature_depth_in_meter = 1.0f;
+    float default_feature_depth_in_meter = 3.0f;
 
     float max_tolerence_time_for_estimation_in_second = 0.1f;
 
@@ -79,7 +79,7 @@ struct VioOptionsOfDataLoader {
 };
 
 struct VioOptionsOfDataManager {
-    uint32_t max_num_of_stored_key_frames = 6;
+    uint32_t max_num_of_stored_key_frames = 8;
     float max_time_s_of_imu_preintegration_block = 2.0f;
     bool enable_recording_curve_binlog = true;
     std::string log_file_name = "data_manager.binlog";

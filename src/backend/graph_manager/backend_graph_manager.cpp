@@ -386,7 +386,7 @@ bool Backend::AddImuFactorsToGraph(const bool only_add_oldest_one) {
     for (auto it = std::next(data_manager_->frames_with_bias().begin()); it != data_manager_->frames_with_bias().end(); ++it, ++index) {
         // Add edges of imu preintegration between relative imu pose and motion states.
         const auto &frame_with_bias = *it;
-        CONTINUE_IF(frame_with_bias.imu_preint_block.integrate_time_s() > data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond);
+        CONTINUE_IF(frame_with_bias.imu_preint_block.integrate_time_s() >= data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond);
         RETURN_TRUE_IF(only_add_oldest_one && it != std::next(data_manager_->frames_with_bias().begin()));
 
         graph_.edges.all_imu_factors.emplace_back(std::make_unique<EdgeImuPreintegrationBetweenRelativePose<DorF>>(
@@ -469,8 +469,10 @@ bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
         frame_with_bias.q_wi.z() = graph_.vertices.all_frames_q_wi[index]->param()(3);
         frame_with_bias.v_wi = graph_.vertices.all_frames_v_wi[index]->param().cast<float>();
 
-        RecomputeImuPreintegrationBlock(graph_.vertices.all_frames_ba[index]->param().cast<float>(),
-            graph_.vertices.all_frames_bg[index]->param().cast<float>(), frame_with_bias);
+        if (frame_with_bias.imu_preint_block.integrate_time_s() < options_.kMaxToleranceTimeCostForEstimationInSecond) {
+            RecomputeImuPreintegrationBlock(graph_.vertices.all_frames_ba[index]->param().cast<float>(),
+                graph_.vertices.all_frames_bg[index]->param().cast<float>(), frame_with_bias);
+        }
         ++index;
     }
 
