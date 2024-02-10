@@ -151,6 +151,7 @@ private:
     bool SyncTwcToTwiInLocalMap();
     bool SyncTwiToTwcInLocalMap();
     bool AddNewestFrameWithStatesPredictionToLocalMap();
+    bool ControlSizeOfLocalMap();
 
     // Backend graph manager.
     void ClearGraph();

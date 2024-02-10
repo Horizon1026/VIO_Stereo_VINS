@@ -255,4 +255,35 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
     return true;
 }
 
+bool Backend::ControlSizeOfLocalMap() {
+    RETURN_TRUE_IF(!status_.is_initialized);
+
+    // Remove frames according to marginalization type.
+    switch (status_.marginalize_type) {
+        case BackendMarginalizeType::kMarginalizeOldestFrame: {
+            // Remove oldest frame in visual_local_map and frames_with_bias.
+            const auto oldest_frame_id = data_manager_->visual_local_map()->frames().front().id();
+            data_manager_->visual_local_map()->RemoveFrame(oldest_frame_id);
+            data_manager_->frames_with_bias().pop_front();
+            break;
+        }
+
+        case BackendMarginalizeType::kMarginalizeSubnewFrame: {
+
+            break;
+        }
+
+        default:
+        case BackendMarginalizeType::kNotMarginalize: {
+
+            break;
+        }
+    }
+
+    // Remove useless features.
+    // TODO:
+
+    return true;
+}
+
 }

@@ -14,9 +14,13 @@ bool Backend::RunOnce() {
 
     if (status_.is_initialized) {
         // Process newest visual and imu measurements.
-        if (!AddNewestFrameWithStatesPredictionToLocalMap()) {
-            ReportError("[Backend] Backend failed to add newest frame and do states prediction.");
+        timer.TockTickInMillisecond();
+        const bool res = AddNewestFrameWithStatesPredictionToLocalMap();
+        if (res) {
+            ReportColorInfo("[Backend] Backend succeed to add newest frame with states prediction within " << timer.TockTickInMillisecond() << " ms.");
+        } else {
             ResetToReintialize();
+            ReportColorError("[Backend] Backend failed to add newest frame and do states prediction.");
         }
     }
 
@@ -29,7 +33,7 @@ bool Backend::RunOnce() {
             ReportColorInfo("[Backend] Backend succeed to initialize within " << timer.TockTickInMillisecond() << " ms.");
         } else {
             ResetToReintialize();
-            ReportWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
+            ReportColorWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
         }
     }
 
@@ -41,11 +45,14 @@ bool Backend::RunOnce() {
             ReportColorInfo("[Backend] Backend succeed to estimate within " << timer.TockTickInMillisecond() << " ms.");
         } else {
             ResetToReintialize();
-            ReportWarn("[Backend] Backend failed to estimate. All states will be reset for reinitialization.");
+            ReportColorWarn("[Backend] Backend failed to estimate. All states will be reset for reinitialization.");
         }
 
         // Decide marginalization type.
         status_.marginalize_type = DecideMarginalizeType();
+
+        // Debug.
+        status_.marginalize_type = BackendMarginalizeType::kMarginalizeOldestFrame;
 
         // Try to do marginalization if neccessary.
         timer.TockTickInMillisecond();
@@ -54,12 +61,12 @@ bool Backend::RunOnce() {
             ReportColorInfo("[Backend] Backend succeed to marginalize within " << timer.TockTickInMillisecond() << " ms.");
         } else {
             ResetToReintialize();
-            ReportWarn("[Backend] Backend failed to marginalize. All states will be reset for reinitialization.");
+            ReportColorWarn("[Backend] Backend failed to marginalize. All states will be reset for reinitialization.");
         }
     }
 
-    // Show information of visual local map.
-    data_manager_->ShowTinyInformationOfVisualLocalMap();
+    // Control the dimension of local map.
+    RETURN_FALSE_IF(!ControlSizeOfLocalMap());
 
     // Check data manager components.
     data_manager_->SelfCheckVisualLocalMap();

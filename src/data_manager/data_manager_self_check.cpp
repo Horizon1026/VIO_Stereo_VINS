@@ -57,6 +57,7 @@ bool DataManager::SelfCheckVisualLocalMap() {
 
 bool DataManager::SelfCheckFramesWithBias() {
     // Iterate each frame with bias.
+    float prev_frame_time_stamp_s = 0.0f;
     for (const auto &frame_with_bias : frames_with_bias_) {
         // Check timestamp of visual observations.
         for (const auto &observes : frame_with_bias.visual_measure->observes_per_frame) {
@@ -88,6 +89,21 @@ bool DataManager::SelfCheckFramesWithBias() {
                     latest_imu_time_stamp_s << "] != [" << left_image_time_stamp_s << "].");
                 return false;
             }
+        }
+
+        // Check imu preintegration time between frames.
+        if (frame_with_bias.time_stamp_s == frames_with_bias_.front().time_stamp_s) {
+            prev_frame_time_stamp_s = frame_with_bias.time_stamp_s;
+            continue;
+        }
+        const float imu_dt = frame_with_bias.imu_preint_block.integrate_time_s();
+        const float cam_dt = frame_with_bias.time_stamp_s - prev_frame_time_stamp_s;
+        prev_frame_time_stamp_s = frame_with_bias.time_stamp_s;
+        if (std::fabs(imu_dt - cam_dt) > 0.1f) {
+            ReportError("[DataManager] Frames with bias self check imu preintegration time, integrate_time_s error [" <<
+                imu_dt << "] != [" << cam_dt << "] == [" << frame_with_bias.time_stamp_s << "] - [" <<
+                prev_frame_time_stamp_s << "].");
+            return false;
         }
     }
 
