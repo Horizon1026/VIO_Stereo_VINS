@@ -269,13 +269,35 @@ bool Backend::ControlSizeOfLocalMap() {
         }
 
         case BackendMarginalizeType::kMarginalizeSubnewFrame: {
+            // Merge imu measurements relative to newest and subnew frame.
+            auto it = data_manager_->frames_with_bias().rbegin();
+            auto &newest_frame = *it;
+            ++it;
+            auto &subnew_frame = *it;
+            subnew_frame.time_stamp_s = newest_frame.time_stamp_s;
+            subnew_frame.p_wi = newest_frame.p_wi;
+            subnew_frame.q_wi = newest_frame.q_wi;
+            subnew_frame.v_wi = newest_frame.v_wi;
+            subnew_frame.visual_measure = std::move(newest_frame.visual_measure);
+            subnew_frame.packed_measure->left_image = std::move(newest_frame.packed_measure->left_image);
+            subnew_frame.packed_measure->right_image = std::move(newest_frame.packed_measure->right_image);
+            for (uint32_t i = 1; i < newest_frame.packed_measure->imus.size(); ++i) {
+                subnew_frame.packed_measure->imus.emplace_back(std::move(newest_frame.packed_measure->imus[i]));
+            }
+            RecomputeImuPreintegrationBlock(newest_frame.imu_preint_block.bias_accel(),
+                                            newest_frame.imu_preint_block.bias_gyro(),
+                                            subnew_frame);
+
+            // Remove subnew frame in visual_local_map and frames_with_bias.
+            const auto subnew_frame_id = data_manager_->visual_local_map()->frames().back().id() - 1;
+            data_manager_->visual_local_map()->RemoveFrame(subnew_frame_id);
+            data_manager_->frames_with_bias().pop_back();
 
             break;
         }
 
         default:
         case BackendMarginalizeType::kNotMarginalize: {
-
             break;
         }
     }

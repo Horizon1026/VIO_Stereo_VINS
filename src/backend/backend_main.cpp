@@ -51,9 +51,6 @@ bool Backend::RunOnce() {
         // Decide marginalization type.
         status_.marginalize_type = DecideMarginalizeType();
 
-        // Debug.
-        status_.marginalize_type = BackendMarginalizeType::kMarginalizeOldestFrame;
-
         // Try to do marginalization if neccessary.
         timer.TockTickInMillisecond();
         const bool marginalize_res = TryToMarginalize(true);
