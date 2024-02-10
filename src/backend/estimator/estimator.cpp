@@ -42,7 +42,7 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     SolverLm<DorF> solver;
     solver.options().kEnableReportEachIteration = false;
     solver.options().kMaxConvergedSquaredStepLength = static_cast<DorF>(1e-4);
-    solver.options().kMaxCostTimeInSecond = 0.05f;
+    solver.options().kMaxCostTimeInSecond = options_.kMaxToleranceTimeCostForEstimationInSecond;
     solver.problem() = &graph_optimization_problem;
     solver.Solve(states_.prior.is_valid);
 

@@ -63,9 +63,9 @@ struct VioOptionsOfBackend {
     float min_valid_feature_depth_in_meter = 0.05f;
     float default_feature_depth_in_meter = 1.0f;
 
-    bool enable_report_all_information = false;
-    bool enable_local_map_store_raw_images = false;
+    float max_tolerence_time_for_estimation_in_second = 0.08f;
 
+    bool enable_local_map_store_raw_images = false;
     bool enable_recording_curve_binlog = true;
     std::string log_file_name = "backend.binlog";
 };
@@ -79,8 +79,8 @@ struct VioOptionsOfDataLoader {
 };
 
 struct VioOptionsOfDataManager {
-    uint32_t max_num_of_stored_key_frames = 6;
-    float max_time_s_of_imu_preintegration_block = 1.0f;
+    uint32_t max_num_of_stored_key_frames = 7;
+    float max_time_s_of_imu_preintegration_block = 5.0f;
     bool enable_recording_curve_binlog = true;
     std::string log_file_name = "data_manager.binlog";
     std::vector<Mat3> all_R_ic = {};

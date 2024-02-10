@@ -134,10 +134,9 @@ bool Vio::ConfigComponentOfBackend() {
     backend_->options().kMaxValidFeatureDepthInMeter = options_.backend.max_valid_feature_depth_in_meter;
     backend_->options().kMinValidFeatureDepthInMeter = options_.backend.min_valid_feature_depth_in_meter;
     backend_->options().kDefaultFeatureDepthInMeter = options_.backend.default_feature_depth_in_meter;
+    backend_->options().kMaxToleranceTimeCostForEstimationInSecond = options_.backend.max_tolerence_time_for_estimation_in_second;
 
-    backend_->options().kEnableReportAllInformation = options_.backend.enable_report_all_information;
     backend_->options().kEnableLocalMapStoreRawImages = options_.backend.enable_local_map_store_raw_images;
-
     backend_->options().kEnableRecordBinaryCurveLog = options_.backend.enable_recording_curve_binlog;
     RETURN_FALSE_IF_FALSE(backend_->Configuration(options_.log_file_root_name + options_.backend.log_file_name));
 

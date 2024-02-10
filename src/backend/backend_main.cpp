@@ -6,12 +6,11 @@ namespace VIO {
 
 bool Backend::RunOnce() {
     ReportInfo(MAGENTA "[Backend] Backend is triggerred to run once." RESET_COLOR);
-    if (data_manager_ == nullptr) {
-        ReportError("[Backend] Backend cannot link with data manager.");
-        return false;
-    }
     TickTock timer;
+    TickTock total_timer;
 
+    // Process newest frame into visual local map.
+    log_package_cost_time_.add_new_frame_into_local_map = 0.0f;
     if (status_.is_initialized) {
         // Process newest visual and imu measurements.
         timer.TockTickInMillisecond();
@@ -26,6 +25,8 @@ bool Backend::RunOnce() {
         }
     }
 
+    // Part of initialization.
+    log_package_cost_time_.initialize = 0.0f;
     if (!status_.is_initialized) {
         // Try to initialize vio if not initialized.
         timer.TockTickInMillisecond();
@@ -38,10 +39,11 @@ bool Backend::RunOnce() {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
         }
-    } else {
-        log_package_cost_time_.initialize = 0.0f;
     }
 
+    // Part of estimation and marginalization.
+    log_package_cost_time_.estimate = 0.0f;
+    log_package_cost_time_.marginalize = 0.0f;
     if (status_.is_initialized) {
         // Try to do graph optimization if vio has initialized.
         timer.TockTickInMillisecond();
@@ -67,22 +69,20 @@ bool Backend::RunOnce() {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to marginalize. All states will be reset for reinitialization.");
         }
-    } else {
-        log_package_cost_time_.estimate = 0.0f;
-        log_package_cost_time_.marginalize = 0.0f;
     }
 
     // Control the dimension of local map.
     RETURN_FALSE_IF(!ControlSizeOfLocalMap());
-
     // Update backend states for output.
     UpdateBackendStates();
 
     // Record logs.
+    log_package_cost_time_.total_loop = total_timer.TockTickInMillisecond();
     RecordBackendLogStates();
     RecordBackendLogStatus();
     RecordBackendLogCostTime();
     RecordBackendLogPriorInformation();
+    data_manager_->TriggerLogRecording(states_.motion.time_stamp_s);
 
     return true;
 }

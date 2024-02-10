@@ -25,10 +25,13 @@ struct BackendOptions {
     bool kEnableRecordBinaryCurveLog = true;
     uint32_t kMethodIndexToEstimateGyroBiasForInitialization = 1;
     Vec3 kGravityInWordFrame = Vec3(0.0f, 0.0f, 0.0f);
+
     float kMaxValidFeatureDepthInMeter = 0.0f;
     float kMinValidFeatureDepthInMeter = 0.0f;
     float kDefaultFeatureDepthInMeter = 0.0f;
-    bool kEnableReportAllInformation = false;
+
+    float kMaxToleranceTimeCostForEstimationInSecond = 0.0f;
+
     bool kEnableLocalMapStoreRawImages = true;
 };
 

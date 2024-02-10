@@ -10,27 +10,6 @@ void DataManager::Clear() {
     camera_extrinsics_.clear();
 }
 
-bool DataManager::Configuration(const std::string &log_file_name) {
-    // Register packages for log file.
-    if (options_.kEnableRecordBinaryCurveLog) {
-        if (!logger_.CreateLogFile(log_file_name)) {
-            ReportError("[DataManager] Failed to create log file.");
-            options_.kEnableRecordBinaryCurveLog = false;
-            return false;
-        }
-
-        RegisterLogPackages();
-        logger_.PrepareForRecording();
-    }
-
-    return true;
-}
-
-void DataManager::RegisterLogPackages() {
-    using namespace SLAM_DATA_LOG;
-
-}
-
 // Transform packed measurements to a new frame.
 bool DataManager::ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure,
                                  std::unique_ptr<FrontendOutputData> &new_visual_measure) {

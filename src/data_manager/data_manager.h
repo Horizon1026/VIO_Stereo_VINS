@@ -71,8 +71,12 @@ public:
     ~DataManager() = default;
 
     void Clear();
+
+    // Record log.
     bool Configuration(const std::string &log_file_name);
     void RegisterLogPackages();
+    void TriggerLogRecording(const float time_stamp_s);
+    void RecordLocalMap(const float time_stamp_s);
 
     // Self check.
     bool SelfCheckVisualLocalMap();
