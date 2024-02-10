@@ -23,6 +23,7 @@ using DorF = float;
 /* Options for Data Manager. */
 struct DataManagerOptions {
     uint32_t kMaxStoredKeyFrames = 0;
+    float kMaxValidImuPreintegrationBlockTimeInSecond = 0.0f;
     bool kEnableRecordBinaryCurveLog = false;
 };
 

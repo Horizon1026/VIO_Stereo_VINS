@@ -48,6 +48,7 @@ bool Vio::ConfigComponentOfDataManager() {
     // Config data manager.
     data_manager_ = std::make_unique<DataManager>();
     data_manager_->options().kMaxStoredKeyFrames = options_.data_manager.max_num_of_stored_key_frames;
+    data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond = options_.data_manager.max_time_s_of_imu_preintegration_block;
 
     data_manager_->options().kEnableRecordBinaryCurveLog = options_.data_manager.enable_recording_curve_binlog;
     RETURN_FALSE_IF_FALSE(data_manager_->Configuration(options_.log_file_root_name + options_.data_manager.log_file_name));

@@ -386,6 +386,8 @@ bool Backend::AddImuFactorsToGraph(const bool only_add_oldest_one) {
     for (auto it = std::next(data_manager_->frames_with_bias().begin()); it != data_manager_->frames_with_bias().end(); ++it, ++index) {
         // Add edges of imu preintegration between relative imu pose and motion states.
         const auto &frame_with_bias = *it;
+        CONTINUE_IF(frame_with_bias.imu_preint_block.integrate_time_s() > data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond);
+        RETURN_TRUE_IF(only_add_oldest_one && it != std::next(data_manager_->frames_with_bias().begin()));
 
         graph_.edges.all_imu_factors.emplace_back(std::make_unique<EdgeImuPreintegrationBetweenRelativePose<DorF>>(
             frame_with_bias.imu_preint_block, options_.kGravityInWordFrame));
@@ -402,8 +404,6 @@ bool Backend::AddImuFactorsToGraph(const bool only_add_oldest_one) {
         imu_factor->SetVertex(graph_.vertices.all_frames_bg[index + 1].get(), 9);
         imu_factor->name() = std::string("imu factor [") + std::to_string(index + 1) + std::string("~") + std::to_string(index + 2) + std::string("]");
         RETURN_FALSE_IF(!imu_factor->SelfCheck());
-
-        BREAK_IF(only_add_oldest_one);
     }
 
     return true;

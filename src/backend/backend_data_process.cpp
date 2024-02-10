@@ -214,11 +214,17 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
 
     // Predict pose and velocity of newest frame based on imu frame.
     const float dt = newest_frame_with_bias.imu_preint_block.integrate_time_s();
-    newest_frame_with_bias.p_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.p_ij() +
-        subnew_frame_with_bias.p_wi + subnew_frame_with_bias.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
-    newest_frame_with_bias.q_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.q_ij();
-    newest_frame_with_bias.v_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.v_ij() +
-        subnew_frame_with_bias.v_wi - options_.kGravityInWordFrame * dt;
+    if (dt < data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
+        newest_frame_with_bias.p_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.p_ij() +
+            subnew_frame_with_bias.p_wi + subnew_frame_with_bias.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
+        newest_frame_with_bias.q_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.q_ij();
+        newest_frame_with_bias.v_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.v_ij() +
+            subnew_frame_with_bias.v_wi - options_.kGravityInWordFrame * dt;
+    } else {
+        newest_frame_with_bias.p_wi = subnew_frame_with_bias.p_wi + dt * subnew_frame_with_bias.v_wi;
+        newest_frame_with_bias.q_wi = subnew_frame_with_bias.q_wi;
+        newest_frame_with_bias.v_wi = subnew_frame_with_bias.v_wi;
+    }
 
     // Add new frame into visual_local_map.
     std::vector<MatImg> raw_images;
@@ -274,6 +280,7 @@ bool Backend::ControlSizeOfLocalMap() {
             auto &newest_frame = *it;
             ++it;
             auto &subnew_frame = *it;
+            // Make subnew_frame to be neweset_frame.
             subnew_frame.time_stamp_s = newest_frame.time_stamp_s;
             subnew_frame.p_wi = newest_frame.p_wi;
             subnew_frame.q_wi = newest_frame.q_wi;
@@ -281,12 +288,28 @@ bool Backend::ControlSizeOfLocalMap() {
             subnew_frame.visual_measure = std::move(newest_frame.visual_measure);
             subnew_frame.packed_measure->left_image = std::move(newest_frame.packed_measure->left_image);
             subnew_frame.packed_measure->right_image = std::move(newest_frame.packed_measure->right_image);
-            for (uint32_t i = 1; i < newest_frame.packed_measure->imus.size(); ++i) {
-                subnew_frame.packed_measure->imus.emplace_back(std::move(newest_frame.packed_measure->imus[i]));
+            // Process imu measurements.
+            const uint32_t max_idx = newest_frame.packed_measure->imus.size();
+            if (subnew_frame.imu_preint_block.integrate_time_s() + newest_frame.imu_preint_block.integrate_time_s() >
+                data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
+                // If integration time is too long, only integrate the incremental part.
+                for (uint32_t i = 1; i < max_idx; ++i) {
+                    // Only integration the new part of imu measurements.
+                    subnew_frame.imu_preint_block.Propagate(*newest_frame.packed_measure->imus[i - 1], *newest_frame.packed_measure->imus[i]);
+                }
+                for (uint32_t i = 1; i < max_idx; ++i) {
+                    // Merge imu measurements. Skip the first imu measurements since it is the same.
+                    subnew_frame.packed_measure->imus.emplace_back(std::move(newest_frame.packed_measure->imus[i]));
+                }
+            } else {
+                // If integration time is short, integrate totally for better performance.
+                for (uint32_t i = 1; i < max_idx; ++i) {
+                    subnew_frame.packed_measure->imus.emplace_back(std::move(newest_frame.packed_measure->imus[i]));
+                }
+                RecomputeImuPreintegrationBlock(newest_frame.imu_preint_block.bias_accel(),
+                                                newest_frame.imu_preint_block.bias_gyro(),
+                                                subnew_frame);
             }
-            RecomputeImuPreintegrationBlock(newest_frame.imu_preint_block.bias_accel(),
-                                            newest_frame.imu_preint_block.bias_gyro(),
-                                            subnew_frame);
 
             // Remove subnew frame in visual_local_map and frames_with_bias.
             const auto subnew_frame_id = data_manager_->visual_local_map()->frames().back().id() - 1;
