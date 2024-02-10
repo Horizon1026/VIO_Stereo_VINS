@@ -303,7 +303,31 @@ bool Backend::ControlSizeOfLocalMap() {
     }
 
     // Remove useless features.
-    // TODO:
+    std::vector<uint32_t> features_id;
+    features_id.reserve(100);
+    const auto &newest_keyframe_id = data_manager_->visual_local_map()->frames().back().id() - 2;
+    for (const auto &pair : data_manager_->visual_local_map()->features()) {
+        const auto &feature = pair.second;
+        // Remove features that has no observations.
+        if (feature.observes().empty()) {
+            features_id.emplace_back(feature.id());
+        }
+        // Remove features that cannot has more observations.
+        if (feature.observes().size() < 2 && feature.final_frame_id() < newest_keyframe_id) {
+            features_id.emplace_back(feature.id());
+        }
+        // Remove features that has been marginalized.
+        if (feature.status() == FeatureSolvedStatus::kMarginalized) {
+            features_id.emplace_back(feature.id());
+        }
+    }
+    // Remove selected features.
+    for (const auto &id : features_id) {
+        data_manager_->visual_local_map()->RemoveFeature(id);
+    }
+
+    // Check validation of visual local map.
+    RETURN_FALSE_IF(!data_manager_->visual_local_map()->SelfCheck());
 
     return true;
 }
