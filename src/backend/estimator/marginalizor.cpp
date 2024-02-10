@@ -48,18 +48,19 @@ BackendMarginalizeType Backend::DecideMarginalizeType() {
 bool Backend::TryToMarginalize(const bool use_multi_view) {
     switch (status_.marginalize_type) {
         case BackendMarginalizeType::kMarginalizeOldestFrame: {
-            ReportInfo("[Backend] Backend marginalize oldest frame.");
+            ReportColorInfo("[Backend] Backend marginalize oldest frame.");
+            signals_.should_quit = true;
             return MarginalizeOldestFrame(use_multi_view);
             break;
         }
         case BackendMarginalizeType::kMarginalizeSubnewFrame: {
-            ReportInfo("[Backend] Backend marginalize subnew frame.");
+            ReportColorInfo("[Backend] Backend marginalize subnew frame.");
             return MarginalizeSubnewFrame(use_multi_view);
             break;
         }
         default:
         case BackendMarginalizeType::kNotMarginalize: {
-            ReportInfo("[Backend] Backend not marginalize any frame.");
+            ReportColorInfo("[Backend] Backend not marginalize any frame.");
             break;
         }
     }
@@ -89,9 +90,43 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
 
     // Construct full visual-inertial problem.
     Graph<DorF> graph_optimization_problem;
-    ConstructVioGraphOptimizationProblem(graph_optimization_problem);
+    float prior_residual_norm = 0.0f;
+    ConstructVioGraphOptimizationProblem(graph_optimization_problem, prior_residual_norm);
 
+    // Set vertices to be marged.
+    std::vector<Vertex<DorF> *> vertices_to_be_marged = {
+        graph_.vertices.all_frames_p_wi.front().get(),
+        graph_.vertices.all_frames_q_wi.front().get(),
+        graph_.vertices.all_frames_v_wi.front().get(),
+        graph_.vertices.all_frames_ba.front().get(),
+        graph_.vertices.all_frames_bg.front().get(),
+    };
 
+    // Do marginalization.
+    Marginalizor<DorF> marger;
+    marger.problem() = &graph_optimization_problem;
+    marger.options().kSortDirection = SortMargedVerticesDirection::kSortAtFront;
+    states_.prior.is_valid = marger.Marginalize(vertices_to_be_marged, states_.prior.is_valid);
+
+    marger.problem()->VerticesInformation();
+    data_manager_->ShowMatrixImage("hessian", marger.problem()->hessian());
+    data_manager_->ShowMatrixImage("prior hessian", marger.problem()->prior_hessian());
+    data_manager_->ShowLocalMapInWorldFrame("Estimation result", 50, true);
+
+    // Report the change of prior information.
+    if (states_.prior.is_valid) {
+        ReportInfo("[Backend] Estimation change prior residual squared norm [" << prior_residual_norm <<
+            "] -> [" << graph_optimization_problem.prior_residual().squaredNorm() << "]. Prior size [" <<
+            marger.problem()->prior_hessian().cols() << "].");
+    }
+
+    // Store prior information.
+    if (states_.prior.is_valid) {
+        states_.prior.hessian = marger.problem()->prior_hessian();
+        states_.prior.bias = marger.problem()->prior_bias();
+        states_.prior.jacobian_t_inv = marger.problem()->prior_jacobian_t_inv();
+        states_.prior.residual = marger.problem()->prior_residual();
+    }
 
     return true;
 }

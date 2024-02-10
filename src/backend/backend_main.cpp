@@ -66,12 +66,7 @@ bool Backend::RunOnce() {
     data_manager_->SelfCheckFramesWithBias();
 
     // Debug.
-    if (data_manager_->visual_local_map()->frames().size() > 30) {
-        signals_.should_quit = true;
-        data_manager_->ShowLocalMapInWorldFrame("Estimation result", 30, true);
-    } else {
-        data_manager_->ShowLocalMapInWorldFrame("Estimation result", 1, false);
-    }
+    data_manager_->ShowLocalMapInWorldFrame("Estimation result", 1, false);
 
     return true;
 }

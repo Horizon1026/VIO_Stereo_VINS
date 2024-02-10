@@ -35,7 +35,8 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
 
     // Construct full visual-inertial problem.
     Graph<DorF> graph_optimization_problem;
-    ConstructVioGraphOptimizationProblem(graph_optimization_problem);
+    float prior_residual_norm = 0.0f;
+    ConstructVioGraphOptimizationProblem(graph_optimization_problem, prior_residual_norm);
 
     // Construct solver to solve this problem.
     SolverLm<DorF> solver;
@@ -44,6 +45,12 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     solver.options().kMaxCostTimeInSecond = 0.05f;
     solver.problem() = &graph_optimization_problem;
     solver.Solve(states_.prior.is_valid);
+
+    // Report the change of prior information.
+    if (states_.prior.is_valid) {
+        ReportInfo("[Backend] Estimation change prior residual squared norm [" << prior_residual_norm <<
+            "] -> [" << graph_optimization_problem.prior_residual().squaredNorm() << "].");
+    }
 
     // Update all states in visual_local_map and frames_with_bias.
     RETURN_FALSE_IF(!SyncGraphVerticesToDataManager(graph_optimization_problem));

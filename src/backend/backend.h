@@ -154,7 +154,7 @@ private:
 
     // Backend graph manager.
     void ClearGraph();
-    void ConstructVioGraphOptimizationProblem(Graph<DorF> &problem);
+    void ConstructVioGraphOptimizationProblem(Graph<DorF> &problem, float &prior_residual_norm);
     void ConstructPureVisualGraphOptimizationProblem(Graph<DorF> &problem);
     void AddAllCameraExtrinsicsToGraph();
     void AddAllCameraPosesInLocalMapToGraph();

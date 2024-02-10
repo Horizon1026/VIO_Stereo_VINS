@@ -35,7 +35,7 @@ void Backend::ClearGraph() {
     graph_.edges.all_imu_factors.clear();
 }
 
-void Backend::ConstructVioGraphOptimizationProblem(Graph<DorF> &problem) {
+void Backend::ConstructVioGraphOptimizationProblem(Graph<DorF> &problem, float &prior_residual_norm) {
     // Add all vertices into graph.
     for (uint32_t i = 0; i < graph_.vertices.all_cameras_p_ic.size(); ++i) {
         problem.AddVertex(graph_.vertices.all_cameras_p_ic[i].get());
@@ -86,8 +86,7 @@ void Backend::ConstructVioGraphOptimizationProblem(Graph<DorF> &problem) {
         problem.prior_bias() = states_.prior.bias;
         problem.prior_jacobian_t_inv() = states_.prior.jacobian_t_inv;
         problem.prior_residual() = states_.prior.residual;
-        ReportInfo("[Backend] Before estimation, prior residual squared norm is " <<
-            problem.prior_residual().squaredNorm());
+        prior_residual_norm = problem.prior_residual().squaredNorm();
     }
 }
 
@@ -503,8 +502,6 @@ bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
         states_.prior.bias = problem.prior_bias();
         states_.prior.jacobian_t_inv = problem.prior_jacobian_t_inv();
         states_.prior.residual = problem.prior_residual();
-        ReportInfo("[Backend] After estimation, prior residual squared norm [" <<
-            problem.prior_residual().squaredNorm() << "].");
     }
 
     return true;
