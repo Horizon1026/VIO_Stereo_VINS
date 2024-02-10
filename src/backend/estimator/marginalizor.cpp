@@ -137,6 +137,38 @@ bool Backend::MarginalizeSubnewFrame(const bool use_multi_view) {
         return true;
     }
 
+    if (data_manager_->visual_local_map()->frames().size() < 3) {
+        ReportInfo("[Backend] Totally discard prior information.");
+        states_.prior.is_valid = false;
+        return true;
+    }
+
+    const float prior_residual_norm = states_.prior.residual.squaredNorm();
+    const int32_t size_of_prior = static_cast<int32_t>(states_.prior.hessian.cols());
+
+    // Compute the size of prior information after discarding.
+    const int32_t min_size = (data_manager_->visual_local_map()->frames().size() - 2) * 15 +
+        6 * data_manager_->camera_extrinsics().size();
+    if (states_.prior.hessian.cols() <= min_size) {
+        ReportInfo("[Backend] No prior information is discarded.");
+        return true;
+    }
+
+    // Discard prior information of subnew frame.
+    Marginalizor<DorF> marger;
+    // Prior information of frame to be discarded shoule be directly discarded.
+    marger.DiscardPriorInformation(states_.prior.hessian, states_.prior.bias, min_size, 15);
+    // Prior jacobian_t_inv and residual should be decomposed by hessian and bias.
+    marger.DecomposeHessianAndBias(states_.prior.hessian, states_.prior.bias,
+        states_.prior.jacobian, states_.prior.residual, states_.prior.jacobian_t_inv);
+
+    // Report the change of prior information.
+    if (states_.prior.is_valid) {
+        ReportInfo("[Backend] Estimation change prior residual squared norm [" << prior_residual_norm <<
+            "] -> [" << states_.prior.residual.squaredNorm() << "]. Prior size [" <<
+            size_of_prior << "] -> [" << states_.prior.hessian.cols() << "].");
+    }
+
     return true;
 }
 
