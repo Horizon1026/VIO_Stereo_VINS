@@ -148,8 +148,8 @@ private:
 
     // Backend data processor.
     bool TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
-                                                       const Vec3 init_p_wc = Vec3::Zero(),
-                                                       const Quat init_q_wc = Quat::Identity());
+                                                       const Vec3 &init_p_wc = Vec3::Zero(),
+                                                       const Quat &init_q_wc = Quat::Identity());
     bool TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature_id,
                                                       const int32_t min_frame_id = -1,
                                                       const int32_t max_frame_id = kMaxInt32,

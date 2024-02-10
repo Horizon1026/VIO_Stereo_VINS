@@ -76,8 +76,8 @@ bool Backend::SyncTwiToTwcInLocalMap() {
 }
 
 bool Backend::TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
-                                                            const Vec3 init_p_wc,
-                                                            const Quat init_q_wc) {
+                                                            const Vec3 &init_p_wc,
+                                                            const Quat &init_q_wc) {
     auto frame_ptr = data_manager_->visual_local_map()->frame(frame_id);
     RETURN_FALSE_IF(frame_ptr == nullptr);
     RETURN_FALSE_IF(frame_ptr->features().empty());
