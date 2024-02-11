@@ -41,9 +41,9 @@ struct VioOptionsOfFrontend {
     uint32_t image_rows = 0;
     uint32_t image_cols = 0;
     bool enable_drawing_track_result = false;
-    bool select_keyframe = true;
+    bool select_keyframe = false;
     uint32_t max_feature_number = 121;
-    uint32_t min_feature_number = 60;
+    uint32_t min_feature_number = 40;
     VioOptionsOfFeatureDetector feature_detector;
     VioOptionsOfFeatureTracker feature_tracker;
     bool enable_recording_curve_binlog = true;
