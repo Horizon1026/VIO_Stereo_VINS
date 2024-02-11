@@ -314,7 +314,9 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureTyp
     return true;
 }
 
-bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex, const bool use_multi_view) {
+bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex,
+                                                          const bool use_multi_view,
+                                                          const bool use_only_solved_features) {
     // Compute information matrix of visual observation.
     const TMat2<DorF> visual_info_matrix = GetVisualObserveInformationMatrix();
 
@@ -326,7 +328,7 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
         CONTINUE_IF(use_multi_view && feature.observes().size() < 2 && feature.observes().front().size() < 2)
         CONTINUE_IF(!use_multi_view && feature.observes().size() < 2);
         // Select features which is solved successfully.
-        CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved);
+        CONTINUE_IF(use_only_solved_features && feature.status() != FeatureSolvedStatus::kSolved);
 
         // Compute inverse depth by p_w of this feature.
         const auto &frame = data_manager_->visual_local_map()->frame(feature.first_frame_id());
@@ -469,7 +471,7 @@ bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
         frame_with_bias.q_wi.z() = graph_.vertices.all_frames_q_wi[index]->param()(3);
         frame_with_bias.v_wi = graph_.vertices.all_frames_v_wi[index]->param().cast<float>();
 
-        if (frame_with_bias.imu_preint_block.integrate_time_s() < options_.kMaxToleranceTimeCostForEstimationInSecond) {
+        if (frame_with_bias.imu_preint_block.integrate_time_s() < data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
             RecomputeImuPreintegrationBlock(graph_.vertices.all_frames_ba[index]->param().cast<float>(),
                 graph_.vertices.all_frames_bg[index]->param().cast<float>(), frame_with_bias);
         }
