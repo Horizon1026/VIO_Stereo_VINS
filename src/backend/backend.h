@@ -32,6 +32,7 @@ struct BackendOptions {
 
     float kMaxToleranceTimeCostForEstimationInSecond = 0.0f;
 
+    bool kEnableRecordGlobalMap = true;
     bool kEnableLocalMapStoreRawImages = true;
 };
 
@@ -163,6 +164,7 @@ private:
     bool AddNewestFrameWithStatesPredictionToLocalMap();
     bool ControlSizeOfLocalMap();
     void UpdateBackendStates();
+    bool SelectKeyframesIntoGlobalMap();
 
     // Backend graph manager.
     void ClearGraph();

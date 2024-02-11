@@ -71,6 +71,8 @@ bool Backend::RunOnce() {
         }
     }
 
+    // Add new keyframe into global map if needed.
+    RETURN_FALSE_IF(!SelectKeyframesIntoGlobalMap());
     // Control the dimension of local map.
     RETURN_FALSE_IF(!ControlSizeOfLocalMap());
     // Update backend states for output.

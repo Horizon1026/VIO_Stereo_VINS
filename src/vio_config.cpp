@@ -61,8 +61,8 @@ bool Vio::ConfigComponentOfDataManager() {
     const uint32_t max_camera_num = options_.data_manager.all_R_ic.size();
     for (uint32_t i = 0; i < max_camera_num; ++i) {
         data_manager_->camera_extrinsics().emplace_back(CameraExtrinsic{
-            .q_ic = Quat(options_.data_manager.all_R_ic[i]),
             .p_ic = options_.data_manager.all_t_ic[i],
+            .q_ic = Quat(options_.data_manager.all_R_ic[i]),
         });
     }
 
@@ -136,6 +136,7 @@ bool Vio::ConfigComponentOfBackend() {
     backend_->options().kDefaultFeatureDepthInMeter = options_.backend.default_feature_depth_in_meter;
     backend_->options().kMaxToleranceTimeCostForEstimationInSecond = options_.backend.max_tolerence_time_for_estimation_in_second;
 
+    backend_->options().kEnableRecordGlobalMap = options_.backend.enable_recording_global_map;
     backend_->options().kEnableLocalMapStoreRawImages = options_.backend.enable_local_map_store_raw_images;
     backend_->options().kEnableRecordBinaryCurveLog = options_.backend.enable_recording_curve_binlog;
     RETURN_FALSE_IF_FALSE(backend_->Configuration(options_.log_file_root_name + options_.backend.log_file_name));

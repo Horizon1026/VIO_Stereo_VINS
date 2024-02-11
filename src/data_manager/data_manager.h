@@ -57,8 +57,23 @@ struct FramesCorresbondence {
 /* Definition of Camera Extrinsic. */
 struct CameraExtrinsic {
     // Rotation and translation between imu and camera frame.
-    Quat q_ic = Quat::Identity();
     Vec3 p_ic = Vec3::Zero();
+    Quat q_ic = Quat::Identity();
+};
+
+/* Definition of Global Map Point and Keyframe. */
+struct GlobalMapPoint {
+    // Position based on camera.(If multi-view, only based on camera with id 0)
+    Vec3 p_c = Vec3::Zero();
+};
+struct GlobalMapKeyframe {
+    // Pose based on camera.(If multi-view, only based on camera with id 0)
+    Vec3 p_wc = Vec3::Zero();
+    Quat q_wc = Quat::Identity();
+    // Timestamp of this keyframe.
+    float time_stamp_s = 0.0f;
+    // Feature points based on this keyframe.
+    std::vector<GlobalMapPoint> points;
 };
 
 /* Class Data Manager Declaration. */
@@ -98,6 +113,7 @@ public:
     void ShowAllFramesWithBias(const int32_t delay_ms = 0);
     void ShowLocalMapFramesAndFeatures(const int32_t feature_id = -1, const int32_t camera_id = 0, const int32_t delay_ms = 0);
     void ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop = false);
+    void ShowLocalAndGlobalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop = false);
     void ShowSimpleInformationOfVisualLocalMap();
     void ShowTinyInformationOfVisualLocalMap();
     void ShowMatrixImage(const std::string &title, const Mat &matrix);
@@ -106,20 +122,25 @@ public:
     DataManagerOptions &options() { return options_; }
     CovisibleGraphType *visual_local_map() { return visual_local_map_.get(); }
     std::deque<FrameWithBias> &frames_with_bias() { return frames_with_bias_; }
+    std::vector<GlobalMapKeyframe> &global_map_keyframes() { return global_map_keyframes_; }
     std::vector<CameraExtrinsic> &camera_extrinsics() { return camera_extrinsics_; }
 
 private:
-    // Support for visualizor of managed data.
+    // Support for visualizor.
     RgbPixel GetFeatureColor(const FeatureType &feature);
+    void ShowLocalMapInWorldFrame();
+    void ShowGlobalMapInWorldFrame();
 
 private:
     // Options for data manager.
     DataManagerOptions options_;
 
-    // All frames and map points.
+    // All frames and map points in local map.
     std::unique_ptr<CovisibleGraphType> visual_local_map_ = std::make_unique<CovisibleGraphType>();
-    // All frames with bias.
+    // All frames with bias in local map.
     std::deque<FrameWithBias> frames_with_bias_;
+    // All keyframes and points in global map.
+    std::vector<GlobalMapKeyframe> global_map_keyframes_;
     // Camera extrinsics.
     std::vector<CameraExtrinsic> camera_extrinsics_;
 

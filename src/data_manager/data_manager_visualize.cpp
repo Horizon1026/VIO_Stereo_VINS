@@ -201,9 +201,7 @@ void DataManager::ShowAllFramesWithBias(const int32_t delay_ms) {
     Visualizor::WaitKey(delay_ms);
 }
 
-void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
-    Visualizor3D::Clear();
-
+void DataManager::ShowLocalMapInWorldFrame() {
     // Add word frame.
     Visualizor3D::poses().emplace_back(PoseType{
         .p_wb = Vec3::Zero(),
@@ -254,11 +252,52 @@ void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32
             }
         }
     }
+}
+
+void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
+    Visualizor3D::Clear();
+    ShowLocalMapInWorldFrame();
 
     // Set visualizor camera view by newest frame.
-    const Vec3 p_c = Vec3(0, 0, 1);
-    const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
-    Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
+    if (!visual_local_map_->frames().empty()) {
+        const Vec3 p_c = Vec3(0, 0, 1);
+        const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
+        Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
+    }
+
+    // Refresh screen.
+    const int32_t delay = delay_ms < 1 ? 0 : delay_ms;
+    do {
+        Visualizor3D::Refresh(title, delay);
+    } while (!Visualizor3D::ShouldQuit() && block_in_loop);
+}
+
+void DataManager::ShowGlobalMapInWorldFrame() {
+    RETURN_IF(global_map_keyframes_.empty());
+
+    for (const auto &keyframe : global_map_keyframes_) {
+        Visualizor3D::poses().emplace_back(PoseType{ .p_wb = keyframe.p_wc, .q_wb = keyframe.q_wc, .scale = 0.2f });
+        for (const auto &point : keyframe.points) {
+            Visualizor3D::points().emplace_back(PointType{
+                .p_w = keyframe.q_wc * point.p_c + keyframe.p_wc,
+                .color = RgbPixel{.r = 255, .g = 255, .b = 0},
+                .radius = 2,
+            });
+        }
+    }
+}
+
+void DataManager::ShowLocalAndGlobalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
+    Visualizor3D::Clear();
+    ShowLocalMapInWorldFrame();
+    ShowGlobalMapInWorldFrame();
+
+    // Set visualizor camera view by newest frame.
+    if (!visual_local_map_->frames().empty()) {
+        const Vec3 p_c = Vec3(0, 0, 1);
+        const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
+        Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
+    }
 
     // Refresh screen.
     const int32_t delay = delay_ms < 1 ? 0 : delay_ms;

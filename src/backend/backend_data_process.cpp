@@ -375,4 +375,34 @@ void Backend::UpdateBackendStates() {
     states_.motion.bg = newest_frame_with_bias.imu_preint_block.bias_gyro();
 }
 
+bool Backend::SelectKeyframesIntoGlobalMap() {
+    RETURN_TRUE_IF(!options_.kEnableRecordGlobalMap);
+    RETURN_TRUE_IF(data_manager_->visual_local_map()->frames().empty());
+
+    bool add_oldest_one_into_global_map = data_manager_->global_map_keyframes().empty();
+    if (!add_oldest_one_into_global_map) {
+        add_oldest_one_into_global_map = data_manager_->visual_local_map()->frames().front().time_stamp_s() -
+            data_manager_->global_map_keyframes().back().time_stamp_s > 3.0f;
+    }
+    RETURN_TRUE_IF(!add_oldest_one_into_global_map);
+
+    const auto &oldest_frame = data_manager_->visual_local_map()->frames().front();
+    data_manager_->global_map_keyframes().emplace_back(GlobalMapKeyframe{});
+    auto &new_keyframe = data_manager_->global_map_keyframes().back();
+    new_keyframe.time_stamp_s = oldest_frame.time_stamp_s();
+    new_keyframe.p_wc = oldest_frame.p_wc();
+    new_keyframe.q_wc = oldest_frame.q_wc();
+
+    for (const auto &pair : oldest_frame.features()) {
+        const auto &feature_ptr = pair.second;
+        CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kSolved);
+        new_keyframe.points.emplace_back(GlobalMapPoint{
+            .p_c = oldest_frame.q_wc().inverse() * (feature_ptr->param() - oldest_frame.p_wc()),
+        });
+    }
+
+    ReportColorInfo("[Backend] New keyframe with " << new_keyframe.points.size() << " points is added into global map.");
+    return true;
+}
+
 }

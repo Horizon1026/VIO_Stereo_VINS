@@ -8,6 +8,7 @@ void DataManager::Clear() {
     }
     frames_with_bias_.clear();
     camera_extrinsics_.clear();
+    global_map_keyframes_.clear();
 }
 
 // Transform packed measurements to a new frame.
