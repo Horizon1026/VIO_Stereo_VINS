@@ -243,6 +243,10 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
     Utility::ComputeTransformTransform(newest_frame_with_bias.p_wi, newest_frame_with_bias.q_wi,
         p_ic, q_ic, newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
 
+    // Try to triangulize newest frame for better pose estimation.
+    // Eliminate the drift of prediction from only imu.
+    TryToSolveFramePoseByFeaturesObservedByItself(newest_cam_frame.id(), newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
+
     // Try to triangulize all new features observed in newest frame.
     for (auto &pair : newest_cam_frame.features()) {
         const auto &feature_id = pair.first;

@@ -61,9 +61,9 @@ struct VioOptionsOfBackend {
     Vec3 gravity_w = Vec3(0.0f, 0.0f, 9.8f);
     float max_valid_feature_depth_in_meter = 120.0f;
     float min_valid_feature_depth_in_meter = 0.05f;
-    float default_feature_depth_in_meter = 3.0f;
+    float default_feature_depth_in_meter = 2.0f;
 
-    float max_tolerence_time_for_estimation_in_second = 0.1f;
+    float max_tolerence_time_for_estimation_in_second = 0.05f;
 
     bool enable_local_map_store_raw_images = false;
     bool enable_recording_curve_binlog = true;

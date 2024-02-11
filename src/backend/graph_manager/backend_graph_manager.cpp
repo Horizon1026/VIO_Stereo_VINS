@@ -327,6 +327,8 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
         // Select features which has at least two observations.
         CONTINUE_IF(use_multi_view && feature.observes().size() < 2 && feature.observes().front().size() < 2)
         CONTINUE_IF(!use_multi_view && feature.observes().size() < 2);
+        // Select features which is first observed in keyframes.(This is important.)
+        CONTINUE_IF(feature.first_frame_id() > data_manager_->visual_local_map()->frames().back().id() - 2);
         // Select features which is solved successfully.
         CONTINUE_IF(use_only_solved_features && feature.status() != FeatureSolvedStatus::kSolved);
 
