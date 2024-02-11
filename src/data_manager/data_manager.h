@@ -27,20 +27,11 @@ struct DataManagerOptions {
     bool kEnableRecordBinaryCurveLog = false;
 };
 
-/* Definition of Feature Points. */
+/* Definition of Covisible Graph for Local Map. */
 using FeatureParameter = Vec3;
-
-/* Definition of Covisible Graph. */
 using FeatureObserve = std::vector<ObservePerView>; // Use std::vector to store observations of left and right camera.
 using FeatureType = VisualFeature<FeatureParameter, FeatureObserve>;
 using CovisibleGraphType = CovisibleGraph<FeatureParameter, FeatureObserve>;
-
-/* Definition of Camera Extrinsic. */
-struct CameraExtrinsic {
-    // Rotation and translation between imu and camera frame.
-    Quat q_ic = Quat::Identity();
-    Vec3 p_ic = Vec3::Zero();
-};
 
 /* Definition of Frame and FrameWithBias. */
 using FrameType = VisualFrame<FeatureType>;
@@ -61,6 +52,13 @@ struct FrameWithBias {
 struct FramesCorresbondence {
     int32_t num_of_covisible_features = 0;
     float average_parallax = 0.0f;
+};
+
+/* Definition of Camera Extrinsic. */
+struct CameraExtrinsic {
+    // Rotation and translation between imu and camera frame.
+    Quat q_ic = Quat::Identity();
+    Vec3 p_ic = Vec3::Zero();
 };
 
 /* Class Data Manager Declaration. */
