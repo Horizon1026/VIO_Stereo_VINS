@@ -130,6 +130,7 @@ private:
     RgbPixel GetFeatureColor(const FeatureType &feature);
     void ShowLocalMapInWorldFrame();
     void ShowGlobalMapInWorldFrame();
+    void ShowInformationWithStringsInVisualizor();
     void UpdateVisualizorCameraView();
 
 private:

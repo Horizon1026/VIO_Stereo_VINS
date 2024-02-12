@@ -254,6 +254,15 @@ void DataManager::ShowLocalMapInWorldFrame() {
     }
 }
 
+void DataManager::ShowInformationWithStringsInVisualizor() {
+    Visualizor3D::strings().emplace_back(std::string("<local map> ") + std::to_string(visual_local_map_->frames().size()) +
+        std::string(" frames, ") + std::to_string(visual_local_map_->features().size()) + std::string(" features."));
+    RETURN_IF(visual_local_map_->frames().empty());
+
+    Visualizor3D::strings().emplace_back(std::string("<time stamp> ") + std::to_string(visual_local_map_->frames().back().time_stamp_s()) +
+        std::string("s."));
+}
+
 void DataManager::UpdateVisualizorCameraView() {
     // Set visualizor camera view by newest frame.
     if (!visual_local_map_->frames().empty()) {
@@ -271,6 +280,7 @@ void DataManager::UpdateVisualizorCameraView() {
 void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
     Visualizor3D::Clear();
     ShowLocalMapInWorldFrame();
+    ShowInformationWithStringsInVisualizor();
 
     // Refresh screen.
     UpdateVisualizorCameraView();
@@ -299,6 +309,7 @@ void DataManager::ShowLocalAndGlobalMapInWorldFrame(const std::string &title, co
     Visualizor3D::Clear();
     ShowLocalMapInWorldFrame();
     ShowGlobalMapInWorldFrame();
+    ShowInformationWithStringsInVisualizor();
 
     // Refresh screen.
     UpdateVisualizorCameraView();
