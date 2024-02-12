@@ -254,18 +254,26 @@ void DataManager::ShowLocalMapInWorldFrame() {
     }
 }
 
-void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
-    Visualizor3D::Clear();
-    ShowLocalMapInWorldFrame();
-
+void DataManager::UpdateVisualizorCameraView() {
     // Set visualizor camera view by newest frame.
     if (!visual_local_map_->frames().empty()) {
+        Vec3 euler = Utility::QuaternionToEuler(Visualizor3D::camera_view().q_wc);
+        euler.x() = -90.0f;
+        euler.y() = 0.0f;
+        Visualizor3D::camera_view().q_wc = Utility::EulerToQuaternion(euler);
+
         const Vec3 p_c = Vec3(0, 0, 1);
         const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
         Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
     }
+}
+
+void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
+    Visualizor3D::Clear();
+    ShowLocalMapInWorldFrame();
 
     // Refresh screen.
+    UpdateVisualizorCameraView();
     const int32_t delay = delay_ms < 1 ? 0 : delay_ms;
     do {
         Visualizor3D::Refresh(title, delay);
@@ -292,14 +300,8 @@ void DataManager::ShowLocalAndGlobalMapInWorldFrame(const std::string &title, co
     ShowLocalMapInWorldFrame();
     ShowGlobalMapInWorldFrame();
 
-    // Set visualizor camera view by newest frame.
-    if (!visual_local_map_->frames().empty()) {
-        const Vec3 p_c = Vec3(0, 0, 1);
-        const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
-        Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
-    }
-
     // Refresh screen.
+    UpdateVisualizorCameraView();
     const int32_t delay = delay_ms < 1 ? 0 : delay_ms;
     do {
         Visualizor3D::Refresh(title, delay);
