@@ -11,6 +11,7 @@ struct VioOptionsOfCamera {
     float fy = 0.0f;
     float cx = 0.0f;
     float cy = 0.0f;
+
     float k1 = 0.0f;
     float k2 = 0.0f;
     float k3 = 0.0f;
@@ -40,24 +41,22 @@ struct VioOptionsOfFeatureTracker {
 struct VioOptionsOfFrontend {
     uint32_t image_rows = 0;
     uint32_t image_cols = 0;
-    bool enable_drawing_track_result = false;
-    bool select_keyframe = false;
+
     uint32_t max_feature_number = 121;
     uint32_t min_feature_number = 40;
+
     VioOptionsOfFeatureDetector feature_detector;
     VioOptionsOfFeatureTracker feature_tracker;
+
+    bool select_keyframe = false;
+
+    bool enable_drawing_track_result = false;
     bool enable_recording_curve_binlog = true;
     bool enable_recording_image_binlog = false;
     std::string log_file_name = "frontend.binlog";
 };
 
 struct VioOptionsOfBackend {
-    /* Method index explaination: */
-    // Method 1: Method in Vins-Mono.
-    // Method 2: Robust vio initialization - Heyijia.
-    // Method 3: Visual rotation directly estimate gyro bias.
-    uint32_t method_index_to_estimate_gyro_bias_for_initialization = 3;
-
     Vec3 gravity_w = Vec3(0.0f, 0.0f, 9.8f);
     float max_valid_feature_depth_in_meter = 120.0f;
     float min_valid_feature_depth_in_meter = 0.05f;
@@ -74,31 +73,35 @@ struct VioOptionsOfBackend {
 struct VioOptionsOfDataLoader {
     uint32_t max_size_of_imu_buffer = 200;
     uint32_t max_size_of_image_buffer = 20;
+
     bool enable_recording_curve_binlog = true;
-    std::string log_file_name = "data_loader.binlog";
     bool enable_recording_raw_data_binlog = true;
+    std::string log_file_name = "data_loader.binlog";
 };
 
 struct VioOptionsOfDataManager {
+    std::vector<Mat3> all_R_ic = {};
+    std::vector<Vec3> all_t_ic = {};
+
     uint32_t max_num_of_stored_key_frames = 8;
     float max_time_s_of_imu_preintegration_block = 10.0f;
     bool enable_recording_curve_binlog = true;
     std::string log_file_name = "data_manager.binlog";
-    std::vector<Mat3> all_R_ic = {};
-    std::vector<Vec3> all_t_ic = {};
 };
 
 /* Options for vio. */
 struct VioOptions {
-    std::string log_file_root_name = "../../Slam_Workspace/output/";
     float max_tolerence_time_s_for_no_data = 2.0f;
     float heart_beat_period_time_s = 1.0f;
+
     std::vector<VioOptionsOfCamera> cameras;
     VioOptionsOfImu imu;
     VioOptionsOfFrontend frontend;
     VioOptionsOfBackend backend;
     VioOptionsOfDataLoader data_loader;
     VioOptionsOfDataManager data_manager;
+
+    std::string log_file_root_name = "../../Slam_Workspace/output/";
 };
 
 }

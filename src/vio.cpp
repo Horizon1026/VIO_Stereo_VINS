@@ -12,7 +12,8 @@ bool Vio::RunOnce() {
     if (!res) {
         const float time_s_for_no_data = measure_invalid_timer_.TockInSecond();
         if (time_s_for_no_data > options_.max_tolerence_time_s_for_no_data) {
-            ReportInfo("[Vio] Failed to load packed measures for " << time_s_for_no_data << " s. Skip this tick.");
+            ReportWarn("[Vio] Failed to load packed measures for " << time_s_for_no_data << " s. Stop vio thread.");
+            backend_->signals().should_quit = true;
         }
         return false;
     }

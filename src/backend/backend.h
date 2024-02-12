@@ -23,7 +23,9 @@ using DorF = float;
 /* Options for Backend. */
 struct BackendOptions {
     bool kEnableRecordBinaryCurveLog = true;
-    uint32_t kMethodIndexToEstimateGyroBiasForInitialization = 1;
+    bool kEnableRecordGlobalMap = true;
+    bool kEnableLocalMapStoreRawImages = true;
+
     Vec3 kGravityInWordFrame = Vec3(0.0f, 0.0f, 0.0f);
 
     float kMaxValidFeatureDepthInMeter = 0.0f;
@@ -31,9 +33,6 @@ struct BackendOptions {
     float kDefaultFeatureDepthInMeter = 0.0f;
 
     float kMaxToleranceTimeCostForEstimationInSecond = 0.0f;
-
-    bool kEnableRecordGlobalMap = true;
-    bool kEnableLocalMapStoreRawImages = true;
 };
 
 /* Status of Backend. */

@@ -376,6 +376,7 @@ void Backend::UpdateBackendStates() {
 }
 
 bool Backend::SelectKeyframesIntoGlobalMap() {
+    RETURN_TRUE_IF(!status_.is_initialized);
     RETURN_TRUE_IF(!options_.kEnableRecordGlobalMap);
     RETURN_TRUE_IF(data_manager_->visual_local_map()->frames().empty());
 

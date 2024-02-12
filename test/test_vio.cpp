@@ -122,7 +122,7 @@ void PublishCameraData(const std::string &csv_file_path,
 
 void TestRunVio(const uint32_t max_wait_ticks) {
     uint32_t cnt = max_wait_ticks;
-    const uint32_t max_valid_steps = 3700;
+    const uint32_t max_valid_steps = 3682;
     uint32_t valid_steps = 0;
     while (cnt) {
         const bool res = vio.RunOnce();
@@ -134,7 +134,6 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         }
 
         if (vio.backend()->signals().should_quit) {
-            vio.data_manager()->ShowLocalAndGlobalMapInWorldFrame("Vio 3d local map", 50, true);
             break;
         } else {
             vio.data_manager()->ShowLocalAndGlobalMapInWorldFrame("Vio 3d local map", 1, false);
@@ -147,6 +146,8 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         }
         cnt = max_wait_ticks;
     }
+
+    vio.data_manager()->ShowLocalAndGlobalMapInWorldFrame("Vio 3d local map", 50, true);
 }
 
 static std::ofstream g_txt_log("../output/vio_log.txt");
