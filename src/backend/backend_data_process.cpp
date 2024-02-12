@@ -382,23 +382,23 @@ bool Backend::SelectKeyframesIntoGlobalMap() {
 
     bool add_oldest_one_into_global_map = data_manager_->global_map_keyframes().empty();
     if (!add_oldest_one_into_global_map) {
-        add_oldest_one_into_global_map = data_manager_->visual_local_map()->frames().front().time_stamp_s() -
-            data_manager_->global_map_keyframes().back().time_stamp_s > 3.0f;
+        add_oldest_one_into_global_map = (data_manager_->visual_local_map()->frames().back().p_wc() -
+            data_manager_->global_map_keyframes().back().p_wc).norm() > 3.0f;
     }
     RETURN_TRUE_IF(!add_oldest_one_into_global_map);
 
-    const auto &oldest_frame = data_manager_->visual_local_map()->frames().front();
+    const auto &newest_frame = data_manager_->visual_local_map()->frames().back();
     data_manager_->global_map_keyframes().emplace_back(GlobalMapKeyframe{});
     auto &new_keyframe = data_manager_->global_map_keyframes().back();
-    new_keyframe.time_stamp_s = oldest_frame.time_stamp_s();
-    new_keyframe.p_wc = oldest_frame.p_wc();
-    new_keyframe.q_wc = oldest_frame.q_wc();
+    new_keyframe.time_stamp_s = newest_frame.time_stamp_s();
+    new_keyframe.p_wc = newest_frame.p_wc();
+    new_keyframe.q_wc = newest_frame.q_wc();
 
-    for (const auto &pair : oldest_frame.features()) {
+    for (const auto &pair : newest_frame.features()) {
         const auto &feature_ptr = pair.second;
         CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kSolved);
         new_keyframe.points.emplace_back(GlobalMapPoint{
-            .p_c = oldest_frame.q_wc().inverse() * (feature_ptr->param() - oldest_frame.p_wc()),
+            .p_c = newest_frame.q_wc().inverse() * (feature_ptr->param() - newest_frame.p_wc()),
         });
     }
 

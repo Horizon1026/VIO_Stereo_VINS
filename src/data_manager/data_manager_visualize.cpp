@@ -14,28 +14,28 @@ namespace {
 }
 
 RgbPixel DataManager::GetFeatureColor(const FeatureType &feature) {
-    RgbPixel pixel_color = RgbPixel{.r = 255, .g = 255, .b = 0};
+    RgbPixel pixel_color = RgbColor::kLightSkyBlue;
     switch (feature.status()) {
         case FeatureSolvedStatus::kSolved:
             if (feature.observes().size() > 1) {
                 // If this feature is observed in different frame.
-                pixel_color = RgbPixel{.r = 0, .g = 255, .b = 0};
+                pixel_color = RgbColor::kLaunGreen;
             } else {
                 // If this feature is only observed in one frame but has stereo view.
-                pixel_color = RgbPixel{.r = 255, .g = 255, .b = 0};
+                pixel_color = RgbColor::kLightGreen;
             }
             break;
         case FeatureSolvedStatus::kMarginalized:
-            pixel_color = RgbPixel{.r = 0, .g = 0, .b = 255};
+            pixel_color = RgbColor::kPurple;
             break;
         default:
         case FeatureSolvedStatus::kUnsolved:
-            pixel_color = RgbPixel{.r = 255, .g = 0, .b = 0};
+            pixel_color = RgbColor::kRed;
             break;
     }
 
     if (feature.observes().size() == 1 && feature.observes().front().size() == 1) {
-        pixel_color = RgbPixel{.r = 255, .g = 255, .b = 255};
+        pixel_color = RgbColor::kSlateGray;
     }
 
     return pixel_color;
@@ -111,7 +111,7 @@ void DataManager::ShowLocalMapFramesAndFeatures(const int32_t feature_id, const 
         // Type basic information of each frame.
         const int32_t font_size = 16;
         const RgbPixel info_color = frame_id >= static_cast<int32_t>(visual_local_map_->frames().size() - options_.kMaxStoredKeyFrames) ?
-            RgbPixel{.r = 255, .g = 0, .b = 0} : RgbPixel{.r = 0, .g = 255, .b = 0};
+            RgbColor::kRed : RgbColor::kGreen;
         Visualizor::DrawString(show_image, std::string("[ ") + std::to_string(frame.id()) + std::string(" | ") + std::to_string(frame.time_stamp_s()) + std::string("s ]"),
             col_offset, row_offset, info_color, font_size);
         // Draw all observed features in this frame and this camera image.
@@ -180,14 +180,14 @@ void DataManager::ShowAllFramesWithBias(const int32_t delay_ms) {
         // Type basic information of each frame.
         const int32_t font_size = 16;
         const RgbPixel info_color = frame_id >= static_cast<int32_t>(options_.kMaxStoredKeyFrames - options_.kMaxStoredKeyFrames) ?
-            RgbPixel{.r = 255, .g = 0, .b = 0} : RgbPixel{.r = 0, .g = 255, .b = 0};
+            RgbColor::kRed : RgbColor::kGreen;
         Visualizor::DrawString(show_image, std::string("[ ") + std::to_string(frame_with_bias.time_stamp_s) + std::string("s ]"),
             col_offset, row_offset, info_color, font_size);
 
         // Draw all observed features in this frame and this camera image.
         for (uint32_t i = 0; i < frame_with_bias.visual_measure->features_id.size(); ++i) {
             const Vec2 pixel_uv = frame_with_bias.visual_measure->observes_per_frame[i][0].raw_pixel_uv + Vec2(col_offset, row_offset);
-            const RgbPixel pixel_color = RgbPixel{.r = 0, .g = 255, .b = 127};
+            const RgbPixel pixel_color = RgbColor::kDeepSkyBlue;
             Visualizor::DrawSolidCircle(show_image, pixel_uv.x(), pixel_uv.y(), 3, pixel_color);
             Visualizor::DrawString(show_image, std::to_string(frame_with_bias.visual_measure->features_id[i]),
                 pixel_uv.x(), pixel_uv.y(), pixel_color);
@@ -238,7 +238,7 @@ void DataManager::ShowLocalMapInWorldFrame() {
 
         // Link relative imu pose.
         if (is_p_wi0_valid) {
-            Visualizor3D::lines().emplace_back(LineType{ .p_w_i = p_wi0, .p_w_j = p_wi, .color = RgbPixel{.r = 255, .g = 255, .b = 255} });
+            Visualizor3D::lines().emplace_back(LineType{ .p_w_i = p_wi0, .p_w_j = p_wi, .color = RgbColor::kWhite });
         }
         p_wi0 = p_wi;
         is_p_wi0_valid = true;
@@ -280,7 +280,7 @@ void DataManager::ShowGlobalMapInWorldFrame() {
         for (const auto &point : keyframe.points) {
             Visualizor3D::points().emplace_back(PointType{
                 .p_w = keyframe.q_wc * point.p_c + keyframe.p_wc,
-                .color = RgbPixel{.r = 255, .g = 255, .b = 0},
+                .color = RgbColor::kAliceBlue,
                 .radius = 2,
             });
         }

@@ -64,7 +64,7 @@ struct VioOptionsOfBackend {
 
     float max_tolerence_time_for_estimation_in_second = 0.05f;
 
-    bool enable_recording_global_map = false;
+    bool enable_recording_global_map = true;
     bool enable_local_map_store_raw_images = false;
     bool enable_recording_curve_binlog = true;
     std::string log_file_name = "backend.binlog";
