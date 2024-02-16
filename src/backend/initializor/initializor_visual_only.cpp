@@ -11,7 +11,7 @@ namespace {
     constexpr int32_t kMinValidCovisibleFeaturesNumberForPureVisualSfm = 30;
 }
 
-bool Backend::PrepareForPureVisualSfm() {
+bool Backend::PrepareForPureVisualSfmByMonoView() {
     // Find the frame with best corresbondence with the first frame.
     FramesCorresbondence best_corres = FramesCorresbondence{
         .num_of_covisible_features = static_cast<int32_t>(visual_frontend_->options().kMaxStoredFeaturePointsNumber),
@@ -121,6 +121,11 @@ bool Backend::PrepareForPureVisualSfm() {
                 std::min(feature_ptr->final_frame_id(), frame.id()));
         }
     }
+
+    return true;
+}
+
+bool Backend::PrepareForPureVisualSfmByMultiView() {
 
     return true;
 }

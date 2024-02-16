@@ -27,7 +27,7 @@ bool Backend::TryToInitialize() {
     }
 
     // Compute initialized value of visual local map.
-    if (!PrepareForPureVisualSfm()) {
+    if (!PrepareForPureVisualSfmByMonoView()) {
         ReportError("[Backend] Backend failed to prepare for pure visual SFM.");
         return false;
     }

@@ -193,7 +193,8 @@ private:
 
     // Backend initializor.
     bool TryToInitialize();
-    bool PrepareForPureVisualSfm();
+    bool PrepareForPureVisualSfmByMonoView();
+    bool PrepareForPureVisualSfmByMultiView();
     bool PerformPureVisualBundleAdjustment(const bool use_multi_view = false);
     bool EstimateGyroBias();
     bool EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale);
