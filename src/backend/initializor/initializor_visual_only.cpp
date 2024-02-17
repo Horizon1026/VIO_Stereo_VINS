@@ -126,6 +126,32 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
 }
 
 bool Backend::PrepareForPureVisualSfmByMultiView() {
+    RETURN_FALSE_IF(data_manager_->camera_extrinsics().size() < 2);
+
+    // Set the first frame to be origin.
+    const int32_t ref_frame_id = data_manager_->visual_local_map()->frames().front().id();
+    auto first_frame = data_manager_->visual_local_map()->frame(ref_frame_id);
+    first_frame->p_wc().setZero();
+    first_frame->q_wc().setIdentity();
+
+    // Triangulize all features observed in each frame. And estimate pose of each frame.
+    for (auto &frame : data_manager_->visual_local_map()->frames()) {
+        for (auto &pair : frame.features()) {
+            auto feature_ptr = pair.second;
+            CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
+
+            TryToSolveFeaturePositionByFramesObservingIt(feature_ptr->id(), feature_ptr->first_frame_id(),
+                std::min(feature_ptr->final_frame_id(), frame.id()), true);
+        }
+
+        // No need to estimate pose of first frame.
+        CONTINUE_IF(frame.id() == static_cast<uint32_t>(ref_frame_id));
+
+        if (!TryToSolveFramePoseByFeaturesObservedByItself(frame.id())) {
+            ReportWarn("[Backend] Backend failed to estimate pose of frame [" << frame.id() << "].");
+            return false;
+        }
+    }
 
     return true;
 }
