@@ -20,7 +20,7 @@ bool Vio::RunOnce() {
     measure_invalid_timer_.TockTickInSecond();
 
     // Check integrity of the packed measurements.
-    if (packed_measure->imus.empty() || packed_measure->left_image == nullptr || packed_measure->right_image == nullptr) {
+    if (!CheckPackedMeasurementValidation(packed_measure.get())) {
         ReportWarn("[Vio] Packed measurements is not valid at " << vio_sys_timer_.TockInSecond() << " s.");
         return false;
     }
@@ -56,6 +56,12 @@ void Vio::HeartBeat() {
         ReportInfo("[Vio] Heart beat for " << vio_heart_beat_timer_.TockTickInSecond() << " s. Vio has running for " <<
             vio_sys_timer_.TockInSecond() << " s.");
     }
+}
+
+bool Vio::CheckPackedMeasurementValidation(const PackedMeasurement *measure) {
+    RETURN_FALSE_IF(packed_measure->imus.empty() || packed_measure->left_image == nullptr || packed_measure->right_image == nullptr);
+
+    return true;
 }
 
 }

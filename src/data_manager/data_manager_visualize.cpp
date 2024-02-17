@@ -264,17 +264,17 @@ void DataManager::ShowInformationWithStringsInVisualizor() {
 }
 
 void DataManager::UpdateVisualizorCameraView() {
-    // Set visualizor camera view by newest frame.
-    if (!visual_local_map_->frames().empty()) {
-        Vec3 euler = Utility::QuaternionToEuler(Visualizor3D::camera_view().q_wc);
-        euler.x() = -90.0f;
-        euler.y() = 0.0f;
-        Visualizor3D::camera_view().q_wc = Utility::EulerToQuaternion(euler);
+    RETURN_IF(visual_local_map_->frames().empty());
 
-        const Vec3 p_c = Vec3(0, 0, 1);
-        const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
-        Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
-    }
+    // Set visualizor camera view by newest frame.
+    Vec3 euler = Utility::QuaternionToEuler(Visualizor3D::camera_view().q_wc);
+    euler.x() = -90.0f;
+    euler.y() = 0.0f;
+    Visualizor3D::camera_view().q_wc = Utility::EulerToQuaternion(euler);
+
+    const Vec3 p_c = Vec3(0, 0, 4);
+    const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
+    Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
 }
 
 void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {

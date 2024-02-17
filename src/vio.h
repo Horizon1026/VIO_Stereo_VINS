@@ -49,6 +49,9 @@ private:
     bool ConfigComponentOfFrontend();
     bool ConfigComponentOfBackend();
 
+    // Self check.
+    bool CheckPackedMeasurementValidation(const PackedMeasurement *measure);
+
 private:
     // Options for vio.
     VioOptions options_;
