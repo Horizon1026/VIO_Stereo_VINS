@@ -59,8 +59,8 @@ void Vio::HeartBeat() {
 }
 
 bool Vio::CheckPackedMeasurementValidation(const PackedMeasurement *measure) {
-    RETURN_FALSE_IF(packed_measure->imus.empty() || packed_measure->left_image == nullptr || packed_measure->right_image == nullptr);
-
+    RETURN_FALSE_IF(measure == nullptr);
+    RETURN_FALSE_IF(measure->imus.empty() || measure->left_image == nullptr || measure->right_image == nullptr);
     return true;
 }
 
