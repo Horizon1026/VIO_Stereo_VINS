@@ -72,8 +72,12 @@ struct GlobalMapKeyframe {
     Quat q_wc = Quat::Identity();
     // Timestamp of this keyframe.
     float time_stamp_s = 0.0f;
-    // Feature points based on this keyframe.
+    // Descriptor of this keyframe image. Support for loop closure.
+    uint32_t image_descriptor = 0;
+    // Feature points based on this keyframe. Support for loop closure.
     std::vector<GlobalMapPoint> points;
+    // Descriptors of feature points based on this keyframe. Support for loop closure.
+    std::vector<uint32_t> point_descriptors;
 };
 
 /* Class Data Manager Declaration. */
