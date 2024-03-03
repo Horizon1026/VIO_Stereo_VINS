@@ -2,7 +2,6 @@
 #define _VIO_STEREO_VINS_BACKEND_LOG_H_
 
 #include "datatype_basic.h"
-#include "data_manager.h"
 
 namespace VIO {
 
