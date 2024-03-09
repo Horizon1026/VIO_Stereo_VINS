@@ -142,10 +142,10 @@ bool Vio::ConfigComponentOfBackend() {
 
     // Config imu model.
     backend_->imu_model() = std::make_unique<Imu>();
-    backend_->imu_model()->options().kAccelNoise = options_.imu.noise_accel;
-    backend_->imu_model()->options().kGyroNoise = options_.imu.noise_gyro;
-    backend_->imu_model()->options().kAccelRandomWalk = options_.imu.random_walk_accel;
-    backend_->imu_model()->options().kGyroRandomWalk = options_.imu.random_walk_gyro;
+    backend_->imu_model()->options().kAccelNoiseSigma = options_.imu.noise_accel;
+    backend_->imu_model()->options().kGyroNoiseSigma = options_.imu.noise_gyro;
+    backend_->imu_model()->options().kAccelRandomWalkSigma = options_.imu.random_walk_accel;
+    backend_->imu_model()->options().kGyroRandomWalkSigma = options_.imu.random_walk_gyro;
 
     // Register components.
     backend_->data_manager() = data_manager_.get();

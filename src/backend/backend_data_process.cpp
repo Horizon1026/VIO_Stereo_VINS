@@ -22,10 +22,10 @@ void Backend::RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
     frame_with_bias.imu_preint_block.Reset();
     frame_with_bias.imu_preint_block.bias_accel() = bias_accel;
     frame_with_bias.imu_preint_block.bias_gyro() = bias_gyro;
-    frame_with_bias.imu_preint_block.SetImuNoiseSigma(imu_model_->options().kAccelNoise,
-                                                      imu_model_->options().kGyroNoise,
-                                                      imu_model_->options().kAccelRandomWalk,
-                                                      imu_model_->options().kGyroRandomWalk);
+    frame_with_bias.imu_preint_block.SetImuNoiseSigma(imu_model_->options().kAccelNoiseSigma,
+                                                      imu_model_->options().kGyroNoiseSigma,
+                                                      imu_model_->options().kAccelRandomWalkSigma,
+                                                      imu_model_->options().kGyroRandomWalkSigma);
 
     const uint32_t max_idx = frame_with_bias.packed_measure->imus.size();
     for (uint32_t i = 1; i < max_idx; ++i) {
