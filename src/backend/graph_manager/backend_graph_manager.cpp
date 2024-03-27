@@ -477,6 +477,9 @@ bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
         if (frame_with_bias.imu_preint_block.integrate_time_s() < data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
             RecomputeImuPreintegrationBlock(graph_.vertices.all_frames_ba[index]->param().cast<float>(),
                 graph_.vertices.all_frames_bg[index]->param().cast<float>(), frame_with_bias);
+        } else {
+            frame_with_bias.imu_preint_block.bias_accel() = graph_.vertices.all_frames_ba[index]->param().cast<float>();
+            frame_with_bias.imu_preint_block.bias_gyro() = graph_.vertices.all_frames_bg[index]->param().cast<float>();
         }
         ++index;
     }
