@@ -23,7 +23,6 @@ using DorF = float;
 /* Options for Backend. */
 struct BackendOptions {
     bool kEnableRecordBinaryCurveLog = true;
-    bool kEnableRecordGlobalMap = true;
     bool kEnableLocalMapStoreRawImages = true;
 
     Vec3 kGravityInWordFrame = Vec3(0.0f, 0.0f, 0.0f);
@@ -163,7 +162,6 @@ private:
     bool AddNewestFrameWithStatesPredictionToLocalMap();
     bool ControlSizeOfLocalMap();
     void UpdateBackendStates();
-    bool SelectKeyframesIntoGlobalMap();
 
     // Backend graph manager.
     void ClearGraph();

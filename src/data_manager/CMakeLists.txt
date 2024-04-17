@@ -29,6 +29,12 @@ if ( NOT TARGET lib_object_pool )
     add_subdirectory( ${SLAM_UTILITY_PATH}/data_struct/object_pool ${PROJECT_SOURCE_DIR}/build/lib_object_pool )
 endif()
 
+# Add image painter.
+set( IMAGE_PAINTER_PATH ${PROJECT_SOURCE_DIR}/../Image_Painter )
+if ( NOT TARGET lib_image_painter )
+    add_subdirectory( ${IMAGE_PAINTER_PATH}/src ${PROJECT_SOURCE_DIR}/build/lib_image_painter )
+endif()
+
 # Add visualizor.
 set( VISUALIZOR_2D_PATH ${PROJECT_SOURCE_DIR}/../Visualizor2D )
 if ( NOT TARGET lib_image_visualizor )
@@ -75,6 +81,7 @@ target_link_libraries( lib_vio_stereo_vins_data_manager
     lib_object_pool
     lib_imu_model
 
+    lib_image_painter
     lib_image_visualizor
     lib_3d_visualizor
 )

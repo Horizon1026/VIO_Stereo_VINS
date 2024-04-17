@@ -2,10 +2,12 @@
 #include "log_report.h"
 #include "slam_memory.h"
 #include "math_kinematics.h"
+#include "image_painter.h"
 #include "visualizor.h"
 #include "visualizor_3d.h"
 
 using namespace SLAM_VISUALIZOR;
+using namespace IMAGE_PAINTER;
 
 namespace VIO {
 
@@ -100,7 +102,7 @@ void DataManager::ShowLocalMapFramesAndFeatures(const int32_t feature_id, const 
     GrayImage gray_show_image(show_image_mat);
     uint8_t *show_image_buf = (uint8_t *)SlamMemory::Malloc(show_image_rows * show_image_cols * 3 * sizeof(uint8_t));
     RgbImage show_image(show_image_buf, show_image_rows, show_image_cols, true);
-    Visualizor::ConvertUint8ToRgb(gray_show_image.data(), show_image.data(), gray_show_image.rows() * gray_show_image.cols());
+    ImagePainter::ConvertUint8ToRgb(gray_show_image.data(), show_image.data(), gray_show_image.rows() * gray_show_image.cols());
 
     // Iterate all frames in local map.
     frame_id = 0;
@@ -112,7 +114,7 @@ void DataManager::ShowLocalMapFramesAndFeatures(const int32_t feature_id, const 
         const int32_t font_size = 16;
         const RgbPixel info_color = frame_id >= static_cast<int32_t>(visual_local_map_->frames().size() - options_.kMaxStoredKeyFrames) ?
             RgbColor::kRed : RgbColor::kGreen;
-        Visualizor::DrawString(show_image, std::string("[ ") + std::to_string(frame.id()) + std::string(" | ") + std::to_string(frame.time_stamp_s()) + std::string("s ]"),
+        ImagePainter::DrawString(show_image, std::string("[ ") + std::to_string(frame.id()) + std::string(" | ") + std::to_string(frame.time_stamp_s()) + std::string("s ]"),
             col_offset, row_offset, info_color, font_size);
         // Draw all observed features in this frame and this camera image.
         for (auto &pair : frame.features()) {
@@ -125,8 +127,8 @@ void DataManager::ShowLocalMapFramesAndFeatures(const int32_t feature_id, const 
             Vec2 pixel_uv = observe[camera_id].raw_pixel_uv;
             const RgbPixel pixel_color = GetFeatureColor(*feature);
             const std::string feature_text = feature->first_frame_id() == frame.id() ? std::to_string(feature->id()) + std::string("+") : std::to_string(feature->id());
-            Visualizor::DrawSolidCircle(show_image, pixel_uv.x() + col_offset, pixel_uv.y() + row_offset, 3, pixel_color);
-            Visualizor::DrawString(show_image, feature_text, pixel_uv.x() + col_offset, pixel_uv.y() + row_offset, pixel_color);
+            ImagePainter::DrawSolidCircle(show_image, pixel_uv.x() + col_offset, pixel_uv.y() + row_offset, 3, pixel_color);
+            ImagePainter::DrawString(show_image, feature_text, pixel_uv.x() + col_offset, pixel_uv.y() + row_offset, pixel_color);
         }
         // Accumulate index.
         ++frame_id;
@@ -166,7 +168,7 @@ void DataManager::ShowAllFramesWithBias(const int32_t delay_ms) {
     GrayImage gray_show_image(show_image_mat);
     uint8_t *show_image_buf = (uint8_t *)SlamMemory::Malloc(show_image_rows * show_image_cols * 3 * sizeof(uint8_t));
     RgbImage show_image(show_image_buf, show_image_rows, show_image_cols, true);
-    Visualizor::ConvertUint8ToRgb(gray_show_image.data(), show_image.data(), gray_show_image.rows() * gray_show_image.cols());
+    ImagePainter::ConvertUint8ToRgb(gray_show_image.data(), show_image.data(), gray_show_image.rows() * gray_show_image.cols());
 
     // Iterate all frames in local map.
     frame_id = 0;
@@ -181,15 +183,15 @@ void DataManager::ShowAllFramesWithBias(const int32_t delay_ms) {
         const int32_t font_size = 16;
         const RgbPixel info_color = frame_id >= static_cast<int32_t>(options_.kMaxStoredKeyFrames - options_.kMaxStoredKeyFrames) ?
             RgbColor::kRed : RgbColor::kGreen;
-        Visualizor::DrawString(show_image, std::string("[ ") + std::to_string(frame_with_bias.time_stamp_s) + std::string("s ]"),
+        ImagePainter::DrawString(show_image, std::string("[ ") + std::to_string(frame_with_bias.time_stamp_s) + std::string("s ]"),
             col_offset, row_offset, info_color, font_size);
 
         // Draw all observed features in this frame and this camera image.
         for (uint32_t i = 0; i < frame_with_bias.visual_measure->features_id.size(); ++i) {
             const Vec2 pixel_uv = frame_with_bias.visual_measure->observes_per_frame[i][0].raw_pixel_uv + Vec2(col_offset, row_offset);
             const RgbPixel pixel_color = RgbColor::kDeepSkyBlue;
-            Visualizor::DrawSolidCircle(show_image, pixel_uv.x(), pixel_uv.y(), 3, pixel_color);
-            Visualizor::DrawString(show_image, std::to_string(frame_with_bias.visual_measure->features_id[i]),
+            ImagePainter::DrawSolidCircle(show_image, pixel_uv.x(), pixel_uv.y(), 3, pixel_color);
+            ImagePainter::DrawString(show_image, std::to_string(frame_with_bias.visual_measure->features_id[i]),
                 pixel_uv.x(), pixel_uv.y(), pixel_color);
         }
 
@@ -290,40 +292,11 @@ void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32
     } while (!Visualizor3D::ShouldQuit() && block_in_loop);
 }
 
-void DataManager::ShowGlobalMapInWorldFrame() {
-    RETURN_IF(global_map_keyframes_.empty());
-
-    for (const auto &keyframe : global_map_keyframes_) {
-        Visualizor3D::poses().emplace_back(PoseType{ .p_wb = keyframe.p_wc, .q_wb = keyframe.q_wc, .scale = 0.2f });
-        for (const auto &point : keyframe.points) {
-            Visualizor3D::points().emplace_back(PointType{
-                .p_w = keyframe.q_wc * point.p_c + keyframe.p_wc,
-                .color = RgbColor::kAliceBlue,
-                .radius = 2,
-            });
-        }
-    }
-}
-
-void DataManager::ShowLocalAndGlobalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
-    Visualizor3D::Clear();
-    ShowLocalMapInWorldFrame();
-    ShowGlobalMapInWorldFrame();
-    ShowInformationWithStringsInVisualizor();
-
-    // Refresh screen.
-    UpdateVisualizorCameraView();
-    const int32_t delay = delay_ms < 1 ? 0 : delay_ms;
-    do {
-        Visualizor3D::Refresh(title, delay);
-    } while (!Visualizor3D::ShouldQuit() && block_in_loop);
-}
-
 void DataManager::ShowMatrixImage(const std::string &title, const Mat &matrix) {
     const uint32_t scale = 3;
     uint8_t *buf = (uint8_t *)malloc(matrix.rows() * matrix.cols() * scale * scale * sizeof(uint8_t));
     GrayImage image_matrix(buf, matrix.rows() * scale, matrix.cols() * scale, true);
-    Visualizor::ConvertMatrixToImage<float>(matrix, image_matrix, 100.0f, scale);
+    ImagePainter::ConvertMatrixToImage<float>(matrix, image_matrix, 100.0f, scale);
     Visualizor::ShowImage(title, image_matrix);
     Visualizor::WaitKey(1);
 }

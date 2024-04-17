@@ -136,7 +136,7 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         if (vio.backend()->signals().should_quit) {
             break;
         } else {
-            vio.data_manager()->ShowLocalAndGlobalMapInWorldFrame("Vio 3d local map", 1, false);
+            vio.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 1, false);
         }
 
         if (!res) {
@@ -147,7 +147,7 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         cnt = max_wait_ticks;
     }
 
-    vio.data_manager()->ShowLocalAndGlobalMapInWorldFrame("Vio 3d local map", 50, true);
+    vio.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 50, true);
 }
 
 static std::ofstream g_txt_log("../output/vio_log.txt");
