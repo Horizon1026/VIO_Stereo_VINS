@@ -1,5 +1,4 @@
 #include "vio.h"
-
 #include "slam_operations.h"
 #include "log_report.h"
 

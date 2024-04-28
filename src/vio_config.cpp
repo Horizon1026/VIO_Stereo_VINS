@@ -1,14 +1,11 @@
 #include "vio.h"
-
-#include "pinhole.h"
-
-#include "optical_flow_basic_klt.h"
-
-#include "feature_point_detector.h"
-#include "feature_fast.h"
-
 #include "slam_operations.h"
 #include "log_report.h"
+
+#include "pinhole.h"
+#include "optical_flow_basic_klt.h"
+#include "feature_point_detector.h"
+#include "feature_fast.h"
 
 namespace VIO {
 
