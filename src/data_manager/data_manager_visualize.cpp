@@ -317,8 +317,7 @@ void DataManager::ShowTinyInformationOfVisualLocalMap() {
         ReportInfo(" - cam frame " << frame.id() <<
             " at " << frame.time_stamp_s() << "s" <<
             ", q_wc " << LogQuat(frame.q_wc()) <<
-            ", p_wc " << LogVec(frame.p_wc()) <<
-            ", v_wc " << LogVec(frame.v_w()));
+            ", p_wc " << LogVec(frame.p_wc()));
     }
     for (const auto &frame : imu_based_frames_) {
         const auto &imus_vector = frame.packed_measure->imus;
