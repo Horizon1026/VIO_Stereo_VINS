@@ -4,14 +4,14 @@ namespace VIO {
 
 bool Backend::EstimateGyroBias() {
     // Preintegrate all imu measurement block.
-    for (auto &frame_with_bias : data_manager_->frames_with_bias()) {
-        RecomputeImuPreintegrationBlock(Vec3::Zero(), Vec3::Zero(), frame_with_bias);
+    for (auto &imu_based_frame : data_manager_->imu_based_frames()) {
+        RecomputeImuPreintegrationBlock(Vec3::Zero(), Vec3::Zero(), imu_based_frame);
     }
 
     // Construct incremental function.
     Mat3 hessian = Mat3::Zero();
     Vec3 bias = Vec3::Zero();
-    for (auto it = data_manager_->frames_with_bias().cbegin(); std::next(it) != data_manager_->frames_with_bias().cend(); ++it) {
+    for (auto it = data_manager_->imu_based_frames().cbegin(); std::next(it) != data_manager_->imu_based_frames().cend(); ++it) {
         const auto &frame_i = *it;
         const auto &frame_j = *std::next(it);
         const Quat &q_wi_i = frame_i.q_wi;
@@ -30,17 +30,17 @@ bool Backend::EstimateGyroBias() {
     ReportColorInfo("[Backend] Backend estimated bias of gyro " << LogVec(delta_bias_gyro) << ".");
 
     // Update bias of gyro and do preintegration.
-    for (auto &frame_with_bias : data_manager_->frames_with_bias()) {
+    for (auto &imu_based_frame : data_manager_->imu_based_frames()) {
         RecomputeImuPreintegrationBlock(Vec3::Zero(),
-            frame_with_bias.imu_preint_block.bias_gyro() + delta_bias_gyro,
-            frame_with_bias);
+            imu_based_frame.imu_preint_block.bias_gyro() + delta_bias_gyro,
+            imu_based_frame);
     }
 
     return true;
 }
 
 bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale) {
-    const int32_t size = data_manager_->frames_with_bias().size() * 3 + 3 + 1;
+    const int32_t size = data_manager_->imu_based_frames().size() * 3 + 3 + 1;
     Mat A = Mat::Zero(size, size);
     Vec b = Vec::Zero(size);
 
@@ -49,7 +49,7 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale)
 
     // Construct incremental function.
     uint32_t frame_id_i = data_manager_->visual_local_map()->frames().front().id();
-    for (auto it = data_manager_->frames_with_bias().cbegin(); std::next(it) != data_manager_->frames_with_bias().cend(); ++it) {
+    for (auto it = data_manager_->imu_based_frames().cbegin(); std::next(it) != data_manager_->imu_based_frames().cend(); ++it) {
         const auto &cam_frame_i = data_manager_->visual_local_map()->frame(frame_id_i);
         const auto &cam_frame_j = data_manager_->visual_local_map()->frame(frame_id_i + 1);
         const auto &imu_frame_i = *it;
@@ -103,7 +103,7 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale)
 }
 
 bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii) {
-    const int32_t size = data_manager_->frames_with_bias().size() * 3 + 2 + 1;
+    const int32_t size = data_manager_->imu_based_frames().size() * 3 + 2 + 1;
     Mat A = Mat::Zero(size, size);
     Vec b = Vec::Zero(size);
     Vec x = Vec::Zero(size);
@@ -121,7 +121,7 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
     for (int32_t iter = 0; iter < max_iteration; ++iter) {
         // Construct incremental function.
         uint32_t frame_id_i = data_manager_->visual_local_map()->frames().front().id();
-        for (auto it = data_manager_->frames_with_bias().cbegin(); std::next(it) != data_manager_->frames_with_bias().cend(); ++it) {
+        for (auto it = data_manager_->imu_based_frames().cbegin(); std::next(it) != data_manager_->imu_based_frames().cend(); ++it) {
             const auto &cam_frame_i = data_manager_->visual_local_map()->frame(frame_id_i);
             const auto &cam_frame_j = data_manager_->visual_local_map()->frame(frame_id_i + 1);
             const auto &imu_frame_i = *it;

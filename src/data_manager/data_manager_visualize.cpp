@@ -139,29 +139,29 @@ void DataManager::ShowLocalMapFramesAndFeatures(const int32_t feature_id, const 
     Visualizor::WaitKey(delay_ms);
 }
 
-void DataManager::ShowAllFramesWithBias(const int32_t delay_ms) {
-    RETURN_IF(frames_with_bias_.empty());
-    RETURN_IF(frames_with_bias_.front().packed_measure->left_image == nullptr);
+void DataManager::ShowAllImuBasedFrames(const int32_t delay_ms) {
+    RETURN_IF(imu_based_frames_.empty());
+    RETURN_IF(imu_based_frames_.front().packed_measure->left_image == nullptr);
 
     // Memory allocation.
     const int32_t cols_of_images = kMaxImageNumInOneRow;
     const int32_t rows_of_images = options_.kMaxStoredKeyFrames % cols_of_images == 0 ?
         options_.kMaxStoredKeyFrames / cols_of_images :
         options_.kMaxStoredKeyFrames / cols_of_images + 1;
-    const int32_t image_cols = frames_with_bias_.front().packed_measure->left_image->image.cols();
-    const int32_t image_rows = frames_with_bias_.front().packed_measure->left_image->image.rows();
+    const int32_t image_cols = imu_based_frames_.front().packed_measure->left_image->image.cols();
+    const int32_t image_rows = imu_based_frames_.front().packed_measure->left_image->image.rows();
     const int32_t show_image_cols = image_cols * cols_of_images;
     const int32_t show_image_rows = image_rows * rows_of_images;
 
     // Load all frame images.
     int32_t frame_id = 0;
     MatImg show_image_mat = MatImg::Zero(show_image_rows, show_image_cols);
-    for (auto &frame_with_bias : frames_with_bias_) {
+    for (const auto &imu_based_frame : imu_based_frames_) {
         // Compute location offset.
         const int32_t row_offset = image_rows * (frame_id / cols_of_images);
         const int32_t col_offset = image_cols * (frame_id % cols_of_images);
         // Load image.
-        show_image_mat.block(row_offset, col_offset, image_rows, image_cols) = frame_with_bias.packed_measure->left_image->image;
+        show_image_mat.block(row_offset, col_offset, image_rows, image_cols) = imu_based_frame.packed_measure->left_image->image;
         // Accumulate index.
         ++frame_id;
     }
@@ -172,9 +172,9 @@ void DataManager::ShowAllFramesWithBias(const int32_t delay_ms) {
 
     // Iterate all frames in local map.
     frame_id = 0;
-    for (auto &frame_with_bias : frames_with_bias_) {
-        CONTINUE_IF(frame_with_bias.packed_measure == nullptr || frame_with_bias.visual_measure == nullptr);
-        CONTINUE_IF((frame_with_bias.packed_measure->left_image == nullptr));
+    for (const auto &imu_based_frame : imu_based_frames_) {
+        CONTINUE_IF(imu_based_frame.packed_measure == nullptr || imu_based_frame.visual_measure == nullptr);
+        CONTINUE_IF((imu_based_frame.packed_measure->left_image == nullptr));
 
         // Compute location offset.
         const int32_t row_offset = image_rows * (frame_id / cols_of_images);
@@ -183,15 +183,15 @@ void DataManager::ShowAllFramesWithBias(const int32_t delay_ms) {
         const int32_t font_size = 16;
         const RgbPixel info_color = frame_id >= static_cast<int32_t>(options_.kMaxStoredKeyFrames - options_.kMaxStoredKeyFrames) ?
             RgbColor::kRed : RgbColor::kGreen;
-        ImagePainter::DrawString(show_image, std::string("[ ") + std::to_string(frame_with_bias.time_stamp_s) + std::string("s ]"),
+        ImagePainter::DrawString(show_image, std::string("[ ") + std::to_string(imu_based_frame.time_stamp_s) + std::string("s ]"),
             col_offset, row_offset, info_color, font_size);
 
         // Draw all observed features in this frame and this camera image.
-        for (uint32_t i = 0; i < frame_with_bias.visual_measure->features_id.size(); ++i) {
-            const Vec2 pixel_uv = frame_with_bias.visual_measure->observes_per_frame[i][0].raw_pixel_uv + Vec2(col_offset, row_offset);
+        for (uint32_t i = 0; i < imu_based_frame.visual_measure->features_id.size(); ++i) {
+            const Vec2 pixel_uv = imu_based_frame.visual_measure->observes_per_frame[i][0].raw_pixel_uv + Vec2(col_offset, row_offset);
             const RgbPixel pixel_color = RgbColor::kDeepSkyBlue;
             ImagePainter::DrawSolidCircle(show_image, pixel_uv.x(), pixel_uv.y(), 3, pixel_color);
-            ImagePainter::DrawString(show_image, std::to_string(frame_with_bias.visual_measure->features_id[i]),
+            ImagePainter::DrawString(show_image, std::to_string(imu_based_frame.visual_measure->features_id[i]),
                 pixel_uv.x(), pixel_uv.y(), pixel_color);
         }
 
@@ -302,8 +302,8 @@ void DataManager::ShowMatrixImage(const std::string &title, const Mat &matrix) {
 }
 
 void DataManager::ShowSimpleInformationOfVisualLocalMap() {
-    for (const auto &frame : frames_with_bias_) {
-        ReportInfo(" - Frame with bias timestamp_s is " << frame.time_stamp_s);
+    for (const auto &frame : imu_based_frames_) {
+        ReportInfo(" - imu based frame timestamp_s is " << frame.time_stamp_s);
         frame.imu_preint_block.SimpleInformation();
     }
     for (const auto &frame : visual_local_map_->frames()) {
@@ -320,7 +320,7 @@ void DataManager::ShowTinyInformationOfVisualLocalMap() {
             ", p_wc " << LogVec(frame.p_wc()) <<
             ", v_wc " << LogVec(frame.v_w()));
     }
-    for (const auto &frame : frames_with_bias_) {
+    for (const auto &frame : imu_based_frames_) {
         const auto &imus_vector = frame.packed_measure->imus;
         ReportInfo(" - imu frame at " << frame.time_stamp_s << "s, " <<
             "imu [" << imus_vector.front()->time_stamp_s << " ~ " << imus_vector.back()->time_stamp_s << "]s" <<

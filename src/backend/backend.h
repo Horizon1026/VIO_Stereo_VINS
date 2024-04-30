@@ -156,7 +156,7 @@ private:
     TMat2<DorF> GetVisualObserveInformationMatrix();
     void RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
                                          const Vec3 &bias_gyro,
-                                         FrameWithBias &frame_with_bias);
+                                         ImuBasedFrame &imu_based_frame);
     bool SyncTwcToTwiInLocalMap();
     bool SyncTwiToTwcInLocalMap();
     bool AddNewestFrameWithStatesPredictionToLocalMap();

@@ -18,18 +18,19 @@ TMat2<DorF> Backend::GetVisualObserveInformationMatrix() {
 
 void Backend::RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
                                               const Vec3 &bias_gyro,
-                                              FrameWithBias &frame_with_bias) {
-    frame_with_bias.imu_preint_block.Reset();
-    frame_with_bias.imu_preint_block.bias_accel() = bias_accel;
-    frame_with_bias.imu_preint_block.bias_gyro() = bias_gyro;
-    frame_with_bias.imu_preint_block.SetImuNoiseSigma(imu_model_->options().kAccelNoiseSigma,
+                                              ImuBasedFrame &imu_based_frame) {
+    imu_based_frame.imu_preint_block.Reset();
+    imu_based_frame.imu_preint_block.bias_accel() = bias_accel;
+    imu_based_frame.imu_preint_block.bias_gyro() = bias_gyro;
+    imu_based_frame.imu_preint_block.SetImuNoiseSigma(imu_model_->options().kAccelNoiseSigma,
                                                       imu_model_->options().kGyroNoiseSigma,
                                                       imu_model_->options().kAccelRandomWalkSigma,
                                                       imu_model_->options().kGyroRandomWalkSigma);
 
-    const uint32_t max_idx = frame_with_bias.packed_measure->imus.size();
+    const uint32_t max_idx = imu_based_frame.packed_measure->imus.size();
     for (uint32_t i = 1; i < max_idx; ++i) {
-        frame_with_bias.imu_preint_block.Propagate(*frame_with_bias.packed_measure->imus[i - 1], *frame_with_bias.packed_measure->imus[i]);
+        imu_based_frame.imu_preint_block.Propagate(*imu_based_frame.packed_measure->imus[i - 1],
+            *imu_based_frame.packed_measure->imus[i]);
     }
 }
 
@@ -44,9 +45,9 @@ bool Backend::SyncTwcToTwiInLocalMap() {
     const Vec3 &p_ic = data_manager_->camera_extrinsics().front().p_ic;
 
     // T_wi = T_wc * T_ic.inv.
-    auto it = data_manager_->frames_with_bias().begin();
+    auto it = data_manager_->imu_based_frames().begin();
     for (const auto &frame : data_manager_->visual_local_map()->frames()) {
-        RETURN_FALSE_IF(it == data_manager_->frames_with_bias().end());
+        RETURN_FALSE_IF(it == data_manager_->imu_based_frames().end());
         Utility::ComputeTransformTransformInverse(frame.p_wc(), frame.q_wc(), p_ic, q_ic, it->p_wi, it->q_wi);
         ++it;
     }
@@ -65,9 +66,9 @@ bool Backend::SyncTwiToTwcInLocalMap() {
     const Vec3 &p_ic = data_manager_->camera_extrinsics().front().p_ic;
 
     // T_wc = T_wi * T_ic
-    auto it = data_manager_->frames_with_bias().cbegin();
+    auto it = data_manager_->imu_based_frames().cbegin();
     for (auto &frame : data_manager_->visual_local_map()->frames()) {
-        RETURN_FALSE_IF(it == data_manager_->frames_with_bias().cend());
+        RETURN_FALSE_IF(it == data_manager_->imu_based_frames().cend());
         Utility::ComputeTransformTransform(it->p_wi, it->q_wi, p_ic, q_ic, frame.p_wc(), frame.q_wc());
         ++it;
     }
@@ -186,61 +187,61 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
 }
 
 bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
-    // Check validation. Frames_with_bias must have one more frame than visual_local_map.
-    if (data_manager_->visual_local_map()->frames().size() + 1 != data_manager_->frames_with_bias().size()) {
-        ReportError("[Backend] Size of frames in local map and in frames_with_bias is not match. [" <<
+    // Check validation. imu_based_frames must have one more frame than visual_local_map.
+    if (data_manager_->visual_local_map()->frames().size() + 1 != data_manager_->imu_based_frames().size()) {
+        ReportError("[Backend] Size of frames in local map and in imu_based_frames is not match. [" <<
             data_manager_->visual_local_map()->frames().size() + 1 << "] != [" <<
-            data_manager_->frames_with_bias().size() << "].");
+            data_manager_->imu_based_frames().size() << "].");
         return false;
     }
 
-    // Extract newest frame with bias.
-    auto &newest_frame_with_bias = data_manager_->frames_with_bias().back();
-    if (newest_frame_with_bias.visual_measure == nullptr) {
-        ReportError("[Backend] Backend find newest_frame_with_bias.visual_measure to be nullptr.");
+    // Extract newest imu based frame.
+    auto &newest_imu_based_frame = data_manager_->imu_based_frames().back();
+    if (newest_imu_based_frame.visual_measure == nullptr) {
+        ReportError("[Backend] Backend find newest_imu_based_frame.visual_measure to be nullptr.");
         return false;
     }
 
     // Preintegrate newest imu measurements.
-    auto it = std::next(data_manager_->frames_with_bias().rbegin());
-    if (it == data_manager_->frames_with_bias().rend()) {
-        ReportError("[Backend] Backend failed to extract subnew frame with bias.");
+    auto it = std::next(data_manager_->imu_based_frames().rbegin());
+    if (it == data_manager_->imu_based_frames().rend()) {
+        ReportError("[Backend] Backend failed to extract subnew imu based frame.");
         return false;
     }
-    auto &subnew_frame_with_bias = *it;
-    const Vec3 &bias_accel = subnew_frame_with_bias.imu_preint_block.bias_accel();
-    const Vec3 &bias_gyro = subnew_frame_with_bias.imu_preint_block.bias_gyro();
-    RecomputeImuPreintegrationBlock(bias_accel, bias_gyro, newest_frame_with_bias);
+    auto &subnew_imu_based_frame = *it;
+    const Vec3 &bias_accel = subnew_imu_based_frame.imu_preint_block.bias_accel();
+    const Vec3 &bias_gyro = subnew_imu_based_frame.imu_preint_block.bias_gyro();
+    RecomputeImuPreintegrationBlock(bias_accel, bias_gyro, newest_imu_based_frame);
 
     // Predict pose and velocity of newest frame based on imu frame.
-    const float dt = newest_frame_with_bias.imu_preint_block.integrate_time_s();
-    newest_frame_with_bias.p_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.p_ij() +
-        subnew_frame_with_bias.p_wi + subnew_frame_with_bias.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
-    newest_frame_with_bias.q_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.q_ij();
-    newest_frame_with_bias.v_wi = subnew_frame_with_bias.q_wi * newest_frame_with_bias.imu_preint_block.v_ij() +
-        subnew_frame_with_bias.v_wi - options_.kGravityInWordFrame * dt;
+    const float dt = newest_imu_based_frame.imu_preint_block.integrate_time_s();
+    newest_imu_based_frame.p_wi = subnew_imu_based_frame.q_wi * newest_imu_based_frame.imu_preint_block.p_ij() +
+        subnew_imu_based_frame.p_wi + subnew_imu_based_frame.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
+    newest_imu_based_frame.q_wi = subnew_imu_based_frame.q_wi * newest_imu_based_frame.imu_preint_block.q_ij();
+    newest_imu_based_frame.v_wi = subnew_imu_based_frame.q_wi * newest_imu_based_frame.imu_preint_block.v_ij() +
+        subnew_imu_based_frame.v_wi - options_.kGravityInWordFrame * dt;
 
     // Add new frame into visual_local_map.
     std::vector<MatImg> raw_images;
-    if (options_.kEnableLocalMapStoreRawImages && newest_frame_with_bias.packed_measure != nullptr) {
-        if (newest_frame_with_bias.packed_measure->left_image != nullptr) {
-            raw_images.emplace_back(newest_frame_with_bias.packed_measure->left_image->image);
+    if (options_.kEnableLocalMapStoreRawImages && newest_imu_based_frame.packed_measure != nullptr) {
+        if (newest_imu_based_frame.packed_measure->left_image != nullptr) {
+            raw_images.emplace_back(newest_imu_based_frame.packed_measure->left_image->image);
         }
-        if (newest_frame_with_bias.packed_measure->right_image != nullptr) {
-            raw_images.emplace_back(newest_frame_with_bias.packed_measure->right_image->image);
+        if (newest_imu_based_frame.packed_measure->right_image != nullptr) {
+            raw_images.emplace_back(newest_imu_based_frame.packed_measure->right_image->image);
         }
     }
     const auto &newest_cam_frame_id = data_manager_->visual_local_map()->frames().back().id() + 1;
-    data_manager_->visual_local_map()->AddNewFrameWithFeatures(newest_frame_with_bias.visual_measure->features_id,
-                                                               newest_frame_with_bias.visual_measure->observes_per_frame,
-                                                               newest_frame_with_bias.time_stamp_s,
+    data_manager_->visual_local_map()->AddNewFrameWithFeatures(newest_imu_based_frame.visual_measure->features_id,
+                                                               newest_imu_based_frame.visual_measure->observes_per_frame,
+                                                               newest_imu_based_frame.time_stamp_s,
                                                                newest_cam_frame_id, raw_images);
 
     // Sync imu pose to camera pose.
     const Quat &q_ic = data_manager_->camera_extrinsics().front().q_ic;
     const Vec3 &p_ic = data_manager_->camera_extrinsics().front().p_ic;
     auto &newest_cam_frame = data_manager_->visual_local_map()->frames().back();
-    Utility::ComputeTransformTransform(newest_frame_with_bias.p_wi, newest_frame_with_bias.q_wi,
+    Utility::ComputeTransformTransform(newest_imu_based_frame.p_wi, newest_imu_based_frame.q_wi,
         p_ic, q_ic, newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
 
     // Try to triangulize newest frame for better pose estimation.
@@ -265,16 +266,16 @@ bool Backend::ControlSizeOfLocalMap() {
     // Remove frames according to marginalization type.
     switch (status_.marginalize_type) {
         case BackendMarginalizeType::kMarginalizeOldestFrame: {
-            // Remove oldest frame in visual_local_map and frames_with_bias.
+            // Remove oldest frame in visual_local_map and imu_based_frames.
             const auto oldest_frame_id = data_manager_->visual_local_map()->frames().front().id();
             data_manager_->visual_local_map()->RemoveFrame(oldest_frame_id);
-            data_manager_->frames_with_bias().pop_front();
+            data_manager_->imu_based_frames().pop_front();
             break;
         }
 
         case BackendMarginalizeType::kMarginalizeSubnewFrame: {
             // Merge imu measurements relative to newest and subnew frame.
-            auto it = data_manager_->frames_with_bias().rbegin();
+            auto it = data_manager_->imu_based_frames().rbegin();
             auto &newest_frame = *it;
             ++it;
             auto &subnew_frame = *it;
@@ -293,7 +294,8 @@ bool Backend::ControlSizeOfLocalMap() {
                 // If integration time is too long, only integrate the incremental part.
                 for (uint32_t i = 1; i < max_idx; ++i) {
                     // Only integration the new part of imu measurements.
-                    subnew_frame.imu_preint_block.Propagate(*newest_frame.packed_measure->imus[i - 1], *newest_frame.packed_measure->imus[i]);
+                    subnew_frame.imu_preint_block.Propagate(*newest_frame.packed_measure->imus[i - 1],
+                        *newest_frame.packed_measure->imus[i]);
                 }
                 for (uint32_t i = 1; i < max_idx; ++i) {
                     // Merge imu measurements. Skip the first imu measurements since it is the same.
@@ -309,10 +311,10 @@ bool Backend::ControlSizeOfLocalMap() {
                                                 subnew_frame);
             }
 
-            // Remove subnew frame in visual_local_map and frames_with_bias.
+            // Remove subnew frame in visual_local_map and imu_based_frames.
             const auto subnew_frame_id = data_manager_->visual_local_map()->frames().back().id() - 1;
             data_manager_->visual_local_map()->RemoveFrame(subnew_frame_id);
-            data_manager_->frames_with_bias().pop_back();
+            data_manager_->imu_based_frames().pop_back();
 
             break;
         }
@@ -354,8 +356,8 @@ bool Backend::ControlSizeOfLocalMap() {
 }
 
 void Backend::UpdateBackendStates() {
-    states_.motion.time_stamp_s = data_manager_->frames_with_bias().empty() ? 0.0f :
-        data_manager_->frames_with_bias().back().time_stamp_s;
+    states_.motion.time_stamp_s = data_manager_->imu_based_frames().empty() ? 0.0f :
+        data_manager_->imu_based_frames().back().time_stamp_s;
 
     if (!status_.is_initialized) {
         states_.prior.is_valid = false;
@@ -367,12 +369,12 @@ void Backend::UpdateBackendStates() {
         return;
     }
 
-    const auto &newest_frame_with_bias = data_manager_->frames_with_bias().back();
-    states_.motion.p_wi = newest_frame_with_bias.p_wi;
-    states_.motion.q_wi = newest_frame_with_bias.q_wi;
-    states_.motion.v_wi = newest_frame_with_bias.v_wi;
-    states_.motion.ba = newest_frame_with_bias.imu_preint_block.bias_accel();
-    states_.motion.bg = newest_frame_with_bias.imu_preint_block.bias_gyro();
+    const auto &newest_imu_based_frame = data_manager_->imu_based_frames().back();
+    states_.motion.p_wi = newest_imu_based_frame.p_wi;
+    states_.motion.q_wi = newest_imu_based_frame.q_wi;
+    states_.motion.v_wi = newest_imu_based_frame.v_wi;
+    states_.motion.ba = newest_imu_based_frame.imu_preint_block.bias_accel();
+    states_.motion.bg = newest_imu_based_frame.imu_preint_block.bias_gyro();
 }
 
 }

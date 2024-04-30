@@ -145,13 +145,13 @@ void Backend::AddAllCameraPosesInLocalMapToGraph() {
 void Backend::AddAllImuPosesInLocalMapToGraph() {
     // [Vertices] Imu pose of each frame.
     uint32_t frame_id = data_manager_->visual_local_map()->frames().front().id();
-    for (const auto &frame_with_bias : data_manager_->frames_with_bias()) {
+    for (const auto &imu_based_frame : data_manager_->imu_based_frames()) {
         graph_.vertices.all_frames_p_wi.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
-        graph_.vertices.all_frames_p_wi.back()->param() = frame_with_bias.p_wi.cast<DorF>();
+        graph_.vertices.all_frames_p_wi.back()->param() = imu_based_frame.p_wi.cast<DorF>();
         graph_.vertices.all_frames_p_wi.back()->name() = std::string("p_wi") + std::to_string(frame_id);
 
         graph_.vertices.all_frames_q_wi.emplace_back(std::make_unique<VertexQuat<DorF>>(4, 3));
-        graph_.vertices.all_frames_q_wi.back()->param() << frame_with_bias.q_wi.w(), frame_with_bias.q_wi.x(), frame_with_bias.q_wi.y(), frame_with_bias.q_wi.z();
+        graph_.vertices.all_frames_q_wi.back()->param() << imu_based_frame.q_wi.w(), imu_based_frame.q_wi.x(), imu_based_frame.q_wi.y(), imu_based_frame.q_wi.z();
         graph_.vertices.all_frames_q_wi.back()->name() = std::string("q_wi") + std::to_string(frame_id);
 
         ++frame_id;
@@ -162,17 +162,17 @@ void Backend::AddAllImuMotionStatesInLocalMapToGraph() {
     // [Vertices] Imu velocity of each frame.
     // [Vertices] Imu bias of accel and gyro in each frame.
     uint32_t frame_id = data_manager_->visual_local_map()->frames().front().id();
-    for (const auto &frame_with_bias : data_manager_->frames_with_bias()) {
+    for (const auto &imu_based_frame : data_manager_->imu_based_frames()) {
         graph_.vertices.all_frames_v_wi.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
-        graph_.vertices.all_frames_v_wi.back()->param() = frame_with_bias.v_wi.cast<DorF>();
+        graph_.vertices.all_frames_v_wi.back()->param() = imu_based_frame.v_wi.cast<DorF>();
         graph_.vertices.all_frames_v_wi.back()->name() = std::string("v_wi") + std::to_string(frame_id);
 
         graph_.vertices.all_frames_ba.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
-        graph_.vertices.all_frames_ba.back()->param() = frame_with_bias.imu_preint_block.bias_accel().cast<DorF>();
+        graph_.vertices.all_frames_ba.back()->param() = imu_based_frame.imu_preint_block.bias_accel().cast<DorF>();
         graph_.vertices.all_frames_ba.back()->name() = std::string("bias_a") + std::to_string(frame_id);
 
         graph_.vertices.all_frames_bg.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
-        graph_.vertices.all_frames_bg.back()->param() = frame_with_bias.imu_preint_block.bias_gyro().cast<DorF>();
+        graph_.vertices.all_frames_bg.back()->param() = imu_based_frame.imu_preint_block.bias_gyro().cast<DorF>();
         graph_.vertices.all_frames_bg.back()->name() = std::string("bias_g") + std::to_string(frame_id);
 
         ++frame_id;
@@ -384,18 +384,18 @@ bool Backend::AddFeatureFirstObserveInOldestFrameAndVisualFactorsToGraph(const b
 }
 
 bool Backend::AddImuFactorsToGraph(const bool only_add_oldest_one) {
-    RETURN_TRUE_IF(data_manager_->frames_with_bias().size() < 2);
+    RETURN_TRUE_IF(data_manager_->imu_based_frames().size() < 2);
 
     // [Edges] Imu preintegration block factors.
     int32_t index = 0;
-    for (auto it = std::next(data_manager_->frames_with_bias().begin()); it != data_manager_->frames_with_bias().end(); ++it, ++index) {
+    for (auto it = std::next(data_manager_->imu_based_frames().begin()); it != data_manager_->imu_based_frames().end(); ++it, ++index) {
         // Add edges of imu preintegration between relative imu pose and motion states.
-        const auto &frame_with_bias = *it;
-        CONTINUE_IF(frame_with_bias.imu_preint_block.integrate_time_s() >= data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond);
-        RETURN_TRUE_IF(only_add_oldest_one && it != std::next(data_manager_->frames_with_bias().begin()));
+        const auto &imu_based_frame = *it;
+        CONTINUE_IF(imu_based_frame.imu_preint_block.integrate_time_s() >= data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond);
+        RETURN_TRUE_IF(only_add_oldest_one && it != std::next(data_manager_->imu_based_frames().begin()));
 
         graph_.edges.all_imu_factors.emplace_back(std::make_unique<EdgeImuPreintegrationBetweenRelativePose<DorF>>(
-            frame_with_bias.imu_preint_block, options_.kGravityInWordFrame));
+            imu_based_frame.imu_preint_block, options_.kGravityInWordFrame));
         auto &imu_factor = graph_.edges.all_imu_factors.back();
         imu_factor->SetVertex(graph_.vertices.all_frames_p_wi[index].get(), 0);
         imu_factor->SetVertex(graph_.vertices.all_frames_q_wi[index].get(), 1);
@@ -466,20 +466,20 @@ bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
 
     // Update all imu poses and motion states.
     uint32_t index = 0;
-    for (auto &frame_with_bias : data_manager_->frames_with_bias()) {
-        frame_with_bias.p_wi = graph_.vertices.all_frames_p_wi[index]->param().cast<float>();
-        frame_with_bias.q_wi.w() = graph_.vertices.all_frames_q_wi[index]->param()(0);
-        frame_with_bias.q_wi.x() = graph_.vertices.all_frames_q_wi[index]->param()(1);
-        frame_with_bias.q_wi.y() = graph_.vertices.all_frames_q_wi[index]->param()(2);
-        frame_with_bias.q_wi.z() = graph_.vertices.all_frames_q_wi[index]->param()(3);
-        frame_with_bias.v_wi = graph_.vertices.all_frames_v_wi[index]->param().cast<float>();
+    for (auto &imu_based_frame : data_manager_->imu_based_frames()) {
+        imu_based_frame.p_wi = graph_.vertices.all_frames_p_wi[index]->param().cast<float>();
+        imu_based_frame.q_wi.w() = graph_.vertices.all_frames_q_wi[index]->param()(0);
+        imu_based_frame.q_wi.x() = graph_.vertices.all_frames_q_wi[index]->param()(1);
+        imu_based_frame.q_wi.y() = graph_.vertices.all_frames_q_wi[index]->param()(2);
+        imu_based_frame.q_wi.z() = graph_.vertices.all_frames_q_wi[index]->param()(3);
+        imu_based_frame.v_wi = graph_.vertices.all_frames_v_wi[index]->param().cast<float>();
 
-        if (frame_with_bias.imu_preint_block.integrate_time_s() < data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
+        if (imu_based_frame.imu_preint_block.integrate_time_s() < data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
             RecomputeImuPreintegrationBlock(graph_.vertices.all_frames_ba[index]->param().cast<float>(),
-                graph_.vertices.all_frames_bg[index]->param().cast<float>(), frame_with_bias);
+                graph_.vertices.all_frames_bg[index]->param().cast<float>(), imu_based_frame);
         } else {
-            frame_with_bias.imu_preint_block.bias_accel() = graph_.vertices.all_frames_ba[index]->param().cast<float>();
-            frame_with_bias.imu_preint_block.bias_gyro() = graph_.vertices.all_frames_bg[index]->param().cast<float>();
+            imu_based_frame.imu_preint_block.bias_accel() = graph_.vertices.all_frames_ba[index]->param().cast<float>();
+            imu_based_frame.imu_preint_block.bias_gyro() = graph_.vertices.all_frames_bg[index]->param().cast<float>();
         }
         ++index;
     }

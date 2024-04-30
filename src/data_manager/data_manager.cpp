@@ -6,7 +6,7 @@ void DataManager::Clear() {
     if (visual_local_map_ != nullptr) {
         visual_local_map_->Clear();
     }
-    frames_with_bias_.clear();
+    imu_based_frames_.clear();
     camera_extrinsics_.clear();
 }
 
@@ -18,23 +18,23 @@ bool DataManager::ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_
         return false;
     }
 
-    frames_with_bias_.emplace_back(FrameWithBias{});
-    FrameWithBias &frame_with_bias = frames_with_bias_.back();
-    frame_with_bias.time_stamp_s = new_packed_measure->left_image->time_stamp_s;
-    frame_with_bias.packed_measure = std::move(new_packed_measure);
-    frame_with_bias.visual_measure = std::move(new_visual_measure);
+    imu_based_frames_.emplace_back(ImuBasedFrame{});
+    ImuBasedFrame &imu_based_frame = imu_based_frames_.back();
+    imu_based_frame.time_stamp_s = new_packed_measure->left_image->time_stamp_s;
+    imu_based_frame.packed_measure = std::move(new_packed_measure);
+    imu_based_frame.visual_measure = std::move(new_visual_measure);
 
     return true;
 }
 
-bool DataManager::ConvertAllFramesWithBiasToLocalMap() {
+bool DataManager::ConvertAllImuBasedFramesToLocalMap() {
     RETURN_FALSE_IF(visual_local_map_ == nullptr);
     visual_local_map_->Clear();
 
     int32_t frame_id = 1;
-    for (const auto &frame : frames_with_bias_) {
+    for (const auto &frame : imu_based_frames_) {
         if (frame.visual_measure == nullptr) {
-            ReportError("[DataManager] Cannot find visual measurement in frames_with_bias_.");
+            ReportError("[DataManager] Cannot find visual measurement in imu_based_frames_.");
             return false;
         }
 
@@ -56,7 +56,7 @@ bool DataManager::ConvertAllFramesWithBiasToLocalMap() {
     }
 
     if (!visual_local_map_->SelfCheck()) {
-        ReportError("[DataManager] Visual local map self check failed in ConvertAllFramesWithBiasToLocalMap().");
+        ReportError("[DataManager] Visual local map self check failed in ConvertAllImuBasedFramesToLocalMap().");
         return false;
     }
 
@@ -65,14 +65,14 @@ bool DataManager::ConvertAllFramesWithBiasToLocalMap() {
 
 // Compute imu accel variance.
 float DataManager::ComputeImuAccelVariance() {
-    if (frames_with_bias_.empty()) {
+    if (imu_based_frames_.empty()) {
         return 0.0f;
     }
 
     // Compute mean accel vector.
     Vec3 mean_accel = Vec3::Zero();
     int32_t sample_cnt = 0;
-    for (const auto &frame : frames_with_bias_) {
+    for (const auto &frame : imu_based_frames_) {
         CONTINUE_IF(frame.packed_measure == nullptr);
         CONTINUE_IF(frame.packed_measure->imus.empty());
         for (const auto &imu : frame.packed_measure->imus) {
@@ -88,7 +88,7 @@ float DataManager::ComputeImuAccelVariance() {
 
     // Compute accel variance.
     float variance = 0.0f;
-    for (const auto &frame : frames_with_bias_) {
+    for (const auto &frame : imu_based_frames_) {
         CONTINUE_IF(frame.packed_measure == nullptr);
         CONTINUE_IF(frame.packed_measure->imus.empty());
         for (const auto &imu : frame.packed_measure->imus) {

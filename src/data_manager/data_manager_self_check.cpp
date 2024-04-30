@@ -55,13 +55,13 @@ bool DataManager::SelfCheckVisualLocalMap() {
     return true;
 }
 
-bool DataManager::SelfCheckFramesWithBias() {
-    // Iterate each frame with bias.
+bool DataManager::SelfCheckImuBasedFrames() {
+    // Iterate each imu based frame.
     float prev_frame_time_stamp_s = 0.0f;
-    for (const auto &frame_with_bias : frames_with_bias_) {
+    for (const auto &imu_based_frame : imu_based_frames_) {
         // Check timestamp of visual observations.
-        for (const auto &observes : frame_with_bias.visual_measure->observes_per_frame) {
-            const auto time_stamp_0 = frame_with_bias.time_stamp_s;
+        for (const auto &observes : imu_based_frame.visual_measure->observes_per_frame) {
+            const auto time_stamp_0 = imu_based_frame.time_stamp_s;
             for (const auto &observe : observes) {
                 const auto time_stamp_1 = observe.frame_time_stamp_s;
                 if (time_stamp_0 != time_stamp_1) {
@@ -73,17 +73,17 @@ bool DataManager::SelfCheckFramesWithBias() {
         }
 
         // Check timestamp of imu and images.
-        const auto latest_imu_time_stamp_s = frame_with_bias.packed_measure->imus.back()->time_stamp_s;
-        if (frame_with_bias.packed_measure->left_image != nullptr) {
-            const auto left_image_time_stamp_s = frame_with_bias.packed_measure->left_image->time_stamp_s;
+        const auto latest_imu_time_stamp_s = imu_based_frame.packed_measure->imus.back()->time_stamp_s;
+        if (imu_based_frame.packed_measure->left_image != nullptr) {
+            const auto left_image_time_stamp_s = imu_based_frame.packed_measure->left_image->time_stamp_s;
             if (latest_imu_time_stamp_s != left_image_time_stamp_s) {
                 ReportError("[DataManager] Frames with bias self check imu and left image, feature observe timestamp error [" <<
                     latest_imu_time_stamp_s << "] != [" << left_image_time_stamp_s << "].");
                 return false;
             }
         }
-        if (frame_with_bias.packed_measure->right_image != nullptr) {
-            const auto left_image_time_stamp_s = frame_with_bias.packed_measure->right_image->time_stamp_s;
+        if (imu_based_frame.packed_measure->right_image != nullptr) {
+            const auto left_image_time_stamp_s = imu_based_frame.packed_measure->right_image->time_stamp_s;
             if (latest_imu_time_stamp_s != left_image_time_stamp_s) {
                 ReportError("[DataManager] Frames with bias self check imu and right image, feature observe timestamp error [" <<
                     latest_imu_time_stamp_s << "] != [" << left_image_time_stamp_s << "].");
@@ -92,16 +92,16 @@ bool DataManager::SelfCheckFramesWithBias() {
         }
 
         // Check imu preintegration time between frames.
-        if (frame_with_bias.time_stamp_s == frames_with_bias_.front().time_stamp_s) {
-            prev_frame_time_stamp_s = frame_with_bias.time_stamp_s;
+        if (imu_based_frame.time_stamp_s == imu_based_frames_.front().time_stamp_s) {
+            prev_frame_time_stamp_s = imu_based_frame.time_stamp_s;
             continue;
         }
-        const float imu_dt = frame_with_bias.imu_preint_block.integrate_time_s();
-        const float cam_dt = frame_with_bias.time_stamp_s - prev_frame_time_stamp_s;
-        prev_frame_time_stamp_s = frame_with_bias.time_stamp_s;
+        const float imu_dt = imu_based_frame.imu_preint_block.integrate_time_s();
+        const float cam_dt = imu_based_frame.time_stamp_s - prev_frame_time_stamp_s;
+        prev_frame_time_stamp_s = imu_based_frame.time_stamp_s;
         if (std::fabs(imu_dt - cam_dt) > 0.1f) {
             ReportError("[DataManager] Frames with bias self check imu preintegration time, integrate_time_s error [" <<
-                imu_dt << "] != [" << cam_dt << "] == [" << frame_with_bias.time_stamp_s << "] - [" <<
+                imu_dt << "] != [" << cam_dt << "] == [" << imu_based_frame.time_stamp_s << "] - [" <<
                 prev_frame_time_stamp_s << "].");
             return false;
         }

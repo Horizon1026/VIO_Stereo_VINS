@@ -17,7 +17,7 @@ BackendMarginalizeType Backend::DecideMarginalizeType() {
     // Visual frontend select keyframes.
     if (visual_frontend_->options().kSelfSelectKeyframe) {
         ReportInfo("[Backend] Visual frontend select keyframe.");
-        if (std::next(data_manager_->frames_with_bias().rbegin())->visual_measure->is_current_keyframe) {
+        if (std::next(data_manager_->imu_based_frames().rbegin())->visual_measure->is_current_keyframe) {
             return BackendMarginalizeType::kMarginalizeOldestFrame;
         } else {
             return BackendMarginalizeType::kMarginalizeSubnewFrame;

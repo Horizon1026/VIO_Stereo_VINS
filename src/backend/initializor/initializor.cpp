@@ -8,7 +8,7 @@ namespace {
 }
 
 bool Backend::TryToInitialize() {
-    if (data_manager_->frames_with_bias().size() < data_manager_->options().kMaxStoredKeyFrames) {
+    if (data_manager_->imu_based_frames().size() < data_manager_->options().kMaxStoredKeyFrames) {
         ReportWarn("[Backend] Backend cannot initialize for lack of frames.");
         return false;
     }
@@ -21,7 +21,7 @@ bool Backend::TryToInitialize() {
     }
 
     // Convert all frames into a covisible graph.
-    if (!data_manager_->ConvertAllFramesWithBiasToLocalMap()) {
+    if (!data_manager_->ConvertAllImuBasedFramesToLocalMap()) {
         ReportError("[Backend] Backend failed to convert frames to covisible graph.");
         return false;
     }
@@ -66,7 +66,7 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
-    // Sync all states in visual_local_map and frames_with_bias.
+    // Sync all states in visual_local_map and imu_based_frames.
     if (!SyncInitializedResult(gravity_c0, all_v_ii, scale)) {
         ReportError("[Backend] Backend failed to sync states after initialization.");
         return false;
@@ -101,10 +101,10 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
         feature.param() = q_wc0 * feature.param() * scale;
     }
 
-    // Recovery all imu states in frames_with_bias.
+    // Recovery all imu states in imu_based_frames.
     RETURN_FALSE_IF(!SyncTwcToTwiInLocalMap());
     uint32_t index = 0;
-    for (auto &imu_frame : data_manager_->frames_with_bias()) {
+    for (auto &imu_frame : data_manager_->imu_based_frames()) {
         imu_frame.v_wi = imu_frame.q_wi * all_v_ii.segment(index * 3, 3);
         ++index;
     }

@@ -90,7 +90,7 @@ bool Backend::RunOnce() {
 void Backend::Reset() {
     // Clear data manager.
     data_manager_->visual_local_map()->Clear();
-    data_manager_->frames_with_bias().clear();
+    data_manager_->imu_based_frames().clear();
 
     // Clear states flag.
     status_.is_initialized = false;
@@ -100,8 +100,8 @@ void Backend::Reset() {
 void Backend::ResetToReintialize() {
     // Clear data manager.
     data_manager_->visual_local_map()->Clear();
-    while (data_manager_->frames_with_bias().size() >= data_manager_->options().kMaxStoredKeyFrames) {
-        data_manager_->frames_with_bias().pop_front();
+    while (data_manager_->imu_based_frames().size() >= data_manager_->options().kMaxStoredKeyFrames) {
+        data_manager_->imu_based_frames().pop_front();
     }
 
     // Clear states flag.

@@ -53,7 +53,7 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
             "] -> [" << graph_optimization_problem.prior_residual().squaredNorm() << "].");
     }
 
-    // Update all states in visual_local_map and frames_with_bias.
+    // Update all states in visual_local_map and imu_based_frames.
     RETURN_FALSE_IF(!SyncGraphVerticesToDataManager(graph_optimization_problem));
     return true;
 }

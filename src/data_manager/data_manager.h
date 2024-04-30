@@ -33,9 +33,9 @@ using FeatureObserve = std::vector<ObservePerView>; // Use std::vector to store 
 using FeatureType = VisualFeature<FeatureParameter, FeatureObserve>;
 using CovisibleGraphType = CovisibleGraph<FeatureParameter, FeatureObserve>;
 
-/* Definition of Frame and FrameWithBias. */
+/* Definition of Frame and ImuBasedFrame. */
 using FrameType = VisualFrame<FeatureType>;
-struct FrameWithBias {
+struct ImuBasedFrame {
     // Imu bias of accel and gyro is inside imu_preint_block.
     ImuPreintegrateBlock<DorF> imu_preint_block;
     float time_stamp_s = 0.0f;
@@ -78,14 +78,14 @@ public:
 
     // Self check.
     bool SelfCheckVisualLocalMap();
-    bool SelfCheckFramesWithBias();
+    bool SelfCheckImuBasedFrames();
 
     // Transform packed measurements to a new frame.
     bool ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure,
                         std::unique_ptr<FrontendOutputData> &new_visual_measure);
 
     // Convert all frames with bias into visual local map.
-    bool ConvertAllFramesWithBiasToLocalMap();
+    bool ConvertAllImuBasedFramesToLocalMap();
 
     // Compute imu accel variance.
     float ComputeImuAccelVariance();
@@ -95,7 +95,7 @@ public:
 
     // Visualizor of managed data.
     void ShowFeaturePairsBetweenTwoFrames(const uint32_t ref_frame_id, const uint32_t cur_frame_id, const int32_t delay_ms = 0);
-    void ShowAllFramesWithBias(const int32_t delay_ms = 0);
+    void ShowAllImuBasedFrames(const int32_t delay_ms = 0);
     void ShowLocalMapFramesAndFeatures(const int32_t feature_id = -1, const int32_t camera_id = 0, const int32_t delay_ms = 0);
     void ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop = false);
     void ShowSimpleInformationOfVisualLocalMap();
@@ -105,7 +105,7 @@ public:
     // Reference for member variables.
     DataManagerOptions &options() { return options_; }
     CovisibleGraphType *visual_local_map() { return visual_local_map_.get(); }
-    std::deque<FrameWithBias> &frames_with_bias() { return frames_with_bias_; }
+    std::deque<ImuBasedFrame> &imu_based_frames() { return imu_based_frames_; }
     std::vector<CameraExtrinsic> &camera_extrinsics() { return camera_extrinsics_; }
 
 private:
@@ -122,7 +122,7 @@ private:
     // All frames and map points in local map.
     std::unique_ptr<CovisibleGraphType> visual_local_map_ = std::make_unique<CovisibleGraphType>();
     // All frames with bias in local map.
-    std::deque<FrameWithBias> frames_with_bias_;
+    std::deque<ImuBasedFrame> imu_based_frames_;
     // Camera extrinsics.
     std::vector<CameraExtrinsic> camera_extrinsics_;
 

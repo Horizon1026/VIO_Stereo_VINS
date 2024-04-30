@@ -82,7 +82,7 @@ struct VioOptionsOfDataManager {
     std::vector<Mat3> all_R_ic = {};
     std::vector<Vec3> all_t_ic = {};
 
-    uint32_t max_num_of_stored_key_frames = 8;
+    uint32_t max_num_of_stored_key_frames = 6;
     float max_time_s_of_imu_preintegration_block = 10.0f;
     bool enable_recording_curve_binlog = true;
     std::string log_file_name = "data_manager.binlog";
