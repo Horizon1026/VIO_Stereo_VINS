@@ -13,7 +13,7 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
-    // Check if imu motion is enough.
+    // If this is mono camera, some movement is neccessary for initialization.
     const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
     if (imu_accel_variance < kMinValidImuAccelVarianceForMonoInitialization && data_manager_->camera_extrinsics().size() < 2) {
         ReportWarn("[Backend] Backend cannot initialize for lack of imu motion in mono-view.");

@@ -47,9 +47,6 @@ endif()
 if ( NOT TARGET lib_vision_geometry_triangulation )
     add_subdirectory( ${VISION_GEOMETRY_PATH}/triangulation ${PROJECT_SOURCE_DIR}/build/lib_vision_geometry_triangulation )
 endif()
-if ( NOT TARGET lib_vision_geometry_relative_rotation )
-    add_subdirectory( ${VISION_GEOMETRY_PATH}/relative_rotation ${PROJECT_SOURCE_DIR}/build/lib_vision_geometry_relative_rotation )
-endif()
 
 # Add components of slam solver.
 set( SLAM_SOLVER_PATH ${PROJECT_SOURCE_DIR}/../Slam_Solver/src )
@@ -93,7 +90,6 @@ target_link_libraries( lib_vio_stereo_vins_backend
     lib_vision_geometry_epipolar
     lib_vision_geometry_pnp
     lib_vision_geometry_triangulation
-    lib_vision_geometry_relative_rotation
 
     lib_binary_data_log
 
