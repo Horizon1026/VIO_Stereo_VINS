@@ -150,38 +150,10 @@ void TestRunVio(const uint32_t max_wait_ticks) {
     vio.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 50, true);
 }
 
-static std::ofstream g_txt_log("../output/vio_log.txt");
-int main(int argc, char **argv) {
-    // Root direction of Euroc dataset.
-    std::string dataset_root_dir = "D:/My_Github/Datasets/Euroc/MH_01_easy/";
-    if (argc == 2) {
-        dataset_root_dir = argv[1];
-    }
-
-    // Fill configuration of vio.
-    ReportInfo(YELLOW ">> Test vio on " << dataset_root_dir << "." RESET_COLOR);
-    vio.options().frontend.image_rows = 480;
-    vio.options().frontend.image_cols = 752;
-
-    // Fill left camera extrinsics.
-    Mat3 R_i_cl;
-    R_i_cl << 0.0148655429818,  -0.999880929698,  0.00414029679422,
-              0.999557249008,   0.0149672133247,  0.025715529948,
-              -0.0257744366974, 0.00375618835797, 0.999660727178;
-    const Vec3 p_i_cl = Vec3(-0.0216401454975,-0.064676986768, 0.00981073058949);
-    vio.options().data_manager.all_R_ic.emplace_back(R_i_cl);
-    vio.options().data_manager.all_t_ic.emplace_back(p_i_cl);
-
-    // Fill right camera extrinsics.
-    Mat3 R_i_cr;
-    R_i_cr << 0.0125552670891,  -0.999755099723, 0.0182237714554,
-              0.999598781151,   0.0130119051815, 0.0251588363115,
-              -0.0253898008918, 0.0179005838253, 0.999517347078;
-    const Vec3 p_i_cr = Vec3(-0.0198435579556, 0.0453689425024, 0.00786212447038);
-    vio.options().data_manager.all_R_ic.emplace_back(R_i_cr);
-    vio.options().data_manager.all_t_ic.emplace_back(p_i_cr);
-
-    // Fill left camera intrinsics.
+void ConfigAllComponentsOfVio()
+{
+    /* VioOptionsOfCamera */
+    // Fill left and right camera intrinsics.
     const VIO::VioOptionsOfCamera left_camera_intrinsics {
         .fx = 458.654f,
         .fy = 457.296f,
@@ -194,8 +166,6 @@ int main(int argc, char **argv) {
         .p2 = 1.76187114e-05f,
     };
     vio.options().cameras.emplace_back(left_camera_intrinsics);
-
-    // Fill right camera intrinsics.
     const VIO::VioOptionsOfCamera right_camera_intrinsics {
         .fx = 457.587f,
         .fy = 456.134f,
@@ -209,9 +179,95 @@ int main(int argc, char **argv) {
     };
     vio.options().cameras.emplace_back(right_camera_intrinsics);
 
+    /* VioOptionsOfImu */
+    // Fill imu noise sigma.
+    vio.options().imu.noise_accel = std::sqrt(2.0000e-3f);
+    vio.options().imu.noise_gyro = std::sqrt(1.6968e-04f);
+    vio.options().imu.random_walk_accel = std::sqrt(3.0000e-3f);
+    vio.options().imu.random_walk_gyro = std::sqrt(1.9393e-05f);
+
+    /* VioOptionsOfFrontend */
+    // Fill options of visual frontend.
+    vio.options().frontend.image_rows = 480;
+    vio.options().frontend.image_cols = 752;
+    vio.options().frontend.max_feature_number = 121;
+    vio.options().frontend.min_feature_number = 40;
+    vio.options().frontend.select_keyframe = false;
+    vio.options().frontend.enable_drawing_track_result = false;
+    vio.options().frontend.enable_recording_curve_binlog = true;
+    vio.options().frontend.enable_recording_image_binlog = false;
+    vio.options().frontend.log_file_name = "frontend.binlog";
+    // Fill options of feature detector.
+    vio.options().frontend.feature_detector.min_valid_feature_distance = 25;
+    vio.options().frontend.feature_detector.grid_filter_rows = 11;
+    vio.options().frontend.feature_detector.grid_filter_cols = 11;
+    // Fill options of feature tracker.
+    vio.options().frontend.feature_tracker.half_row_size_of_patch = 6;
+    vio.options().frontend.feature_tracker.half_col_size_of_patch = 6;
+    vio.options().frontend.feature_tracker.max_iterations = 15;
+
+    /* VioOptionsOfBackend */
+    // Fill options of backend.
+    vio.options().backend.gravity_w = Vec3(0.0f, 0.0f, 9.8f);
+    vio.options().backend.max_valid_feature_depth_in_meter = 120.0f;
+    vio.options().backend.min_valid_feature_depth_in_meter = 0.05f;
+    vio.options().backend.default_feature_depth_in_meter = 2.0f;
+    vio.options().backend.max_tolerence_time_for_estimation_in_second = 0.05f;
+    vio.options().backend.enable_local_map_store_raw_images = false;
+    vio.options().backend.enable_recording_curve_binlog = true;
+    vio.options().backend.log_file_name = "backend.binlog";
+
+    /* VioOptionsOfDataLoader */
+    // Fill options of data loader.
+    vio.options().data_loader.max_size_of_imu_buffer = 200;
+    vio.options().data_loader.max_size_of_image_buffer = 20;
+    vio.options().data_loader.enable_recording_curve_binlog = true;
+    vio.options().data_loader.enable_recording_raw_data_binlog = true;
+    vio.options().data_loader.log_file_name = "data_loader.binlog";
+
+    /* VioOptionsOfDataManager */
+    // Fill left and right camera extrinsics.
+    Mat3 R_i_cl;
+    R_i_cl << 0.0148655429818,  -0.999880929698,  0.00414029679422,
+              0.999557249008,   0.0149672133247,  0.025715529948,
+              -0.0257744366974, 0.00375618835797, 0.999660727178;
+    const Vec3 p_i_cl = Vec3(-0.0216401454975,-0.064676986768, 0.00981073058949);
+    vio.options().data_manager.all_R_ic.emplace_back(R_i_cl);
+    vio.options().data_manager.all_t_ic.emplace_back(p_i_cl);
+    Mat3 R_i_cr;
+    R_i_cr << 0.0125552670891,  -0.999755099723, 0.0182237714554,
+              0.999598781151,   0.0130119051815, 0.0251588363115,
+              -0.0253898008918, 0.0179005838253, 0.999517347078;
+    const Vec3 p_i_cr = Vec3(-0.0198435579556, 0.0453689425024, 0.00786212447038);
+    vio.options().data_manager.all_R_ic.emplace_back(R_i_cr);
+    vio.options().data_manager.all_t_ic.emplace_back(p_i_cr);
+    vio.options().data_manager.max_num_of_stored_key_frames = 8;
+    vio.options().data_manager.max_time_s_of_imu_preintegration_block = 10.0f;
+    vio.options().data_manager.enable_recording_curve_binlog = true;
+    vio.options().data_manager.log_file_name = "data_manager.binlog";
+
+    /* VioOptions */
+    // Fill options of vio.
+    vio.options().max_tolerence_time_s_for_no_data = 2.0f;
+    vio.options().heart_beat_period_time_s = 1.0f;
+    vio.options().log_file_root_name = "../../Slam_Workspace/output/";
+
     // Config vio.
     vio.ConfigAllComponents();
     LogFixPercision(4);
+}
+
+static std::ofstream g_txt_log("../output/vio_log.txt");
+int main(int argc, char **argv) {
+    // Root direction of Euroc dataset.
+    std::string dataset_root_dir = "D:/My_Github/Datasets/Euroc/MH_01_easy/";
+    if (argc == 2) {
+        dataset_root_dir = argv[1];
+    }
+
+    // Fill configuration of vio.
+    ReportInfo(YELLOW ">> Test vio on " << dataset_root_dir << "." RESET_COLOR);
+    ConfigAllComponentsOfVio();
 
     // Config visualizor 3d.
     Visualizor3D::camera_view().q_wc = Quat(1.0, -1.0, 0, 0).normalized();
