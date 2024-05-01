@@ -51,7 +51,7 @@ struct BackendStatus {
 
 struct BackendSignals {
     struct {
-        uint32_t should_quit : 1;
+        uint32_t should_quit : 1;   // You can kill all relative threads by checking this flag.
         uint32_t reserved : 31;
     };
 };
@@ -230,9 +230,6 @@ private:
     BackendLogStates log_package_states_;
     BackendLogStatus log_package_status_;
     BackendLogCostTime log_package_cost_time_;
-
-    // Signal flags.
-    bool should_quit_ = false;  // You can kill all relative threads by checking this flag.
 };
 
 }
