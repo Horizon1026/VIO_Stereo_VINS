@@ -42,7 +42,7 @@ bool Backend::TryToInitialize() {
     }
 
     // Sync motion states.
-    if (!SyncTwcToTwiInLocalMap()) {
+    if (!data_manager_->SyncTwcToTwiInLocalMap()) {
         ReportError("[Backend] Backend failed to sync motion states.");
         return false;
     }
@@ -102,7 +102,7 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
     }
 
     // Recovery all imu states in imu_based_frames.
-    RETURN_FALSE_IF(!SyncTwcToTwiInLocalMap());
+    RETURN_FALSE_IF(!data_manager_->SyncTwcToTwiInLocalMap());
     uint32_t index = 0;
     for (auto &imu_frame : data_manager_->imu_based_frames()) {
         imu_frame.v_wi = imu_frame.q_wi * all_v_ii.segment(index * 3, 3);

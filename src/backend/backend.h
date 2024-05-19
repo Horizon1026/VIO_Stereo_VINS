@@ -157,8 +157,6 @@ private:
     void RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
                                          const Vec3 &bias_gyro,
                                          ImuBasedFrame &imu_based_frame);
-    bool SyncTwcToTwiInLocalMap();
-    bool SyncTwiToTwcInLocalMap();
     bool AddNewestFrameWithStatesPredictionToLocalMap();
     bool ControlSizeOfLocalMap();
     void UpdateBackendStates();

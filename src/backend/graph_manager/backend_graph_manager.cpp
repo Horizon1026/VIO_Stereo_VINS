@@ -485,7 +485,7 @@ bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
     }
 
     // Update all camera poses.
-    RETURN_FALSE_IF(!SyncTwiToTwcInLocalMap());
+    RETURN_FALSE_IF(!data_manager_->SyncTwiToTwcInLocalMap());
 
     // Update all feature position.
     for (uint32_t i = 0; i < graph_.vertices.all_features_id.size(); ++i) {

@@ -89,6 +89,9 @@ public:
 
     // Compute imu accel variance.
     float ComputeImuAccelVariance();
+    // Sync local map.
+    bool SyncTwcToTwiInLocalMap();
+    bool SyncTwiToTwcInLocalMap();
 
     // Compute correspondence between two frames.
     FramesCorresbondence GetCorresbondence(const int32_t frame_id_i, const int32_t frame_id_j);

@@ -101,6 +101,48 @@ float DataManager::ComputeImuAccelVariance() {
     return variance;
 }
 
+bool DataManager::SyncTwcToTwiInLocalMap() {
+    if (camera_extrinsics_.empty()) {
+        ReportError("[DataManager] DataManager failed to sync states bases on imu frame.");
+        return false;
+    }
+
+    // Extract camera extrinsics.
+    const Quat &q_ic = camera_extrinsics_.front().q_ic;
+    const Vec3 &p_ic = camera_extrinsics_.front().p_ic;
+
+    // T_wi = T_wc * T_ic.inv.
+    auto it = imu_based_frames_.begin();
+    for (const auto &frame : visual_local_map_->frames()) {
+        RETURN_FALSE_IF(it == imu_based_frames_.end());
+        Utility::ComputeTransformTransformInverse(frame.p_wc(), frame.q_wc(), p_ic, q_ic, it->p_wi, it->q_wi);
+        ++it;
+    }
+
+    return true;
+}
+
+bool DataManager::SyncTwiToTwcInLocalMap() {
+    if (camera_extrinsics_.empty()) {
+        ReportError("[DataManager] DataManager failed to sync states bases on camera frame.");
+        return false;
+    }
+
+    // Extract camera extrinsics.
+    const Quat &q_ic = camera_extrinsics_.front().q_ic;
+    const Vec3 &p_ic = camera_extrinsics_.front().p_ic;
+
+    // T_wc = T_wi * T_ic
+    auto it = imu_based_frames_.cbegin();
+    for (auto &frame : visual_local_map_->frames()) {
+        RETURN_FALSE_IF(it == imu_based_frames_.cend());
+        Utility::ComputeTransformTransform(it->p_wi, it->q_wi, p_ic, q_ic, frame.p_wc(), frame.q_wc());
+        ++it;
+    }
+
+    return true;
+}
+
 // Compute correspondence between two frames.
 FramesCorresbondence DataManager::GetCorresbondence(const int32_t frame_id_i, const int32_t frame_id_j) {
     FramesCorresbondence corres;
