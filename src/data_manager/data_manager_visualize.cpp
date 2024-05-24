@@ -247,10 +247,9 @@ void DataManager::ShowLocalMapInWorldFrame() {
 
         // Add camera frames in local map for newest frame.
         if (frame.id() == visual_local_map_->frames().back().id()) {
-            Visualizor3D::poses().back().scale = 0.1f;
             for (const auto &extrinsic : camera_extrinsics_) {
                 Utility::ComputeTransformTransform(p_wi, q_wi, extrinsic.p_ic, extrinsic.q_ic, p_wc, q_wc);
-                Visualizor3D::poses().emplace_back(PoseType{ .p_wb = p_wc, .q_wb = q_wc, .scale = 0.01f });
+                Visualizor3D::camera_poses().emplace_back(CameraPoseType{ .p_wc = p_wc, .q_wc = q_wc, .scale = 0.03f });
             }
         }
     }
