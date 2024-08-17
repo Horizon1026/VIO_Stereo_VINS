@@ -250,7 +250,7 @@ void ConfigAllComponentsOfVio()
     // Fill options of vio.
     vio.options().max_tolerence_time_s_for_no_data = 2.0f;
     vio.options().heart_beat_period_time_s = 1.0f;
-    vio.options().log_file_root_name = "../../Slam_Workspace/output/";
+    vio.options().log_file_root_name = "../../Workspace/output/";
 
     // Config vio.
     vio.ConfigAllComponents();
