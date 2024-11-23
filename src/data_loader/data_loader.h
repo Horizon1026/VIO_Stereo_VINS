@@ -1,7 +1,7 @@
 #ifndef _VIO_STEREO_VINS_DATA_LOADER_H_
 #define _VIO_STEREO_VINS_DATA_LOADER_H_
 
-#include "datatype_basic.h"
+#include "basic_type.h"
 #include "datatype_image.h"
 #include "datatype_image_pyramid.h"
 

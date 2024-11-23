@@ -1,7 +1,7 @@
 #ifndef _VIO_STEREO_VINS_BACKEND_LOG_H_
 #define _VIO_STEREO_VINS_BACKEND_LOG_H_
 
-#include "datatype_basic.h"
+#include "basic_type.h"
 
 namespace VIO {
 

@@ -1,7 +1,7 @@
 #ifndef _INERTIAL_EDGES_H_
 #define _INERTIAL_EDGES_H_
 
-#include "datatype_basic.h"
+#include "basic_type.h"
 #include "slam_basic_math.h"
 
 #include "imu_state.h"

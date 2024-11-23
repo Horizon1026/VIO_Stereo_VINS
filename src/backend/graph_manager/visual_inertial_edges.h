@@ -1,7 +1,7 @@
 #ifndef _VISUAL_INERTIAL_EDGES_H_
 #define _VISUAL_INERTIAL_EDGES_H_
 
-#include "datatype_basic.h"
+#include "basic_type.h"
 #include "slam_basic_math.h"
 
 #include "vertex.h"
