@@ -1,5 +1,5 @@
 #include "data_loader.h"
-#include "log_report.h"
+#include "slam_log_reporter.h"
 #include "memory"
 
 namespace VIO {

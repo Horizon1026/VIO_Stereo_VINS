@@ -1,5 +1,5 @@
 #include "backend.h"
-#include "log_report.h"
+#include "slam_log_reporter.h"
 #include "tick_tock.h"
 
 namespace VIO {

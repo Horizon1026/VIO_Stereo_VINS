@@ -6,9 +6,9 @@
 #include "solver_lm.h"
 #include "solver_dogleg.h"
 
-#include "log_report.h"
+#include "slam_log_reporter.h"
 #include "tick_tock.h"
-#include "math_kinematics.h"
+#include "slam_basic_math.h"
 
 namespace VIO {
 

@@ -2,7 +2,7 @@
 #define _GENERAL_EDGES_H_
 
 #include "datatype_basic.h"
-#include "math_kinematics.h"
+#include "slam_basic_math.h"
 
 #include "vertex.h"
 #include "vertex_quaternion.h"
