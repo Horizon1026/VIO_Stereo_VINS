@@ -44,8 +44,8 @@ endif()
 if ( NOT TARGET lib_vision_geometry_pnp )
     add_subdirectory( ${VISION_GEOMETRY_PATH}/src/perspective_n_point ${PROJECT_SOURCE_DIR}/build/lib_vision_geometry_pnp )
 endif()
-if ( NOT TARGET lib_vision_geometry_triangulation )
-    add_subdirectory( ${VISION_GEOMETRY_PATH}/src/triangulation ${PROJECT_SOURCE_DIR}/build/lib_vision_geometry_triangulation )
+if ( NOT TARGET lib_vision_geometry_point_triangulator )
+    add_subdirectory( ${VISION_GEOMETRY_PATH}/src/point_triangulator ${PROJECT_SOURCE_DIR}/build/lib_vision_geometry_point_triangulator )
 endif()
 
 # Add components of slam solver.
@@ -89,7 +89,7 @@ target_link_libraries( lib_vio_stereo_vins_backend
 
     lib_vision_geometry_epipolar
     lib_vision_geometry_pnp
-    lib_vision_geometry_triangulation
+    lib_vision_geometry_point_triangulator
 
     lib_binary_data_log
 

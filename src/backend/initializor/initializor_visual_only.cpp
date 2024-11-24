@@ -2,7 +2,7 @@
 #include "slam_operations.h"
 
 #include "geometry_epipolar.h"
-#include "geometry_triangulation.h"
+#include "point_triangulator.h"
 
 namespace VIO {
 
@@ -87,7 +87,7 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
             feature_ptr->observe(ref_frame_id).front().rectified_norm_xy,
             feature_ptr->observe(cur_frame_id).front().rectified_norm_xy};
 
-        Triangulator solver;
+        PointTriangulator solver;
         if (solver.Triangulate(all_q_wc, all_p_wc, all_norm_uv, feature_ptr->param())) {
             feature_ptr->status() = FeatureSolvedStatus::kSolved;
         } else {

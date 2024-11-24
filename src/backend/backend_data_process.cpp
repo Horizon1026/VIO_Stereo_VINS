@@ -3,7 +3,7 @@
 #include "tick_tock.h"
 
 #include "geometry_epipolar.h"
-#include "geometry_triangulation.h"
+#include "point_triangulator.h"
 #include "geometry_pnp.h"
 
 namespace VIO {
@@ -79,8 +79,8 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     RETURN_FALSE_IF(feature_ptr->observes().size() == 1 && feature_ptr->observes().front().size() < 2);
 
     using namespace VISION_GEOMETRY;
-    Triangulator solver;
-    solver.options().kMethod = Triangulator::TriangulationMethod::kAnalytic;
+    PointTriangulator solver;
+    solver.options().kMethod = PointTriangulator::TriangulationMethod::kAnalytic;
 
     std::vector<Quat> all_q_wc;
     std::vector<Vec3> all_p_wc;
