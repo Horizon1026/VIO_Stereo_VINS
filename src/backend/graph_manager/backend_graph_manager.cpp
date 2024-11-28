@@ -120,7 +120,7 @@ void Backend::AddAllCameraExtrinsicsToGraph() {
         graph_.vertices.all_cameras_p_ic.back()->param() = extrinsic.p_ic.cast<DorF>();
         graph_.vertices.all_cameras_p_ic.back()->name() = std::string("p_ic");
 
-        graph_.vertices.all_cameras_q_ic.emplace_back(std::make_unique<VertexQuat<DorF>>(4, 3));
+        graph_.vertices.all_cameras_q_ic.emplace_back(std::make_unique<VertexQuat<DorF>>());
         graph_.vertices.all_cameras_q_ic.back()->param() << extrinsic.q_ic.w(),
             extrinsic.q_ic.x(), extrinsic.q_ic.y(), extrinsic.q_ic.z();
         graph_.vertices.all_cameras_q_ic.back()->name() = std::string("q_ic");
@@ -136,7 +136,7 @@ void Backend::AddAllCameraPosesInLocalMapToGraph() {
         graph_.vertices.all_frames_p_wc.back()->param() = frame.p_wc().cast<DorF>();
         graph_.vertices.all_frames_p_wc.back()->name() = std::string("p_wc") + std::to_string(frame.id());
 
-        graph_.vertices.all_frames_q_wc.emplace_back(std::make_unique<VertexQuat<DorF>>(4, 3));
+        graph_.vertices.all_frames_q_wc.emplace_back(std::make_unique<VertexQuat<DorF>>());
         graph_.vertices.all_frames_q_wc.back()->param() << frame.q_wc().w(), frame.q_wc().x(), frame.q_wc().y(), frame.q_wc().z();
         graph_.vertices.all_frames_q_wc.back()->name() = std::string("q_wc") + std::to_string(frame.id());
     }
@@ -150,7 +150,7 @@ void Backend::AddAllImuPosesInLocalMapToGraph() {
         graph_.vertices.all_frames_p_wi.back()->param() = imu_based_frame.p_wi.cast<DorF>();
         graph_.vertices.all_frames_p_wi.back()->name() = std::string("p_wi") + std::to_string(frame_id);
 
-        graph_.vertices.all_frames_q_wi.emplace_back(std::make_unique<VertexQuat<DorF>>(4, 3));
+        graph_.vertices.all_frames_q_wi.emplace_back(std::make_unique<VertexQuat<DorF>>());
         graph_.vertices.all_frames_q_wi.back()->param() << imu_based_frame.q_wi.w(), imu_based_frame.q_wi.x(), imu_based_frame.q_wi.y(), imu_based_frame.q_wi.z();
         graph_.vertices.all_frames_q_wi.back()->name() = std::string("q_wi") + std::to_string(frame_id);
 
