@@ -5,7 +5,7 @@ project( test_vio_stereo_vins )
 set( CMAKE_BUILD_TYPE "RelWithDegInfo" )
 set( CMAKE_CXX_FLAGS "-std=c++17 -O3 -g -Wall -pthread" )
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
-set( CMAKE_CXX_STANDARD 17 )
+set( CMAKE_CXX_STANDARD 20 )
 
 # Add stack backward.
 set( SLAM_UTILITY_PATH ${PROJECT_SOURCE_DIR}/../Slam_Utility )
