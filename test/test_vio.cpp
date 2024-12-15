@@ -97,7 +97,7 @@ void PublishCameraData(const std::string &csv_file_path,
         image_file_name.erase(std::remove(image_file_name.begin(), image_file_name.end(), ','), image_file_name.end());
 
         GrayImage image;
-        Visualizor::LoadImage(image_file_root + image_file_name, image);
+        Visualizor2D::LoadImage(image_file_root + image_file_name, image);
         image.memory_owner() = false;
         if (image.data() == nullptr) {
             ReportError("Failed to load image file.");
