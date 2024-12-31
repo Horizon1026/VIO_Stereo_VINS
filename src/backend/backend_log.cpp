@@ -32,13 +32,7 @@ void Backend::RegisterLogPackages() {
     package_states_ptr->id = kBackendStatesLogIndex;
     package_states_ptr->name = "backend states";
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "time_stamp_s"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "p_wi_x"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "p_wi_y"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "p_wi_z"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_w"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_x"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_y"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_z"});
+    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kPose6Dof, .name = "T_wi"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_pitch"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_roll"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_yaw"});
