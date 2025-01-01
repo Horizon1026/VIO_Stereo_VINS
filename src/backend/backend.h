@@ -142,6 +142,8 @@ private:
     // Backend log recorder.
     void RegisterLogPackages();
     void RecordBackendLogStates();
+    void UpdateBackendLogGraph();
+    void RecordBackendLogGraph();
     void RecordBackendLogStatus();
     void RecordBackendLogCostTime();
     void RecordBackendLogPriorInformation();
@@ -231,6 +233,7 @@ private:
 
     // Record log.
     BinaryDataLog logger_;
+    BackendLogGraph log_package_graph_;
     BackendLogStates log_package_states_;
     BackendLogStatus log_package_status_;
     BackendLogCostTime log_package_cost_time_;

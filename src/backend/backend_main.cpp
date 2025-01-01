@@ -10,15 +10,15 @@ bool Backend::RunOnce() {
     TickTock total_timer;
 
     // Process newest frame into visual local map.
-    log_package_cost_time_.add_new_frame_into_local_map = 0.0f;
+    log_package_cost_time_.add_new_frame = 0.0f;
     if (status_.is_initialized) {
         // Process newest visual and imu measurements.
         timer.TockTickInMillisecond();
         const bool res = AddNewestFrameWithStatesPredictionToLocalMap();
-        log_package_cost_time_.add_new_frame_into_local_map = timer.TockTickInMillisecond();
+        log_package_cost_time_.add_new_frame = timer.TockTickInMillisecond();
         if (res) {
             ReportColorInfo("[Backend] Backend succeed to add newest frame with states prediction within " <<
-                log_package_cost_time_.add_new_frame_into_local_map << " ms.");
+                log_package_cost_time_.add_new_frame << " ms.");
         } else {
             ResetToReintialize();
             ReportColorError("[Backend] Backend failed to add newest frame and do states prediction.");
@@ -79,6 +79,7 @@ bool Backend::RunOnce() {
     // Record logs.
     log_package_cost_time_.total_loop = total_timer.TockTickInMillisecond();
     RecordBackendLogStates();
+    RecordBackendLogGraph();
     RecordBackendLogStatus();
     RecordBackendLogCostTime();
     RecordBackendLogPriorInformation();

@@ -28,20 +28,39 @@ struct BackendLogStates {
     float bias_g_x = 0.0f;
     float bias_g_y = 0.0f;
     float bias_g_z = 0.0f;
+};
 
-    uint8_t is_prior_valid = 0;
-    float prior_residual = 0.0f;
+struct BackendLogGraph {
+    uint32_t num_of_p_ic = 0;
+    uint32_t num_of_q_ic = 0;
+    uint32_t num_of_p_wi = 0;
+    uint32_t num_of_q_wi = 0;
+    uint32_t num_of_v_wi = 0;
+    uint32_t num_of_bias_a = 0;
+    uint32_t num_of_bias_g = 0;
+    uint32_t num_of_p_wc = 0;
+    uint32_t num_of_q_wc = 0;
+    uint32_t num_of_feature_invdep = 0;
+
+    uint32_t num_of_prior_factor = 0;
+    uint32_t num_of_visual_factor = 0;
+    uint32_t num_of_imu_factor = 0;
+
+    uint8_t is_prior_valid_before_ba = 0;
+    float prior_residual_before_ba = 0.0f;
+    uint8_t is_prior_valid_after_ba = 0;
+    float prior_residual_after_ba = 0.0f;
 };
 
 struct BackendLogStatus {
     uint8_t is_initialized = 0;
     uint8_t marginalize_type = 0;
-    uint32_t num_of_valid_loop = 0;
+    uint32_t valid_loop_count = 0;
 };
 
 struct BackendLogCostTime {
     float total_loop = 0.0f;
-    float add_new_frame_into_local_map = 0.0f;
+    float add_new_frame = 0.0f;
     float initialize = 0.0f;
     float estimate = 0.0f;
     float marginalize = 0.0f;

@@ -5,11 +5,12 @@ namespace VIO {
 
 namespace {
     constexpr uint32_t kBackendStatesLogIndex = 1;
-    constexpr uint32_t kBackendStatusLogIndex = 2;
-    constexpr uint32_t kBackendCostTimeLogIndex = 3;
-    constexpr uint32_t kBackendPriorHessianLogIndex = 4;
-    constexpr uint32_t kBackendPredictionReprojectionErrorLogIndex = 5;
-    constexpr uint32_t kBackendFeatureParallexAngleLogIndex = 6;
+    constexpr uint32_t kBackendGraphLogIndex = 2;
+    constexpr uint32_t kBackendStatusLogIndex = 3;
+    constexpr uint32_t kBackendCostTimeLogIndex = 4;
+    constexpr uint32_t kBackendPriorHessianLogIndex = 5;
+    constexpr uint32_t kBackendPredictionReprojectionErrorLogIndex = 6;
+    constexpr uint32_t kBackendFeatureParallexAngleLogIndex = 7;
 }
 
 bool Backend::Configuration(const std::string &log_file_name) {
@@ -41,10 +42,32 @@ void Backend::RegisterLogPackages() {
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "v_wi"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_a"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_g"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_prior_valid"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "prior_residual"});
     if (!logger_.RegisterPackage(package_states_ptr)) {
         ReportError("[Backend] Failed to register package for backend states log.");
+    }
+
+    std::unique_ptr<PackageInfo> package_graph_ptr = std::make_unique<PackageInfo>();
+    package_graph_ptr->id = kBackendGraphLogIndex;
+    package_graph_ptr->name = "backend graph";
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_p_ic"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_q_ic"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_p_wi"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_q_wi"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_v_wi"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_bias_a"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_bias_g"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_p_wc"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_q_wc"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_feature_invdep"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_prior_factor"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_visual_factor"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_imu_factor"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_prior_valid_before_ba"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "prior_residual_before_ba"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_prior_valid_after_ba"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "prior_residual_after_ba"});
+    if (!logger_.RegisterPackage(package_graph_ptr)) {
+        ReportError("[Backend] Failed to register package for backend graph log.");
     }
 
     std::unique_ptr<PackageInfo> package_status_flags_ptr = std::make_unique<PackageInfo>();
@@ -52,7 +75,7 @@ void Backend::RegisterLogPackages() {
     package_status_flags_ptr->name = "backend status";
     package_status_flags_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_initialized"});
     package_status_flags_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "marginalize_type"});
-    package_status_flags_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_valid_loop"});
+    package_status_flags_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "valid_loop_count"});
     if (!logger_.RegisterPackage(package_status_flags_ptr)) {
         ReportError("[Backend] Failed to register package for backend status flags log.");
     }
@@ -125,11 +148,39 @@ void Backend::RecordBackendLogStates() {
     log_package_states_.bias_g_y = states_.motion.bg.y();
     log_package_states_.bias_g_z = states_.motion.bg.z();
 
-    log_package_states_.is_prior_valid = static_cast<uint8_t>(states_.prior.is_valid);
-    log_package_states_.prior_residual = states_.prior.is_valid ? states_.prior.residual.squaredNorm() : 0.0f;
-
-    // Record log.
     logger_.RecordPackage(kBackendStatesLogIndex, reinterpret_cast<const char *>(&log_package_states_), states_.motion.time_stamp_s);
+}
+
+void Backend::UpdateBackendLogGraph() {
+    RETURN_IF(!options().kEnableRecordBinaryCurveLog);
+    log_package_graph_ = BackendLogGraph{};
+
+    log_package_graph_.num_of_p_ic = graph_.vertices.all_cameras_p_ic.size();
+    log_package_graph_.num_of_q_ic = graph_.vertices.all_cameras_q_ic.size();
+    log_package_graph_.num_of_p_wi = graph_.vertices.all_frames_p_wi.size();
+    log_package_graph_.num_of_q_wi = graph_.vertices.all_frames_q_wi.size();
+    log_package_graph_.num_of_v_wi = graph_.vertices.all_frames_v_wi.size();
+    log_package_graph_.num_of_bias_a = graph_.vertices.all_frames_ba.size();
+    log_package_graph_.num_of_bias_g = graph_.vertices.all_frames_bg.size();
+    log_package_graph_.num_of_p_wc = graph_.vertices.all_frames_p_wc.size();
+    log_package_graph_.num_of_q_wc = graph_.vertices.all_frames_q_wc.size();
+    log_package_graph_.num_of_feature_invdep = graph_.vertices.all_features_invdep.size();
+
+    log_package_graph_.num_of_prior_factor = graph_.edges.all_prior_factors.size();
+    log_package_graph_.num_of_visual_factor = graph_.edges.all_visual_factors.size();
+    log_package_graph_.num_of_imu_factor = graph_.edges.all_imu_factors.size();
+
+    log_package_graph_.is_prior_valid_before_ba = static_cast<uint8_t>(states_.prior.is_valid);
+    log_package_graph_.prior_residual_before_ba = states_.prior.is_valid ? states_.prior.residual.squaredNorm() : 0.0f;
+}
+
+void Backend::RecordBackendLogGraph() {
+    RETURN_IF(!options().kEnableRecordBinaryCurveLog);
+
+    log_package_graph_.is_prior_valid_after_ba = static_cast<uint8_t>(states_.prior.is_valid);
+    log_package_graph_.prior_residual_after_ba = states_.prior.is_valid ? states_.prior.residual.squaredNorm() : 0.0f;
+
+    logger_.RecordPackage(kBackendGraphLogIndex, reinterpret_cast<const char *>(&log_package_graph_), states_.motion.time_stamp_s);
 }
 
 void Backend::RecordBackendLogStatus() {
@@ -137,23 +188,18 @@ void Backend::RecordBackendLogStatus() {
 
     log_package_status_.is_initialized = status_.is_initialized;
     log_package_status_.marginalize_type = static_cast<uint8_t>(status_.marginalize_type);
-    log_package_status_.num_of_valid_loop = status_.is_initialized ? log_package_status_.num_of_valid_loop + 1 : 0;
+    log_package_status_.valid_loop_count = status_.is_initialized ? log_package_status_.valid_loop_count + 1 : 0;
 
-    // Record log.
     logger_.RecordPackage(kBackendStatusLogIndex, reinterpret_cast<const char *>(&log_package_status_), states_.motion.time_stamp_s);
 }
 
 void Backend::RecordBackendLogCostTime() {
     RETURN_IF(!options().kEnableRecordBinaryCurveLog);
-
-    // Record log.
     logger_.RecordPackage(kBackendCostTimeLogIndex, reinterpret_cast<const char *>(&log_package_cost_time_), states_.motion.time_stamp_s);
 }
 
 void Backend::RecordBackendLogPriorInformation() {
     RETURN_IF(!options().kEnableRecordBinaryCurveLog);
-
-    // Record log.
     if (states_.prior.is_valid) {
         logger_.RecordPackage(kBackendPriorHessianLogIndex, states_.prior.hessian.cast<float>(), states_.motion.time_stamp_s);
     }
