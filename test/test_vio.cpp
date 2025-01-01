@@ -213,7 +213,7 @@ void ConfigAllComponentsOfVio()
     vio.options().backend.min_valid_feature_depth_in_meter = 0.05f;
     vio.options().backend.default_feature_depth_in_meter = 2.0f;
     vio.options().backend.min_parallex_angle_of_feature_for_local_ba = 5.0f;
-    vio.options().backend.max_tolerence_time_for_estimation_in_second = 0.05f;
+    vio.options().backend.max_tolerence_time_for_estimation_in_second = 0.03f;
     vio.options().backend.use_multi_view_observation = true;
     vio.options().backend.fix_camera_extrinsics = true;
     vio.options().backend.enable_local_map_store_raw_images = false;
@@ -245,7 +245,7 @@ void ConfigAllComponentsOfVio()
     vio.options().data_manager.all_R_ic.emplace_back(R_i_cr);
     vio.options().data_manager.all_t_ic.emplace_back(p_i_cr);
     vio.options().data_manager.max_num_of_stored_key_frames = 8;
-    vio.options().data_manager.max_time_s_of_imu_preintegration_block = 10.0f;
+    vio.options().data_manager.max_time_s_of_imu_preintegration_block = 5.0f;
     vio.options().data_manager.enable_recording_curve_binlog = true;
     vio.options().data_manager.log_file_name = "data_manager.binlog";
 

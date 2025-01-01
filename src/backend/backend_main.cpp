@@ -71,12 +71,14 @@ bool Backend::RunOnce() {
         }
     }
 
-    // Control the dimension of local map.
-    RETURN_FALSE_IF(!ControlSizeOfLocalMap());
     // Update backend states for output.
     UpdateBackendStates();
+    // Trigger to record log of data_manager.
+    data_manager_->TriggerLogRecording(states_.motion.time_stamp_s);
+    // Control the dimension of local map.
+    RETURN_FALSE_IF(!ControlSizeOfLocalMap());
 
-    // Record logs.
+    // Record logs of backend.
     log_package_cost_time_.total_loop = total_timer.TockTickInMillisecond();
     RecordBackendLogStates();
     RecordBackendLogPredictStates();
@@ -85,7 +87,6 @@ bool Backend::RunOnce() {
     RecordBackendLogCostTime();
     RecordBackendLogPriorInformation();
     RecordBackendLogParallexAngleMap();
-    data_manager_->TriggerLogRecording(states_.motion.time_stamp_s);
 
     return true;
 }

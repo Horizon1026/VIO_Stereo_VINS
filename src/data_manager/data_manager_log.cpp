@@ -79,12 +79,13 @@ void DataManager::RecordLocalMap(const float time_stamp_s) {
     }
 
     log_package.num_of_frames = visual_local_map_->frames().size();
-
     logger_.RecordPackage(kDataManagerLocalMapLogIndex, reinterpret_cast<const char *>(&log_package), time_stamp_s);
 }
 
 void DataManager::RecordPointCloud(const float time_stamp_s) {
     RETURN_IF(visual_local_map_->frames().empty());
+    RETURN_IF(latest_record_point_cloud_time_s_ == time_stamp_s);
+
     std::vector<Vec3> points;
     points.reserve(visual_local_map_->features().size());
     for (const auto &pair : visual_local_map_->features()) {
@@ -100,6 +101,7 @@ void DataManager::RecordPointCloud(const float time_stamp_s) {
     }
 
     logger_.RecordPackage(kDataManagerPointCloudLogIndex, points, time_stamp_s);
+    latest_record_point_cloud_time_s_ = time_stamp_s;
 }
 
 }

@@ -7,7 +7,7 @@ A simple visual-inertial odometry reconstructed from vins-fusion.
     - [x] Visualizor.
 - [x] Data loader.
 - [x] Frontend.
-    - [x] Stereo visual frontend(Base on repo: Visual_Frontend).
+    - [x] Stereo visual frontend (Base on repo: Visual_Frontend).
 - [x] Backend.
     - [x] Backend initialization.
     - [x] Backend optimization.
@@ -28,7 +28,7 @@ A simple visual-inertial odometry reconstructed from vins-fusion.
 - Visualizor3D
 
 # Debug
-- Visual_Frontend 疑似在多线程情况下有偶现的 tracking 点数很少问题，会导致后端连续切 keyframe 而发散，待修复。
+- Visual_Frontend 疑似在多线程情况下有偶现的 tracking 点数很少问题，怀疑是 data_loader 给图问题。这会导致低概率的后端连续切 keyframe 而发散，待修复。
 
 # Tips
 - 这是为了学习开源的 VINS-FUSION 而创建的用于复现/魔改 paper 的代码仓库，欢迎一起交流学习，不同意商用；

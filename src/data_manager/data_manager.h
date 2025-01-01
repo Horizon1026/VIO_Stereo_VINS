@@ -132,6 +132,7 @@ private:
 
     // Record log.
     SLAM_DATA_LOG::BinaryDataLog logger_;
+    float latest_record_point_cloud_time_s_ = 0.0f;
 
 };
 
