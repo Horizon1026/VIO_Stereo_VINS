@@ -31,8 +31,11 @@ struct BackendOptions {
     float kMinValidFeatureDepthInMeter = 0.0f;
     float kDefaultFeatureDepthInMeter = 0.0f;
 
-    float kMinParallexAngleOfFeatureToBundleAdjustmentInDegree = 5.0f;
+    float kMinParallexAngleOfFeatureToBundleAdjustmentInDegree = 0.0f;
     float kMaxToleranceTimeCostForEstimationInSecond = 0.0f;
+
+    bool kEnableUseMultiViewObservation = true;
+    bool kFixCameraExtrinsics = true;
 };
 
 /* Status of Backend. */
@@ -142,6 +145,8 @@ private:
     // Backend log recorder.
     void RegisterLogPackages();
     void RecordBackendLogStates();
+    void UpdateBackendLogPredictStates();
+    void RecordBackendLogPredictStates();
     void UpdateBackendLogGraph();
     void RecordBackendLogGraph();
     void RecordBackendLogStatus();
@@ -235,6 +240,7 @@ private:
     BinaryDataLog logger_;
     BackendLogGraph log_package_graph_;
     BackendLogStates log_package_states_;
+    BackendLogStates log_package_predict_states_;
     BackendLogStatus log_package_status_;
     BackendLogCostTime log_package_cost_time_;
 };

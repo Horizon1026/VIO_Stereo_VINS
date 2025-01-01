@@ -62,7 +62,11 @@ struct VioOptionsOfBackend {
     float min_valid_feature_depth_in_meter = 0.0f;
     float default_feature_depth_in_meter = 0.0f;
 
+    float min_parallex_angle_of_feature_for_local_ba = 0.0f;
     float max_tolerence_time_for_estimation_in_second = 0.0f;
+
+    bool use_multi_view_observation = true;
+    bool fix_camera_extrinsics = true;
 
     bool enable_local_map_store_raw_images = false;
     bool enable_recording_curve_binlog = false;

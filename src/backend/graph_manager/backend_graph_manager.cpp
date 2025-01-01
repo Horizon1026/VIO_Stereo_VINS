@@ -216,7 +216,7 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const Feature
         visual_reproj_factor->SetVertex(graph_.vertices.all_frames_q_wc[idx - offset].get(), 4);
         visual_reproj_factor->observation() = observe_vector.cast<DorF>();
         visual_reproj_factor->information() = visual_info_matrix;
-        visual_reproj_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.5));
+        visual_reproj_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.2));
         visual_reproj_factor->name() = std::string("pure visual ba");
         RETURN_FALSE_IF(!visual_reproj_factor->SelfCheck());
     }
@@ -245,7 +245,7 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureTyp
 
     // Add edges of visual reprojection factor, considering two cameras view one frame.
     for (uint32_t i = 1; i < obv_in_ref.size(); ++i) {
-        BREAK_IF(use_multi_view);
+        BREAK_IF(!use_multi_view);
         observe_vector.tail<2>() = obv_in_ref[i].rectified_norm_xy;
 
         // Add edge of visual reprojection factor, considering two camera view one frame.
@@ -258,7 +258,7 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureTyp
         visual_reproj_factor->SetVertex(graph_.vertices.all_cameras_q_ic[i].get(), 4);
         visual_reproj_factor->observation() = observe_vector.cast<DorF>();
         visual_reproj_factor->information() = visual_info_matrix;
-        visual_reproj_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.5));
+        visual_reproj_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.2));
         visual_reproj_factor->name() = std::string("one frame two cameras");
         RETURN_FALSE_IF(!visual_reproj_factor->SelfCheck());
     }
@@ -282,12 +282,11 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureTyp
         visual_reproj_factor->SetVertex(graph_.vertices.all_cameras_q_ic[0].get(), 6);
         visual_reproj_factor->observation() = observe_vector.cast<DorF>();
         visual_reproj_factor->information() = visual_info_matrix;
-        visual_reproj_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.5));
+        visual_reproj_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.2));
         visual_reproj_factor->name() = std::string("two frames one camera");
         RETURN_FALSE_IF(!visual_reproj_factor->SelfCheck());
 
-        CONTINUE_IF(use_multi_view);
-
+        CONTINUE_IF(!use_multi_view);
         // Add edges of visual reprojection factor, considering two cameras view two frames.
         for (uint32_t i = 1; i < obv_in_cur.size(); ++i) {
             observe_vector.tail<2>() = obv_in_cur[i].rectified_norm_xy;
@@ -305,7 +304,7 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureTyp
             visual_reproj_factor->SetVertex(graph_.vertices.all_cameras_q_ic[i].get(), 8);
             visual_reproj_factor->observation() = observe_vector.cast<DorF>();
             visual_reproj_factor->information() = visual_info_matrix;
-            visual_reproj_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.5));
+            visual_reproj_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.2));
             visual_reproj_factor->name() = std::string("two frames two cameras");
             RETURN_FALSE_IF(!visual_reproj_factor->SelfCheck());
         }
@@ -325,8 +324,7 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
     for (const auto &pair : data_manager_->visual_local_map()->features()) {
         const auto &feature = pair.second;
         // Select features which has at least two observations.
-        CONTINUE_IF(use_multi_view && feature.observes().size() < 2 && feature.observes().front().size() < 2)
-        CONTINUE_IF(!use_multi_view && feature.observes().size() < 2);
+        CONTINUE_IF(feature.observes().size() < 2);
         // Select features which is first observed in keyframes.(This is important.)
         CONTINUE_IF(feature.first_frame_id() > data_manager_->visual_local_map()->frames().back().id() - 2);
         // Select features which is solved successfully.
@@ -366,10 +364,11 @@ bool Backend::AddFeatureFirstObserveInOldestFrameAndVisualFactorsToGraph(const b
         // Select features which is first observed in oldest frame in visual_local_map.
         CONTINUE_IF(feature.first_frame_id() != oldest_frame_id);
         // Select features which has at least two observations.
-        CONTINUE_IF(use_multi_view && feature.observes().size() < 2 && feature.observes().front().size() < 2)
-        CONTINUE_IF(!use_multi_view && feature.observes().size() < 2);
+        CONTINUE_IF(feature.observes().size() < 2);
         // Select features which is solved successfully.
         CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved);
+        // Select features that have enough parallex.(This is important.)
+        CONTINUE_IF(ComputeMaxParallexAngleOfFeature(feature.id()) < options_.kMinParallexAngleOfFeatureToBundleAdjustmentInDegree * kDegToRad);
 
         // Compute inverse depth by p_w of this feature.
         const auto &frame = data_manager_->visual_local_map()->frame(feature.first_frame_id());
@@ -436,6 +435,7 @@ bool Backend::AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph() {
     RETURN_FALSE_IF(!prior_factor->SelfCheck());
 
     // [Edges] Camera extrinsic prior factor.
+    RETURN_TRUE_IF(!options().kFixCameraExtrinsics);
     RETURN_TRUE_IF(data_manager_->camera_extrinsics().empty());
     for (uint32_t i = 0; i < graph_.vertices.all_cameras_p_ic.size(); ++i) {
         graph_.edges.all_prior_factors.emplace_back(std::make_unique<EdgePriorPose<DorF>>());

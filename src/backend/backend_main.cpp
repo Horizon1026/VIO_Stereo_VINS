@@ -47,7 +47,7 @@ bool Backend::RunOnce() {
     if (status_.is_initialized) {
         // Try to do graph optimization if vio has initialized.
         timer.TockTickInMillisecond();
-        const bool estimate_res = TryToEstimate(true);
+        const bool estimate_res = TryToEstimate(options().kEnableUseMultiViewObservation);
         log_package_cost_time_.estimate = timer.TockTickInMillisecond();
         if (estimate_res) {
             ReportColorInfo("[Backend] Backend succeed to estimate within " << log_package_cost_time_.estimate << " ms.");
@@ -61,7 +61,7 @@ bool Backend::RunOnce() {
 
         // Try to do marginalization if neccessary.
         timer.TockTickInMillisecond();
-        const bool marginalize_res = TryToMarginalize(true);
+        const bool marginalize_res = TryToMarginalize(options().kEnableUseMultiViewObservation);
         log_package_cost_time_.marginalize = timer.TockTickInMillisecond();
         if (marginalize_res) {
             ReportColorInfo("[Backend] Backend succeed to marginalize within " << log_package_cost_time_.marginalize << " ms.");
@@ -79,6 +79,7 @@ bool Backend::RunOnce() {
     // Record logs.
     log_package_cost_time_.total_loop = total_timer.TockTickInMillisecond();
     RecordBackendLogStates();
+    RecordBackendLogPredictStates();
     RecordBackendLogGraph();
     RecordBackendLogStatus();
     RecordBackendLogCostTime();

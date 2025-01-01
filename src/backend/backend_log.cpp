@@ -4,7 +4,8 @@
 namespace VIO {
 
 namespace {
-    constexpr uint32_t kBackendStatesLogIndex = 1;
+    constexpr uint32_t kBackendStatesLogIndex = 0;
+    constexpr uint32_t kBackendPredictStatesLogIndex = 1;
     constexpr uint32_t kBackendGraphLogIndex = 2;
     constexpr uint32_t kBackendStatusLogIndex = 3;
     constexpr uint32_t kBackendCostTimeLogIndex = 4;
@@ -44,6 +45,21 @@ void Backend::RegisterLogPackages() {
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_g"});
     if (!logger_.RegisterPackage(package_states_ptr)) {
         ReportError("[Backend] Failed to register package for backend states log.");
+    }
+
+    std::unique_ptr<PackageInfo> package_predict_states_ptr = std::make_unique<PackageInfo>();
+    package_predict_states_ptr->id = kBackendPredictStatesLogIndex;
+    package_predict_states_ptr->name = "backend predict states";
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "time_stamp_s"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kPose6Dof, .name = "T_wi"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_pitch"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_roll"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_yaw"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "v_wi"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_a"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_g"});
+    if (!logger_.RegisterPackage(package_predict_states_ptr)) {
+        ReportError("[Backend] Failed to register package for backend predict states log.");
     }
 
     std::unique_ptr<PackageInfo> package_graph_ptr = std::make_unique<PackageInfo>();
@@ -149,6 +165,48 @@ void Backend::RecordBackendLogStates() {
     log_package_states_.bias_g_z = states_.motion.bg.z();
 
     logger_.RecordPackage(kBackendStatesLogIndex, reinterpret_cast<const char *>(&log_package_states_), states_.motion.time_stamp_s);
+}
+
+void Backend::UpdateBackendLogPredictStates() {
+    RETURN_IF(data_manager_->imu_based_frames().empty());
+    auto &newest_imu_based_frame = data_manager_->imu_based_frames().back();
+    auto it = std::next(data_manager_->imu_based_frames().rbegin());
+    if (it == data_manager_->imu_based_frames().rend()) {
+        return;
+    }
+    auto &subnew_imu_based_frame = *it;
+
+    log_package_predict_states_.time_stamp_s = newest_imu_based_frame.time_stamp_s;
+
+    log_package_predict_states_.p_wi_x = newest_imu_based_frame.p_wi.x();
+    log_package_predict_states_.p_wi_y = newest_imu_based_frame.p_wi.y();
+    log_package_predict_states_.p_wi_z = newest_imu_based_frame.p_wi.z();
+
+    const Vec3 euler = Utility::QuaternionToEuler(newest_imu_based_frame.q_wi);
+    log_package_predict_states_.q_wi_pitch = euler.x();
+    log_package_predict_states_.q_wi_roll = euler.y();
+    log_package_predict_states_.q_wi_yaw = euler.z();
+
+    log_package_predict_states_.q_wi_w = newest_imu_based_frame.q_wi.w();
+    log_package_predict_states_.q_wi_x = newest_imu_based_frame.q_wi.x();
+    log_package_predict_states_.q_wi_y = newest_imu_based_frame.q_wi.y();
+    log_package_predict_states_.q_wi_z = newest_imu_based_frame.q_wi.z();
+
+    log_package_predict_states_.v_wi_x = newest_imu_based_frame.v_wi.x();
+    log_package_predict_states_.v_wi_y = newest_imu_based_frame.v_wi.y();
+    log_package_predict_states_.v_wi_z = newest_imu_based_frame.v_wi.z();
+
+    log_package_predict_states_.bias_a_x = subnew_imu_based_frame.imu_preint_block.bias_accel().x();
+    log_package_predict_states_.bias_a_y = subnew_imu_based_frame.imu_preint_block.bias_accel().y();
+    log_package_predict_states_.bias_a_z = subnew_imu_based_frame.imu_preint_block.bias_accel().z();
+
+    log_package_predict_states_.bias_g_x = subnew_imu_based_frame.imu_preint_block.bias_gyro().x();
+    log_package_predict_states_.bias_g_y = subnew_imu_based_frame.imu_preint_block.bias_gyro().y();
+    log_package_predict_states_.bias_g_z = subnew_imu_based_frame.imu_preint_block.bias_gyro().z();
+}
+
+void Backend::RecordBackendLogPredictStates() {
+    logger_.RecordPackage(kBackendPredictStatesLogIndex, reinterpret_cast<const char *>(&log_package_predict_states_), states_.motion.time_stamp_s);
 }
 
 void Backend::UpdateBackendLogGraph() {

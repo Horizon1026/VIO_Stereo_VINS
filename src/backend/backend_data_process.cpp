@@ -295,8 +295,8 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
         RecordBackendLogPredictionReprojectionError(repro_err_with_feature_id, newest_cam_frame.time_stamp_s());
     }
 
-    // Try to solve better pose of newest frame by pnp.
-    TryToSolveFramePoseByFeaturesObserved(newest_cam_frame.id(), newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
+    // Record result of prediction.
+    UpdateBackendLogPredictStates();
 
     // Try to triangulize all new features observed in newest frame.
     for (auto &pair : newest_cam_frame.features()) {
