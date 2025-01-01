@@ -331,6 +331,8 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
         CONTINUE_IF(feature.first_frame_id() > data_manager_->visual_local_map()->frames().back().id() - 2);
         // Select features which is solved successfully.
         CONTINUE_IF(use_only_solved_features && feature.status() != FeatureSolvedStatus::kSolved);
+        // Select features that have enough parallex.(This is important.)
+        CONTINUE_IF(ComputeMaxParallexAngleOfFeature(feature.id()) < options_.kMinParallexAngleOfFeatureToBundleAdjustmentInDegree * kDegToRad);
 
         // Compute inverse depth by p_w of this feature.
         const auto &frame = data_manager_->visual_local_map()->frame(feature.first_frame_id());

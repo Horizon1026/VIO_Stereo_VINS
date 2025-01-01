@@ -82,6 +82,7 @@ bool Backend::RunOnce() {
     RecordBackendLogStatus();
     RecordBackendLogCostTime();
     RecordBackendLogPriorInformation();
+    RecordBackendLogParallexAngleMap();
     data_manager_->TriggerLogRecording(states_.motion.time_stamp_s);
 
     return true;

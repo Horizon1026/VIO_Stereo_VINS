@@ -75,6 +75,7 @@ public:
     void RegisterLogPackages();
     void TriggerLogRecording(const float time_stamp_s);
     void RecordLocalMap(const float time_stamp_s);
+    void RecordParallexAngleMap(const float time_stamp_s);
 
     // Self check.
     bool SelfCheckVisualLocalMap();

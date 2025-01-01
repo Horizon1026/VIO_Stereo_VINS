@@ -98,7 +98,7 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
     // Estimate pose of each frame between these two frame.
     for (int32_t frame_id = ref_frame_id + 1; frame_id < cur_frame_id; ++frame_id) {
         const auto prev_frame_ptr = data_manager_->visual_local_map()->frame(frame_id - 1);
-        if (!TryToSolveFramePoseByFeaturesObservedByItself(frame_id, prev_frame_ptr->p_wc(), prev_frame_ptr->q_wc())) {
+        if (!TryToSolveFramePoseByFeaturesObserved(frame_id, prev_frame_ptr->p_wc(), prev_frame_ptr->q_wc())) {
             ReportWarn("[Backend] Backend failed to estimate frame pose between frame [" << ref_frame_id << "] and [" << cur_frame_id << "].");
             return false;
         }
@@ -108,7 +108,7 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
     for (auto &frame : data_manager_->visual_local_map()->frames()) {
         CONTINUE_IF(frame.id() <= static_cast<uint32_t>(cur_frame_id));
 
-        if (!TryToSolveFramePoseByFeaturesObservedByItself(frame.id())) {
+        if (!TryToSolveFramePoseByFeaturesObserved(frame.id())) {
             ReportWarn("[Backend] Backend failed to estimate pose of frame [" << frame.id() << "].");
             return false;
         }
@@ -147,7 +147,7 @@ bool Backend::PrepareForPureVisualSfmByMultiView() {
         // No need to estimate pose of first frame.
         CONTINUE_IF(frame.id() == static_cast<uint32_t>(ref_frame_id));
 
-        if (!TryToSolveFramePoseByFeaturesObservedByItself(frame.id())) {
+        if (!TryToSolveFramePoseByFeaturesObserved(frame.id())) {
             ReportWarn("[Backend] Backend failed to estimate pose of frame [" << frame.id() << "].");
             return false;
         }

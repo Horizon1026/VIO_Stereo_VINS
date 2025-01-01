@@ -31,6 +31,7 @@ struct BackendOptions {
     float kMinValidFeatureDepthInMeter = 0.0f;
     float kDefaultFeatureDepthInMeter = 0.0f;
 
+    float kMinParallexAngleOfFeatureToBundleAdjustmentInDegree = 5.0f;
     float kMaxToleranceTimeCostForEstimationInSecond = 0.0f;
 };
 
@@ -144,15 +145,20 @@ private:
     void RecordBackendLogStatus();
     void RecordBackendLogCostTime();
     void RecordBackendLogPriorInformation();
+    void RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id, const float time_stamp_s);
+    void RecordBackendLogParallexAngleMap();
 
     // Backend data processor.
-    bool TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
-                                                       const Vec3 &init_p_wc = Vec3::Zero(),
-                                                       const Quat &init_q_wc = Quat::Identity());
+    bool TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id,
+                                               const Vec3 &init_p_wc = Vec3::Zero(),
+                                               const Quat &init_q_wc = Quat::Identity());
     bool TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature_id,
                                                       const int32_t min_frame_id = -1,
                                                       const int32_t max_frame_id = kMaxInt32,
                                                       const bool use_multi_view = false);
+    bool StatisReprojectionErrorInOneFrame(const int32_t frame_id,
+                                           std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id);
+    float ComputeMaxParallexAngleOfFeature(const uint32_t feature_id);
     TMat2<DorF> GetVisualObserveInformationMatrix();
     void RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
                                          const Vec3 &bias_gyro,

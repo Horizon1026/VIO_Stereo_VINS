@@ -8,6 +8,8 @@ namespace {
     constexpr uint32_t kBackendStatusLogIndex = 2;
     constexpr uint32_t kBackendCostTimeLogIndex = 3;
     constexpr uint32_t kBackendPriorHessianLogIndex = 4;
+    constexpr uint32_t kBackendPredictionReprojectionErrorLogIndex = 5;
+    constexpr uint32_t kBackendFeatureParallexAngleLogIndex = 6;
 }
 
 bool Backend::Configuration(const std::string &log_file_name) {
@@ -36,15 +38,9 @@ void Backend::RegisterLogPackages() {
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_pitch"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_roll"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_yaw"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "v_wi_x"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "v_wi_y"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "v_wi_z"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "bias_a_x"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "bias_a_y"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "bias_a_z"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "bias_g_x"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "bias_g_y"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "bias_g_z"});
+    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "v_wi"});
+    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_a"});
+    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_g"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_prior_valid"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "prior_residual"});
     if (!logger_.RegisterPackage(package_states_ptr)) {
@@ -79,6 +75,22 @@ void Backend::RegisterLogPackages() {
     package_prior_hessian_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "hessian"});
     if (!logger_.RegisterPackage(package_prior_hessian_ptr)) {
         ReportError("[Backend] Failed to register package for backend prior hessian log.");
+    }
+
+    std::unique_ptr<PackageInfo> package_pred_repro_err_ptr = std::make_unique<PackageInfo>();
+    package_pred_repro_err_ptr->id = kBackendPredictionReprojectionErrorLogIndex;
+    package_pred_repro_err_ptr->name = "reprojection error in newest frame";
+    package_pred_repro_err_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "norm plane error [x | y]"});
+    if (!logger_.RegisterPackage(package_pred_repro_err_ptr)) {
+        ReportError("[Backend] Failed to register package for backend prediction reprojection error log.");
+    }
+
+    std::unique_ptr<PackageInfo> package_parallex_angle_ptr = std::make_unique<PackageInfo>();
+    package_parallex_angle_ptr->id = kBackendFeatureParallexAngleLogIndex;
+    package_parallex_angle_ptr->name = "parallex angle map(rad)";
+    package_parallex_angle_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "feature | frame [col | row]"});
+    if (!logger_.RegisterPackage(package_parallex_angle_ptr)) {
+        ReportError("[Backend] Failed to register package for backend parallex angle map error log.");
     }
 }
 
@@ -145,6 +157,35 @@ void Backend::RecordBackendLogPriorInformation() {
     if (states_.prior.is_valid) {
         logger_.RecordPackage(kBackendPriorHessianLogIndex, states_.prior.hessian.cast<float>(), states_.motion.time_stamp_s);
     }
+}
+
+void Backend::RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id,
+                                                          const float time_stamp_s) {
+    RETURN_IF(repro_err_with_feature_id.empty());
+    Mat matrix = Mat::Zero(2, repro_err_with_feature_id.size());
+    for (uint32_t col_idx = 0; col_idx < repro_err_with_feature_id.size(); ++col_idx) {
+        matrix.col(col_idx) = repro_err_with_feature_id[col_idx].second;
+    }
+    logger_.RecordPackage(kBackendPredictionReprojectionErrorLogIndex, matrix, time_stamp_s);
+}
+
+void Backend::RecordBackendLogParallexAngleMap() {
+    const auto &frames = data_manager_->visual_local_map()->frames();
+    const auto &features = data_manager_->visual_local_map()->features();
+    const uint32_t oldest_frame_id = frames.front().id();
+
+    Mat map = Mat::Zero(frames.size(), features.size());
+    uint32_t col_index = 0;
+    for (const auto &pair : features) {
+        const uint32_t feature_id = pair.first;
+        const auto &feature = pair.second;
+        const float max_parallex_angle = ComputeMaxParallexAngleOfFeature(feature_id);
+        map.col(col_index).segment(feature.first_frame_id() - oldest_frame_id,
+            feature.final_frame_id() - feature.first_frame_id() + 1).setConstant(max_parallex_angle);
+        ++col_index;
+    }
+
+    logger_.RecordPackage(kBackendFeatureParallexAngleLogIndex, map, states_.motion.time_stamp_s);
 }
 
 }

@@ -34,9 +34,9 @@ void Backend::RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
     }
 }
 
-bool Backend::TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_id,
-                                                            const Vec3 &init_p_wc,
-                                                            const Quat &init_q_wc) {
+bool Backend::TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id,
+                                                    const Vec3 &init_p_wc,
+                                                    const Quat &init_q_wc) {
     auto frame_ptr = data_manager_->visual_local_map()->frame(frame_id);
     RETURN_FALSE_IF(frame_ptr == nullptr);
     RETURN_FALSE_IF(frame_ptr->features().empty());
@@ -69,6 +69,30 @@ bool Backend::TryToSolveFramePoseByFeaturesObservedByItself(const int32_t frame_
     return true;
 }
 
+bool Backend::StatisReprojectionErrorInOneFrame(const int32_t frame_id,
+                                                std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id) {
+    const auto frame_ptr = data_manager_->visual_local_map()->frame(frame_id);
+    RETURN_FALSE_IF(frame_ptr == nullptr);
+    RETURN_FALSE_IF(frame_ptr->features().empty());
+    const Vec3 &p_wc = frame_ptr->p_wc();
+    const Quat &q_wc = frame_ptr->q_wc();
+    const Quat q_cw = q_wc.inverse();
+    const Vec3 p_cw = - (q_cw * p_wc);
+
+    repro_err_with_feature_id.clear();
+    repro_err_with_feature_id.reserve(frame_ptr->features().size());
+    for (const auto &pair : frame_ptr->features()) {
+        const auto &feature_ptr = pair.second;
+        CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kSolved);
+        const Vec3 &p_w = feature_ptr->param();
+        const Vec2 &norm_xy = feature_ptr->observe(frame_id).front().rectified_norm_xy;
+        const Vec3 p_c = q_cw * p_w + p_cw;
+        CONTINUE_IF(p_c.z() < kZero);
+        repro_err_with_feature_id.emplace_back(std::make_pair(feature_ptr->id(), norm_xy - p_c.head<2>() / p_c.z()));
+    }
+    return true;
+}
+
 bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature_id,
                                                            const int32_t min_frame_id,
                                                            const int32_t max_frame_id,
@@ -77,10 +101,6 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     RETURN_FALSE_IF(feature_ptr == nullptr);
     RETURN_FALSE_IF(feature_ptr->observes().size() < 2);
     RETURN_FALSE_IF(feature_ptr->observes().size() == 1 && feature_ptr->observes().front().size() < 2);
-
-    using namespace VISION_GEOMETRY;
-    PointTriangulator solver;
-    solver.options().kMethod = PointTriangulator::TriangulationMethod::kAnalytic;
 
     std::vector<Quat> all_q_wc;
     std::vector<Vec3> all_p_wc;
@@ -119,10 +139,10 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
             // T_wci = T_wc0 * T_ic0.inv * T_ici.
             /*  [R_wci  t_wci] = [R_wc0  t_wc0] * [R_ic0.t  -R_ic0.t * t_ic0] * [R_ici  t_ici]
                 [  0      1  ]   [  0      1  ]   [   0              1      ]   [  0      1  ]
-                                = [R_wc0 * R_ic0.t  -R_wc0 * R_ic0.t * t_ic0 + t_wc0] * [R_ici  t_ici]
-                                    [       0                        1                ]   [  0      1  ]
-                                = [R_wc0 * R_ic0.t * R_ici  R_wc0 * R_ic0.t * t_ici - R_wc0 * R_ic0.t * t_ic0 + t_wc0]
-                                    [           0                                          1                           ] */
+                               = [R_wc0 * R_ic0.t  -R_wc0 * R_ic0.t * t_ic0 + t_wc0] * [R_ici  t_ici]
+                                 [       0                        1                ]   [  0      1  ]
+                               = [R_wc0 * R_ic0.t * R_ici  R_wc0 * R_ic0.t * t_ici - R_wc0 * R_ic0.t * t_ic0 + t_wc0]
+                                 [           0                                          1                           ] */
             const Quat q_wci = q_wi * q_ici;
             const Vec3 p_wci = q_wi * p_ici - q_wi * p_ic0 + p_wc;
             const Vec2 norm_xy_i = obv[i].rectified_norm_xy;
@@ -133,6 +153,9 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     }
 
     // Triangulize feature.
+    using namespace VISION_GEOMETRY;
+    PointTriangulator solver;
+    solver.options().kMethod = PointTriangulator::TriangulationMethod::kAnalytic;
     Vec3 p_w = Vec3::Zero();
     if (solver.Triangulate(all_q_wc, all_p_wc, all_norm_xy, p_w)) {
         feature_ptr->param() = p_w;
@@ -142,6 +165,70 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     }
 
     return true;
+}
+
+float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
+    auto feature_ptr = data_manager_->visual_local_map()->feature(feature_id);
+    RETURN_FALSE_IF(feature_ptr == nullptr);
+    RETURN_FALSE_IF(feature_ptr->observes().size() < 2);
+    RETURN_FALSE_IF(feature_ptr->observes().size() == 1 && feature_ptr->observes().front().size() < 2);
+
+    float max_parallex_angle_rad = 0.0f;
+    const int32_t min_frame_id = feature_ptr->first_frame_id();
+
+    // Select first frame to be anchor.
+    const auto anchor_frame_ptr = data_manager_->visual_local_map()->frame(min_frame_id);
+    if (anchor_frame_ptr == nullptr) {
+        return max_parallex_angle_rad;
+    }
+    const Vec3 p_wc0 = anchor_frame_ptr->p_wc();
+    const Quat q_wc0 = anchor_frame_ptr->q_wc();
+    const auto &obv0 = feature_ptr->observe(anchor_frame_ptr->id());
+    if (obv0.empty()) {
+        return max_parallex_angle_rad;
+    }
+    const Vec2 norm_xy0 = obv0[0].rectified_norm_xy;
+
+    // Extract all observations.
+    using namespace VISION_GEOMETRY;
+    const uint32_t max_observe_num = feature_ptr->observes().size();
+    for (uint32_t id = 1; id < max_observe_num; ++id) {
+        // Extract states of selected frame.
+        const uint32_t frame_id = min_frame_id + id;
+        const auto frame_ptr = data_manager_->visual_local_map()->frame(frame_id);
+        CONTINUE_IF(frame_ptr == nullptr);
+        const Quat q_wc = frame_ptr->q_wc();
+        const Vec3 p_wc = frame_ptr->p_wc();
+
+        // Add mono-view observations.
+        const auto &obv = feature_ptr->observe(frame_id);
+        CONTINUE_IF(obv.empty());
+        const Vec2 norm_xy = obv[0].rectified_norm_xy;
+        max_parallex_angle_rad = std::max(max_parallex_angle_rad, PointTriangulator::GetParallexAngle(q_wc0, p_wc0, q_wc, p_wc, norm_xy0, norm_xy));
+
+        // Add multi-view observations.
+        CONTINUE_IF(data_manager_->camera_extrinsics().size() < obv.size());
+        const Vec3 p_ic0 = data_manager_->camera_extrinsics()[0].p_ic;
+        const Quat q_ic0 = data_manager_->camera_extrinsics()[0].q_ic;
+        const Quat q_wi = q_wc * q_ic0.inverse();
+        for (uint32_t i = 1; i < obv.size(); ++i) {
+            const Vec3 p_ici = data_manager_->camera_extrinsics()[i].p_ic;
+            const Quat q_ici = data_manager_->camera_extrinsics()[i].q_ic;
+            // T_wci = T_wc0 * T_ic0.inv * T_ici.
+            /*  [R_wci  t_wci] = [R_wc0  t_wc0] * [R_ic0.t  -R_ic0.t * t_ic0] * [R_ici  t_ici]
+                [  0      1  ]   [  0      1  ]   [   0              1      ]   [  0      1  ]
+                               = [R_wc0 * R_ic0.t  -R_wc0 * R_ic0.t * t_ic0 + t_wc0] * [R_ici  t_ici]
+                                 [       0                        1                ]   [  0      1  ]
+                               = [R_wc0 * R_ic0.t * R_ici  R_wc0 * R_ic0.t * t_ici - R_wc0 * R_ic0.t * t_ic0 + t_wc0]
+                                 [           0                                          1                           ] */
+            const Quat q_wci = q_wi * q_ici;
+            const Vec3 p_wci = q_wi * p_ici - q_wi * p_ic0 + p_wc;
+            const Vec2 norm_xy_i = obv[i].rectified_norm_xy;
+            max_parallex_angle_rad = std::max(max_parallex_angle_rad, PointTriangulator::GetParallexAngle(q_wc0, p_wc0, q_wci, p_wci, norm_xy0, norm_xy_i));
+        }
+    }
+
+    return max_parallex_angle_rad;
 }
 
 bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
@@ -202,9 +289,14 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
     Utility::ComputeTransformTransform(newest_imu_based_frame.p_wi, newest_imu_based_frame.q_wi,
         p_ic, q_ic, newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
 
-    // Try to triangulize newest frame for better pose estimation.
-    // Eliminate the drift of prediction from only imu.
-    TryToSolveFramePoseByFeaturesObservedByItself(newest_cam_frame.id(), newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
+    // Statis reprojection error in newest frame. Record it.
+    std::vector<std::pair<uint32_t, Vec2>> repro_err_with_feature_id;
+    if (StatisReprojectionErrorInOneFrame(newest_cam_frame.id(), repro_err_with_feature_id)) {
+        RecordBackendLogPredictionReprojectionError(repro_err_with_feature_id, newest_cam_frame.time_stamp_s());
+    }
+
+    // Try to solve better pose of newest frame by pnp.
+    TryToSolveFramePoseByFeaturesObserved(newest_cam_frame.id(), newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
 
     // Try to triangulize all new features observed in newest frame.
     for (auto &pair : newest_cam_frame.features()) {
