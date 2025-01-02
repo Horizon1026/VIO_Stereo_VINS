@@ -27,9 +27,6 @@ A simple visual-inertial odometry reconstructed from vins-fusion.
 - Visualizor2D
 - Visualizor3D
 
-# Debug
-- Visual_Frontend 疑似在多线程情况下有偶现的 tracking 点数很少问题，怀疑是 data_loader 给图问题。这会导致低概率的后端连续切 keyframe 而发散，待修复。
-
 # Tips
 - 这是为了学习开源的 VINS-FUSION 而创建的用于复现/魔改 paper 的代码仓库，欢迎一起交流学习，不同意商用；
 - 依赖仓库为各个“积木”仓库，陈列在本文 Dependence 中。如需编译（标准 cmake 编译流程），需要拉下所有依赖仓库的源码。如需运行，需要更改 run.sh 中的数据集路径，在 test_vio.cpp 中配置参数，并在各个“积木”仓库的同一路径下创建 ./Workspace/output/ 文件夹，用于保存输出文件；
