@@ -14,6 +14,7 @@
 using namespace SLAM_VISUALIZOR;
 
 VIO::Vio vio;
+std::mutex g_mutex_load_image;
 double time_stamp_offset = 1403636579.0;
 
 void PublishImuData(const std::string &csv_file_path,
@@ -96,8 +97,11 @@ void PublishCameraData(const std::string &csv_file_path,
         camera_data >> time_stamp_s >> image_file_name;
         image_file_name.erase(std::remove(image_file_name.begin(), image_file_name.end(), ','), image_file_name.end());
 
-        GrayImage image;
-        Visualizor2D::LoadImage(image_file_root + image_file_name, image);
+        GrayImage image; {
+            // This mutex is important for multi-thread loading image. Because Visualizor2D::LoadImage is a static function.
+            std::unique_lock<std::mutex> lck(g_mutex_load_image);
+            Visualizor2D::LoadImage(image_file_root + image_file_name, image);
+        }
         image.memory_owner() = false;
         if (image.data() == nullptr) {
             ReportError("Failed to load image file.");

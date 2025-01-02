@@ -65,21 +65,6 @@ void Backend::ConstructVioGraphOptimizationProblem(Graph<DorF> &problem, float &
         problem.AddEdge(edge.get());
     }
 
-    // Report information.
-    ReportInfo("[Backend] Full vio adds [Vertices] " <<
-        graph_.vertices.all_cameras_p_ic.size() << " p_ic, " <<
-        graph_.vertices.all_cameras_q_ic.size() << " q_ic, " <<
-        graph_.vertices.all_frames_p_wi.size() << " p_wi, " <<
-        graph_.vertices.all_frames_q_wi.size() << " q_wi, " <<
-        graph_.vertices.all_frames_v_wi.size() << " v_wi, " <<
-        graph_.vertices.all_frames_ba.size() << " ba, " <<
-        graph_.vertices.all_frames_bg.size() << " bg, " <<
-        graph_.vertices.all_features_invdep.size() << " invdep.");
-    ReportInfo("[Backend] Full vio adds [Edges] " <<
-        graph_.edges.all_prior_factors.size() << " prior pose factors, " <<
-        graph_.edges.all_visual_factors.size() << " visual factors, " <<
-        graph_.edges.all_imu_factors.size() << " imu factors.");
-
     // Add prior information if it is valid.
     if (states_.prior.is_valid) {
         problem.prior_hessian() = states_.prior.hessian;

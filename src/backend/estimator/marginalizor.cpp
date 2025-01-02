@@ -16,7 +16,6 @@ BackendMarginalizeType Backend::DecideMarginalizeType() {
 
     // Visual frontend select keyframes.
     if (visual_frontend_->options().kSelfSelectKeyframe) {
-        ReportInfo("[Backend] Visual frontend select keyframe.");
         if (std::next(data_manager_->imu_based_frames().rbegin())->visual_measure->is_current_keyframe) {
             return BackendMarginalizeType::kMarginalizeOldestFrame;
         } else {
@@ -25,7 +24,6 @@ BackendMarginalizeType Backend::DecideMarginalizeType() {
     }
 
     // Backend select keyframes.
-    ReportInfo("[Backend] Backend select keyframe.");
     // Get covisible features only in left camera.
     std::vector<FeatureType *> covisible_features;
     covisible_features.reserve(visual_frontend_->options().kMaxStoredFeaturePointsNumber);
@@ -107,15 +105,9 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
     marger.options().kSortDirection = SortMargedVerticesDirection::kSortAtFront;
     states_.prior.is_valid = marger.Marginalize(vertices_to_be_marged, states_.prior.is_valid);
 
-    // marger.problem()->VerticesInformation();
-    // data_manager_->ShowMatrixImage("hessian", marger.problem()->hessian());
-    // data_manager_->ShowMatrixImage("reverse hessian", marger.reverse_hessian());
-    // data_manager_->ShowMatrixImage("prior hessian", marger.problem()->prior_hessian());
-    // data_manager_->ShowLocalMapInWorldFrame("Estimation result", 50, true);
-
     // Report the change of prior information.
     if (states_.prior.is_valid) {
-        ReportInfo("[Backend] Estimation change prior residual squared norm [" << prior_residual_norm <<
+        ReportInfo("[Backend] Marginalization change prior residual squared norm [" << prior_residual_norm <<
             "] -> [" << graph_optimization_problem.prior_residual().squaredNorm() << "]. Prior size [" <<
             marger.problem()->prior_hessian().cols() << "].");
     }
@@ -164,7 +156,7 @@ bool Backend::MarginalizeSubnewFrame(const bool use_multi_view) {
 
     // Report the change of prior information.
     if (states_.prior.is_valid) {
-        ReportInfo("[Backend] Estimation change prior residual squared norm [" << prior_residual_norm <<
+        ReportInfo("[Backend] Marginalization change prior residual squared norm [" << prior_residual_norm <<
             "] -> [" << states_.prior.residual.squaredNorm() << "]. Prior size [" <<
             size_of_prior << "] -> [" << states_.prior.hessian.cols() << "].");
     }
