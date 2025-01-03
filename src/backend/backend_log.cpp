@@ -12,6 +12,7 @@ namespace {
     constexpr uint32_t kBackendPriorHessianLogIndex = 5;
     constexpr uint32_t kBackendPredictionReprojectionErrorLogIndex = 6;
     constexpr uint32_t kBackendFeatureParallexAngleLogIndex = 7;
+    constexpr uint32_t kBackendMapOfOldestFrameLogIndex = 8;
 }
 
 bool Backend::Configuration(const std::string &log_file_name) {
@@ -130,6 +131,14 @@ void Backend::RegisterLogPackages() {
     package_parallex_angle_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "feature | frame [col | row]"});
     if (!logger_.RegisterPackage(package_parallex_angle_ptr)) {
         ReportError("[Backend] Failed to register package for backend parallex angle map error log.");
+    }
+
+    std::unique_ptr<PackageInfo> package_map_of_oldest_frame_ptr = std::make_unique<PackageInfo>();
+    package_map_of_oldest_frame_ptr->id = kBackendMapOfOldestFrameLogIndex;
+    package_map_of_oldest_frame_ptr->name = "map of oldest frame";
+    package_map_of_oldest_frame_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kPointCloud, .name = "all_p_wf"});
+    if (!logger_.RegisterPackage(package_map_of_oldest_frame_ptr)) {
+        ReportError("[Backend] Failed to register package for backend map point of oldest frame log.");
     }
 }
 
@@ -265,6 +274,7 @@ void Backend::RecordBackendLogPriorInformation() {
 
 void Backend::RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id,
                                                           const float time_stamp_s) {
+    RETURN_IF(!options().kEnableRecordBinaryCurveLog);
     RETURN_IF(repro_err_with_feature_id.empty());
     Mat matrix = Mat::Zero(2, repro_err_with_feature_id.size());
     for (uint32_t col_idx = 0; col_idx < repro_err_with_feature_id.size(); ++col_idx) {
@@ -274,6 +284,7 @@ void Backend::RecordBackendLogPredictionReprojectionError(const std::vector<std:
 }
 
 void Backend::RecordBackendLogParallexAngleMap() {
+    RETURN_IF(!options().kEnableRecordBinaryCurveLog);
     const auto &frames = data_manager_->visual_local_map()->frames();
     const auto &features = data_manager_->visual_local_map()->features();
     const uint32_t oldest_frame_id = frames.front().id();
@@ -290,6 +301,12 @@ void Backend::RecordBackendLogParallexAngleMap() {
     }
 
     logger_.RecordPackage(kBackendFeatureParallexAngleLogIndex, map, states_.motion.time_stamp_s);
+}
+
+void Backend::RecordBackendLogMapOfOldestFrame() {
+    RETURN_IF(!options().kEnableRecordBinaryCurveLog);
+    RETURN_IF(status_.marginalize_type != BackendMarginalizeType::kMarginalizeOldestFrame);
+    logger_.RecordPackage(kBackendMapOfOldestFrameLogIndex, map_of_marged_frame_.all_p_wf, map_of_marged_frame_.time_stamp_s);
 }
 
 }

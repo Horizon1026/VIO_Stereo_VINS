@@ -248,8 +248,8 @@ void ConfigAllComponentsOfVio()
     const Vec3 p_i_cr = Vec3(-0.0198435579556, 0.0453689425024, 0.00786212447038);
     vio.options().data_manager.all_R_ic.emplace_back(R_i_cr);
     vio.options().data_manager.all_t_ic.emplace_back(p_i_cr);
-    vio.options().data_manager.max_num_of_stored_key_frames = 8;
-    vio.options().data_manager.max_time_s_of_imu_preintegration_block = 5.0f;
+    vio.options().data_manager.max_num_of_stored_key_frames = 6;
+    vio.options().data_manager.max_time_s_of_imu_preintegration_block = 3.0f;
     vio.options().data_manager.enable_recording_curve_binlog = true;
     vio.options().data_manager.log_file_name = "data_manager.binlog";
 
@@ -281,8 +281,8 @@ int main(int argc, char **argv) {
     Visualizor3D::camera_view().p_wc.y() = -3.0f;
 
     // Start threads for data pipeline and vio node.
-    const float imu_timeout_ms = 3.5f;
-    const float image_timeout_ms = 30.0f;
+    const float imu_timeout_ms = 0.5f;
+    const float image_timeout_ms = 10.0f;
     std::thread thread_pub_imu_data{PublishImuData, dataset_root_dir + "mav0/imu0/data.csv", imu_timeout_ms};
     std::thread thread_pub_cam_left_data(PublishCameraData, dataset_root_dir + "mav0/cam0/data.csv", dataset_root_dir + "mav0/cam0/data/", image_timeout_ms, true);
     std::thread thread_pub_cam_right_data(PublishCameraData, dataset_root_dir + "mav0/cam1/data.csv", dataset_root_dir + "mav0/cam1/data/", image_timeout_ms, false);

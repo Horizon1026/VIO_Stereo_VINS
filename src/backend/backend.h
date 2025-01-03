@@ -82,6 +82,14 @@ struct BackendStates {
     } prior;
 };
 
+struct BackendMapPerFrame {
+    float time_stamp_s = 0.0f;
+    Vec3 p_wi = Vec3::Zero();
+    Quat q_wi = Quat::Identity();
+    std::vector<Vec2> all_norm_xy_left;
+    std::vector<Vec3> all_p_wf;
+};
+
 /* Vertices and edges for estimation and marginalization. */
 struct BackendVertices {
     std::vector<std::unique_ptr<Vertex<DorF>>> all_cameras_p_ic;
@@ -154,6 +162,7 @@ private:
     void RecordBackendLogPriorInformation();
     void RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id, const float time_stamp_s);
     void RecordBackendLogParallexAngleMap();
+    void RecordBackendLogMapOfOldestFrame();
 
     // Backend data processor.
     bool TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id,
@@ -217,6 +226,9 @@ private:
     bool MarginalizeOldestFrame(const bool use_multi_view);
     bool MarginalizeSubnewFrame(const bool use_multi_view);
 
+    // Backend map manager.
+    bool LoadMapFromOldestKeyFrame();
+
 private:
     // Options of backend.
     BackendOptions options_;
@@ -230,6 +242,8 @@ private:
 
     // Graph of backend.
     BackendGraph graph_;
+    // Map of backend.
+    BackendMapPerFrame map_of_marged_frame_;
 
     // Register some relative components.
     VisualFrontend *visual_frontend_ = nullptr;

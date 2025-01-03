@@ -2,6 +2,7 @@ aux_source_directory( . AUX_SRC_VIO_STEREO_VINS_BACKEND )
 aux_source_directory( graph_manager AUX_SRC_VIO_STEREO_VINS_BACKEND_GRAPH_MANAGER )
 aux_source_directory( initializor AUX_SRC_VIO_STEREO_VINS_BACKEND_INITIALIZOR )
 aux_source_directory( estimator AUX_SRC_VIO_STEREO_VINS_BACKEND_ESTIMATOR )
+aux_source_directory( map_manager AUX_SRC_VIO_STEREO_VINS_BACKEND_MAP_MANAGER )
 
 # Add all relative components of slam utility.
 set( SLAM_UTILITY_PATH ${PROJECT_SOURCE_DIR}/../Slam_Utility )
@@ -69,6 +70,7 @@ add_library( lib_vio_stereo_vins_backend
     ${AUX_SRC_VIO_STEREO_VINS_BACKEND_GRAPH_MANAGER}
     ${AUX_SRC_VIO_STEREO_VINS_BACKEND_INITIALIZOR}
     ${AUX_SRC_VIO_STEREO_VINS_BACKEND_ESTIMATOR}
+    ${AUX_SRC_VIO_STEREO_VINS_BACKEND_MAP_MANAGER}
 )
 target_include_directories( lib_vio_stereo_vins_backend
     PUBLIC .

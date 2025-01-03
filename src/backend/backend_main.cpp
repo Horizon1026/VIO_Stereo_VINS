@@ -73,6 +73,8 @@ bool Backend::RunOnce() {
 
     // Update backend states for output.
     UpdateBackendStates();
+    // Load map frame from visual local map.
+    LoadMapFromOldestKeyFrame();
     // Trigger to record log of data_manager.
     data_manager_->TriggerLogRecording(states_.motion.time_stamp_s);
     // Control the dimension of local map.
@@ -87,6 +89,7 @@ bool Backend::RunOnce() {
     RecordBackendLogCostTime();
     RecordBackendLogPriorInformation();
     RecordBackendLogParallexAngleMap();
+    RecordBackendLogMapOfOldestFrame();
 
     return true;
 }
