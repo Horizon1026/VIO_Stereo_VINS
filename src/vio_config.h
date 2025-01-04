@@ -64,6 +64,7 @@ struct VioOptionsOfBackend {
 
     float min_parallex_angle_of_feature_for_local_ba = 0.0f;
     float max_tolerence_time_for_estimation_in_second = 0.0f;
+    float max_tolerence_reprojection_error_in_normal_plane = 0.0f;
 
     bool use_multi_view_observation = true;
     bool fix_camera_extrinsics = true;

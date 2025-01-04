@@ -25,8 +25,7 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     // [Vertices] Inverse depth of each feature.
     // [Edges] Visual reprojection factor.
     const bool add_factors_with_cam_ex = true;
-    const bool use_only_solved_features = false;
-    AddAllFeatureInvdepsAndVisualFactorsToGraph(add_factors_with_cam_ex, use_multi_view, use_only_solved_features);
+    AddAllFeatureInvdepsAndVisualFactorsToGraph(add_factors_with_cam_ex, use_multi_view);
     // [Edges] Imu pose prior factor. (In order to fix first imu pose)
     // [Edges] Camera extrinsic prior factor.
     RETURN_FALSE_IF(!AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph());

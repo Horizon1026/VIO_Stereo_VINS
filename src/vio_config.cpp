@@ -134,6 +134,7 @@ bool Vio::ConfigComponentOfBackend() {
     backend_->options().kMinParallexAngleOfFeatureToBundleAdjustmentInDegree = options_.backend.min_parallex_angle_of_feature_for_local_ba;
     backend_->options().kEnableUseMultiViewObservation = options_.backend.use_multi_view_observation;
     backend_->options().kFixCameraExtrinsics = options_.backend.fix_camera_extrinsics;
+    backend_->options().kMaxToleranceReprojectionErrorInNormPlane = options_.backend.max_tolerence_reprojection_error_in_normal_plane;
 
     backend_->options().kEnableLocalMapStoreRawImages = options_.backend.enable_local_map_store_raw_images;
     backend_->options().kEnableRecordBinaryCurveLog = options_.backend.enable_recording_curve_binlog;

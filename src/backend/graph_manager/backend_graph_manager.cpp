@@ -299,8 +299,7 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureTyp
 }
 
 bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex,
-                                                          const bool use_multi_view,
-                                                          const bool use_only_solved_features) {
+                                                          const bool use_multi_view) {
     // Compute information matrix of visual observation.
     const TMat2<DorF> visual_info_matrix = GetVisualObserveInformationMatrix();
 
@@ -313,7 +312,7 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
         // Select features which is first observed in keyframes.(This is important.)
         CONTINUE_IF(feature.first_frame_id() > data_manager_->visual_local_map()->frames().back().id() - 2);
         // Select features which is solved successfully.
-        CONTINUE_IF(use_only_solved_features && feature.status() != FeatureSolvedStatus::kSolved);
+        CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved);
         // Select features that have enough parallex.(This is important.)
         CONTINUE_IF(ComputeMaxParallexAngleOfFeature(feature.id()) < options_.kMinParallexAngleOfFeatureToBundleAdjustmentInDegree * kDegToRad);
 

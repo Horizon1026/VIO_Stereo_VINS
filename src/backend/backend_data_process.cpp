@@ -88,7 +88,8 @@ bool Backend::StatisReprojectionErrorInOneFrame(const int32_t frame_id,
         const Vec2 &norm_xy = feature_ptr->observe(frame_id).front().rectified_norm_xy;
         const Vec3 p_c = q_cw * p_w + p_cw;
         CONTINUE_IF(p_c.z() < kZero);
-        repro_err_with_feature_id.emplace_back(std::make_pair(feature_ptr->id(), norm_xy - p_c.head<2>() / p_c.z()));
+        const Vec2 residual = norm_xy - p_c.head<2>() / p_c.z();
+        repro_err_with_feature_id.emplace_back(std::make_pair(feature_ptr->id(), residual));
     }
     return true;
 }
@@ -99,6 +100,7 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
                                                            const bool use_multi_view) {
     auto feature_ptr = data_manager_->visual_local_map()->feature(feature_id);
     RETURN_FALSE_IF(feature_ptr == nullptr);
+    RETURN_TRUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
     RETURN_FALSE_IF(feature_ptr->observes().size() < 2);
     RETURN_FALSE_IF(feature_ptr->observes().size() == 1 && feature_ptr->observes().front().size() < 2);
 
@@ -155,6 +157,7 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     // Triangulize feature.
     using namespace VISION_GEOMETRY;
     PointTriangulator solver;
+    solver.options().kMaxToleranceReprojectionError = options_.kMaxToleranceReprojectionErrorInNormPlane;
     solver.options().kMethod = PointTriangulator::TriangulationMethod::kAnalytic;
     Vec3 p_w = Vec3::Zero();
     if (solver.Triangulate(all_q_wc, all_p_wc, all_norm_xy, p_w)) {

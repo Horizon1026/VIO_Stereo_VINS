@@ -220,6 +220,7 @@ void ConfigAllComponentsOfVio()
     vio.options().backend.max_tolerence_time_for_estimation_in_second = 0.03f;
     vio.options().backend.use_multi_view_observation = true;
     vio.options().backend.fix_camera_extrinsics = true;
+    vio.options().backend.max_tolerence_reprojection_error_in_normal_plane = 0.03f;
     vio.options().backend.enable_local_map_store_raw_images = false;
     vio.options().backend.enable_recording_curve_binlog = true;
     vio.options().backend.log_file_name = "backend.binlog";

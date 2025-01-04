@@ -71,25 +71,32 @@ bool Backend::RunOnce() {
         }
     }
 
+    log_package_cost_time_.update_state = 0.0f;
+    timer.TockTickInMillisecond();
     // Update backend states for output.
     UpdateBackendStates();
     // Load map frame from visual local map.
     LoadMapFromOldestKeyFrame();
-    // Trigger to record log of data_manager.
-    data_manager_->TriggerLogRecording(states_.motion.time_stamp_s);
     // Control the dimension of local map.
     RETURN_FALSE_IF(!ControlSizeOfLocalMap());
+    log_package_cost_time_.update_state = timer.TockTickInMillisecond();
 
     // Record logs of backend.
-    log_package_cost_time_.total_loop = total_timer.TockTickInMillisecond();
+    log_package_cost_time_.record_log = 0.0f;
+    timer.TockTickInMillisecond();
     RecordBackendLogStates();
     RecordBackendLogPredictStates();
     RecordBackendLogGraph();
     RecordBackendLogStatus();
-    RecordBackendLogCostTime();
     RecordBackendLogPriorInformation();
     RecordBackendLogParallexAngleMap();
     RecordBackendLogMapOfOldestFrame();
+    data_manager_->TriggerLogRecording(states_.motion.time_stamp_s);
+    log_package_cost_time_.record_log = timer.TockTickInMillisecond();
+
+    // Record time cost of backend.
+    log_package_cost_time_.total_loop = total_timer.TockTickInMillisecond();
+    RecordBackendLogCostTime();
 
     return true;
 }

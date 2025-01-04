@@ -105,6 +105,8 @@ void Backend::RegisterLogPackages() {
     package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "initialize(ms)"});
     package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "estimate(ms)"});
     package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "marginalize(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "update_state(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "record_log(ms)"});
     if (!logger_.RegisterPackage(package_cost_time_ptr)) {
         ReportError("[Backend] Failed to register package for backend cost time log.");
     }
@@ -177,6 +179,7 @@ void Backend::RecordBackendLogStates() {
 }
 
 void Backend::UpdateBackendLogPredictStates() {
+    RETURN_IF(!options().kEnableRecordBinaryCurveLog);
     RETURN_IF(data_manager_->imu_based_frames().empty());
     auto &newest_imu_based_frame = data_manager_->imu_based_frames().back();
     auto it = std::next(data_manager_->imu_based_frames().rbegin());
@@ -215,6 +218,7 @@ void Backend::UpdateBackendLogPredictStates() {
 }
 
 void Backend::RecordBackendLogPredictStates() {
+    RETURN_IF(!options().kEnableRecordBinaryCurveLog);
     logger_.RecordPackage(kBackendPredictStatesLogIndex, reinterpret_cast<const char *>(&log_package_predict_states_), states_.motion.time_stamp_s);
 }
 

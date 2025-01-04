@@ -64,6 +64,8 @@ struct BackendLogCostTime {
     float initialize = 0.0f;
     float estimate = 0.0f;
     float marginalize = 0.0f;
+    float update_state = 0.0f;
+    float record_log = 0.0f;
 };
 #pragma pack()
 
