@@ -19,12 +19,10 @@ RgbPixel DataManager::GetFeatureColor(const FeatureType &feature) {
     RgbPixel pixel_color = RgbColor::kLightSkyBlue;
     switch (feature.status()) {
         case FeatureSolvedStatus::kSolved:
-            if (feature.observes().size() > 1) {
-                // If this feature is observed in different frame.
-                pixel_color = RgbColor::kLaunGreen;
+            if (feature.final_frame_id() == visual_local_map_->frames().back().id()) {
+                pixel_color = RgbColor::kCyan;
             } else {
-                // If this feature is only observed in one frame but has stereo view.
-                pixel_color = RgbColor::kLightGreen;
+                pixel_color = RgbColor::kGreen;
             }
             break;
         case FeatureSolvedStatus::kMarginalized:
@@ -34,10 +32,6 @@ RgbPixel DataManager::GetFeatureColor(const FeatureType &feature) {
         case FeatureSolvedStatus::kUnsolved:
             pixel_color = RgbColor::kRed;
             break;
-    }
-
-    if (feature.observes().size() == 1 && feature.observes().front().size() == 1) {
-        pixel_color = RgbColor::kSlateGray;
     }
 
     return pixel_color;
