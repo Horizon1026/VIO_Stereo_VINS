@@ -126,6 +126,7 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
 }
 
 bool Backend::PrepareForPureVisualSfmByMultiView() {
+    RETURN_FALSE_IF(!options_.kEnableUseMultiViewObservation);
     RETURN_FALSE_IF(data_manager_->camera_extrinsics().size() < 2);
 
     // Set the first frame to be origin.

@@ -15,7 +15,7 @@ bool Backend::TryToInitialize() {
 
     // If this is mono camera, some movement is neccessary for initialization.
     const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
-    if (imu_accel_variance < kMinValidImuAccelVarianceForMonoInitialization && data_manager_->camera_extrinsics().size() < 2) {
+    if (imu_accel_variance < kMinValidImuAccelVarianceForMonoInitialization && (data_manager_->camera_extrinsics().size() < 2 || !options_.kEnableUseMultiViewObservation)) {
         ReportWarn("[Backend] Backend cannot initialize for lack of imu motion in mono-view.");
         return false;
     }
@@ -28,7 +28,7 @@ bool Backend::TryToInitialize() {
 
     // Compute initialized value of visual local map.
     if (!PrepareForPureVisualSfmByMonoView()) {
-        ReportWarn("[Backend] Backend failted to prepare for pure visual SFM in mono-view, try to use multi-view.");
+        ReportWarn("[Backend] Backend failed to prepare for pure visual SFM in mono-view, try to use multi-view.");
         if (!PrepareForPureVisualSfmByMultiView()) {
             ReportError("[Backend] Backend failed to prepare for pure visual SFM.");
             return false;
