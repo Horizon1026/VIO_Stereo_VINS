@@ -24,7 +24,7 @@ bool Backend::LoadMapFromOldestKeyFrame() {
     for (const auto &pair : oldest_frame.features()) {
         const auto &feature_id = pair.first;
         const auto &feature_ptr = pair.second;
-        CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kSolved);
+        CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kMarginalized);
         CONTINUE_IF(ComputeMaxParallexAngleOfFeature(feature_id) < 5.0f * kDegToRad);
         const Vec2 norm_xy = feature_ptr->observe(oldest_frame.id())[0].rectified_norm_xy;
         const Vec3 p_wf = feature_ptr->param();

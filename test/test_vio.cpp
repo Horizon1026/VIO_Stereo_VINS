@@ -151,7 +151,7 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         cnt = max_wait_ticks;
     }
 
-    vio.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 50, true);
+    vio.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 20, true);
 }
 
 void ConfigAllComponentsOfVio()

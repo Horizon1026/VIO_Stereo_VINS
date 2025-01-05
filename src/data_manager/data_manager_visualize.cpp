@@ -26,7 +26,7 @@ RgbPixel DataManager::GetFeatureColor(const FeatureType &feature) {
             }
             break;
         case FeatureSolvedStatus::kMarginalized:
-            pixel_color = RgbColor::kPurple;
+            pixel_color = RgbColor::kYellow;
             break;
         default:
         case FeatureSolvedStatus::kUnsolved:

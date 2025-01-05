@@ -84,7 +84,9 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
     // [Edges] Imu preintegration block factors.
     const bool only_add_oldest_one = true;
     RETURN_FALSE_IF(!AddImuFactorsToGraph(only_add_oldest_one));
-
+    // [Vertices] Newest and subnew frame is not including in prior information.
+    // If not remove them, too much zeros will fill prior information, which will perform bad when marginalize subnew frame.
+    RemoveNewestTwoFramesFromGraph();
     // Construct full visual-inertial problem.
     Graph<DorF> graph_optimization_problem;
     float prior_residual_norm = 0.0f;
@@ -118,6 +120,11 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
         states_.prior.bias = marger.problem()->prior_bias();
         states_.prior.jacobian_t_inv = marger.problem()->prior_jacobian_t_inv();
         states_.prior.residual = marger.problem()->prior_residual();
+    }
+
+    // Mark the features that been marginalized. They will not be used in the following estimation.
+    for (const auto &id : graph_.vertices.all_features_id) {
+        data_manager_->visual_local_map()->feature(id)->status() = FeatureSolvedStatus::kMarginalized;
     }
 
     return true;

@@ -164,6 +164,14 @@ void Backend::AddAllImuMotionStatesInLocalMapToGraph() {
     }
 }
 
+void Backend::RemoveNewestTwoFramesFromGraph() {
+    graph_.vertices.all_frames_p_wi.resize(graph_.vertices.all_frames_p_wi.size() - 2);
+    graph_.vertices.all_frames_q_wi.resize(graph_.vertices.all_frames_q_wi.size() - 2);
+    graph_.vertices.all_frames_v_wi.resize(graph_.vertices.all_frames_v_wi.size() - 2);
+    graph_.vertices.all_frames_ba.resize(graph_.vertices.all_frames_ba.size() - 2);
+    graph_.vertices.all_frames_bg.resize(graph_.vertices.all_frames_bg.size() - 2);
+}
+
 bool Backend::AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const FeatureType &feature,
                                                                    const float invdep,
                                                                    const TMat2<DorF> &visual_info_matrix,
@@ -311,7 +319,7 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
         CONTINUE_IF(feature.observes().size() < 2);
         // Select features which is first observed in keyframes.(This is important.)
         CONTINUE_IF(feature.first_frame_id() > data_manager_->visual_local_map()->frames().back().id() - 2);
-        // Select features which is solved successfully.
+        // Select features which is solved successfully. Of cource, features been margenalized will not be used for estimation.
         CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved);
         // Select features that have enough parallex.(This is important.)
         CONTINUE_IF(ComputeMaxParallexAngleOfFeature(feature.id()) < options_.kMinParallexAngleOfFeatureToBundleAdjustmentInDegree * kDegToRad);
@@ -340,6 +348,7 @@ bool Backend::AddFeatureFirstObserveInOldestFrameAndVisualFactorsToGraph(const b
 
     // Extract index of the oldest frame in visual_local_map;
     const auto oldest_frame_id = data_manager_->visual_local_map()->frames().front().id();
+    const auto newest_frame_id = data_manager_->visual_local_map()->frames().back().id();
 
     // [Vertices] Inverse depth of each feature.
     // [Edges] Visual reprojection factor.
@@ -347,6 +356,8 @@ bool Backend::AddFeatureFirstObserveInOldestFrameAndVisualFactorsToGraph(const b
         const auto &feature = pair.second;
         // Select features which is first observed in oldest frame in visual_local_map.
         CONTINUE_IF(feature.first_frame_id() != oldest_frame_id);
+        // Select features which cannot be tracked in newest frame any more.(This is important.)
+        CONTINUE_IF(feature.final_frame_id() >= newest_frame_id - 1);
         // Select features which has at least two observations.
         CONTINUE_IF(feature.observes().size() < 2);
         // Select features which is solved successfully.

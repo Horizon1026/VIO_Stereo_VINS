@@ -192,6 +192,7 @@ private:
     void AddAllCameraPosesInLocalMapToGraph();
     void AddAllImuPosesInLocalMapToGraph();
     void AddAllImuMotionStatesInLocalMapToGraph();
+    void RemoveNewestTwoFramesFromGraph();
     bool AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const FeatureType &feature,
                                                               const float invdep,
                                                               const TMat2<DorF> &visual_info_matrix,

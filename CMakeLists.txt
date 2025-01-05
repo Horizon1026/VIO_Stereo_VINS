@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 3.10 )
 
 project( test_vio_stereo_vins )
 
-set( CMAKE_BUILD_TYPE "RelWithDegInfo" )
+set( CMAKE_BUILD_TYPE "Debug" )
 set( CMAKE_CXX_FLAGS "-std=c++17 -O3 -g -Wall -pthread" )
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 set( CMAKE_CXX_STANDARD 20 )

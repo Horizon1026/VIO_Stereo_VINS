@@ -87,7 +87,7 @@ bool Backend::StatisReprojectionErrorInOneFrame(const int32_t frame_id,
         const Vec3 &p_w = feature_ptr->param();
         const Vec2 &norm_xy = feature_ptr->observe(frame_id).front().rectified_norm_xy;
         const Vec3 p_c = q_cw * p_w + p_cw;
-        CONTINUE_IF(p_c.z() < kZero);
+        CONTINUE_IF(p_c.z() < kZerofloat);
         const Vec2 residual = norm_xy - p_c.head<2>() / p_c.z();
         repro_err_with_feature_id.emplace_back(std::make_pair(feature_ptr->id(), residual));
     }
@@ -100,7 +100,6 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
                                                            const bool use_multi_view) {
     auto feature_ptr = data_manager_->visual_local_map()->feature(feature_id);
     RETURN_FALSE_IF(feature_ptr == nullptr);
-    RETURN_TRUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
     RETURN_FALSE_IF(feature_ptr->observes().size() < 2);
     RETURN_FALSE_IF(feature_ptr->observes().size() == 1 && feature_ptr->observes().front().size() < 2);
 
@@ -305,7 +304,7 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
     for (auto &pair : newest_cam_frame.features()) {
         const auto &feature_id = pair.first;
         const auto &feature_ptr = pair.second;
-        CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
+        CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved || feature_ptr->status() == FeatureSolvedStatus::kMarginalized);
         TryToSolveFeaturePositionByFramesObservingIt(feature_id, feature_ptr->first_frame_id(),
             feature_ptr->final_frame_id(), true);
     }
@@ -323,6 +322,10 @@ bool Backend::ControlSizeOfLocalMap() {
             const auto oldest_frame_id = data_manager_->visual_local_map()->frames().front().id();
             data_manager_->visual_local_map()->RemoveFrame(oldest_frame_id);
             data_manager_->imu_based_frames().pop_front();
+            // Remove marginalized features.
+            for (const auto &id : graph_.vertices.all_features_id) {
+                data_manager_->visual_local_map()->RemoveFeature(id);
+            }
             break;
         }
 
