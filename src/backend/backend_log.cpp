@@ -81,10 +81,8 @@ void Backend::RegisterLogPackages() {
     package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_prior_factor"});
     package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_visual_factor"});
     package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_imu_factor"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_prior_valid_before_ba"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "prior_residual_before_ba"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_prior_valid_after_ba"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "prior_residual_after_ba"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_prior_valid"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "prior_residual"});
     if (!logger_.RegisterPackage(package_graph_ptr)) {
         ReportError("[Backend] Failed to register package for backend graph log.");
     }
@@ -258,16 +256,13 @@ void Backend::UpdateBackendLogGraph() {
     log_package_graph_.num_of_prior_factor = graph_.edges.all_prior_factors.size();
     log_package_graph_.num_of_visual_factor = graph_.edges.all_visual_factors.size();
     log_package_graph_.num_of_imu_factor = graph_.edges.all_imu_factors.size();
-
-    log_package_graph_.is_prior_valid_before_ba = static_cast<uint8_t>(states_.prior.is_valid);
-    log_package_graph_.prior_residual_before_ba = states_.prior.is_valid ? states_.prior.residual.squaredNorm() : 0.0f;
 }
 
 void Backend::RecordBackendLogGraph() {
     RETURN_IF(!options().kEnableRecordBinaryCurveLog);
 
-    log_package_graph_.is_prior_valid_after_ba = static_cast<uint8_t>(states_.prior.is_valid);
-    log_package_graph_.prior_residual_after_ba = states_.prior.is_valid ? states_.prior.residual.squaredNorm() : 0.0f;
+    log_package_graph_.is_prior_valid = static_cast<uint8_t>(states_.prior.is_valid);
+    log_package_graph_.prior_residual = states_.prior.is_valid ? states_.prior.residual.squaredNorm() : 0.0f;
 
     logger_.RecordPackage(kBackendGraphLogIndex, reinterpret_cast<const char *>(&log_package_graph_), states_.motion.time_stamp_s);
 }

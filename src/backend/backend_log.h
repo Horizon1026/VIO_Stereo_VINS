@@ -46,10 +46,8 @@ struct BackendLogGraph {
     uint32_t num_of_visual_factor = 0;
     uint32_t num_of_imu_factor = 0;
 
-    uint8_t is_prior_valid_before_ba = 0;
-    float prior_residual_before_ba = 0.0f;
-    uint8_t is_prior_valid_after_ba = 0;
-    float prior_residual_after_ba = 0.0f;
+    uint8_t is_prior_valid = 0;
+    float prior_residual = 0.0f;
 };
 
 struct BackendLogStatus {
