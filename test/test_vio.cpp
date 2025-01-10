@@ -216,7 +216,7 @@ void ConfigAllComponentsOfVio()
     vio.options().backend.max_valid_feature_depth_in_meter = 30.0f;
     vio.options().backend.min_valid_feature_depth_in_meter = 0.05f;
     vio.options().backend.default_feature_depth_in_meter = 2.0f;
-    vio.options().backend.min_parallex_angle_of_feature_for_local_ba = 5.0f;
+    vio.options().backend.min_parallex_angle_of_feature_for_local_ba = 3.0f;
     vio.options().backend.max_tolerence_time_for_estimation_in_second = 0.03f;
     vio.options().backend.use_multi_view_observation = true;
     vio.options().backend.fix_camera_extrinsics = true;
