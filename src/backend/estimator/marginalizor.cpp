@@ -46,18 +46,13 @@ BackendMarginalizeType Backend::DecideMarginalizeType() {
 bool Backend::TryToMarginalize(const bool use_multi_view) {
     switch (status_.marginalize_type) {
         case BackendMarginalizeType::kMarginalizeOldestFrame: {
-            ReportColorInfo("[Backend] Backend marginalize oldest frame.");
             return MarginalizeOldestFrame(use_multi_view);
-            break;
         }
         case BackendMarginalizeType::kMarginalizeSubnewFrame: {
-            ReportColorInfo("[Backend] Backend marginalize subnew frame.");
             return MarginalizeSubnewFrame(use_multi_view);
-            break;
         }
         default:
         case BackendMarginalizeType::kNotMarginalize: {
-            ReportColorInfo("[Backend] Backend not marginalize any frame.");
             break;
         }
     }
@@ -107,13 +102,6 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
     marger.options().kSortDirection = SortMargedVerticesDirection::kSortAtFront;
     states_.prior.is_valid = marger.Marginalize(vertices_to_be_marged, states_.prior.is_valid);
 
-    // Report the change of prior information.
-    if (states_.prior.is_valid) {
-        ReportInfo("[Backend] Marginalization change prior residual squared norm [" << prior_residual_norm <<
-            "] -> [" << graph_optimization_problem.prior_residual().squaredNorm() << "]. Prior size [" <<
-            marger.problem()->prior_hessian().cols() << "].");
-    }
-
     // Store prior information.
     if (states_.prior.is_valid) {
         states_.prior.hessian = marger.problem()->prior_hessian();
@@ -132,24 +120,18 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
 
 bool Backend::MarginalizeSubnewFrame(const bool use_multi_view) {
     if (!states_.prior.is_valid) {
-        ReportInfo("[Backend] Prior information is invalid, no need to discard subnew prior information.");
         return true;
     }
 
     if (data_manager_->visual_local_map()->frames().size() < 3) {
-        ReportInfo("[Backend] Totally discard prior information.");
         states_.prior.is_valid = false;
         return true;
     }
-
-    const float prior_residual_norm = states_.prior.residual.squaredNorm();
-    const int32_t size_of_prior = static_cast<int32_t>(states_.prior.hessian.cols());
 
     // Compute the size of prior information after discarding.
     const int32_t min_size = (data_manager_->visual_local_map()->frames().size() - 2) * 15 +
         6 * data_manager_->camera_extrinsics().size();
     if (states_.prior.hessian.cols() <= min_size) {
-        ReportInfo("[Backend] No prior information is discarded.");
         return true;
     }
 
@@ -160,13 +142,6 @@ bool Backend::MarginalizeSubnewFrame(const bool use_multi_view) {
     // Prior jacobian_t_inv and residual should be decomposed by hessian and bias.
     marger.DecomposeHessianAndBias(states_.prior.hessian, states_.prior.bias,
         states_.prior.jacobian, states_.prior.residual, states_.prior.jacobian_t_inv);
-
-    // Report the change of prior information.
-    if (states_.prior.is_valid) {
-        ReportInfo("[Backend] Marginalization change prior residual squared norm [" << prior_residual_norm <<
-            "] -> [" << states_.prior.residual.squaredNorm() << "]. Prior size [" <<
-            size_of_prior << "] -> [" << states_.prior.hessian.cols() << "].");
-    }
 
     return true;
 }

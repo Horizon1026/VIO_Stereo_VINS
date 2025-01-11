@@ -5,7 +5,6 @@
 namespace VIO {
 
 bool Backend::RunOnce() {
-    ReportInfo(MAGENTA "[Backend] Backend is triggerred to run once." RESET_COLOR);
     TickTock timer;
     TickTock total_timer;
 
@@ -16,10 +15,7 @@ bool Backend::RunOnce() {
         timer.TockTickInMillisecond();
         const bool res = AddNewestFrameWithStatesPredictionToLocalMap();
         log_package_cost_time_.add_new_frame = timer.TockTickInMillisecond();
-        if (res) {
-            ReportColorInfo("[Backend] Backend succeed to add newest frame with states prediction within " <<
-                log_package_cost_time_.add_new_frame << " ms.");
-        } else {
+        if (!res) {
             ResetToReintialize();
             ReportColorError("[Backend] Backend failed to add newest frame and do states prediction.");
         }
@@ -34,7 +30,6 @@ bool Backend::RunOnce() {
         log_package_cost_time_.initialize = timer.TockTickInMillisecond();
         if (res) {
             status_.is_initialized = true;
-            ReportColorInfo("[Backend] Backend succeed to initialize within " << log_package_cost_time_.initialize << " ms.");
         } else {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to initialize. All states will be reset for reinitialization.");
@@ -49,9 +44,7 @@ bool Backend::RunOnce() {
         timer.TockTickInMillisecond();
         const bool estimate_res = TryToEstimate(options().kEnableUseMultiViewObservation);
         log_package_cost_time_.estimate = timer.TockTickInMillisecond();
-        if (estimate_res) {
-            ReportColorInfo("[Backend] Backend succeed to estimate within " << log_package_cost_time_.estimate << " ms.");
-        } else {
+        if (!estimate_res) {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to estimate. All states will be reset for reinitialization.");
         }
@@ -63,9 +56,7 @@ bool Backend::RunOnce() {
         timer.TockTickInMillisecond();
         const bool marginalize_res = TryToMarginalize(options().kEnableUseMultiViewObservation);
         log_package_cost_time_.marginalize = timer.TockTickInMillisecond();
-        if (marginalize_res) {
-            ReportColorInfo("[Backend] Backend succeed to marginalize within " << log_package_cost_time_.marginalize << " ms.");
-        } else {
+        if (!marginalize_res) {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to marginalize. All states will be reset for reinitialization.");
         }

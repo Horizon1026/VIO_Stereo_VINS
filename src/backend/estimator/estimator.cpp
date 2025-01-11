@@ -48,11 +48,6 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     solver.options().kMaxCostTimeInSecond = options_.kMaxToleranceTimeCostForEstimationInSecond;
     solver.problem() = &graph_optimization_problem;
     solver.Solve(states_.prior.is_valid);
-    // Report the change of prior information.
-    if (states_.prior.is_valid) {
-        ReportInfo("[Backend] Estimation change prior residual squared norm [" << prior_residual_norm <<
-            "] -> [" << graph_optimization_problem.prior_residual().squaredNorm() << "].");
-    }
     // Update all states in visual_local_map and imu_based_frames.
     RETURN_FALSE_IF(!SyncGraphVerticesToDataManager(graph_optimization_problem));
     return true;
