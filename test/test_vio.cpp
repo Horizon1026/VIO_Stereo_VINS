@@ -194,8 +194,8 @@ void ConfigAllComponentsOfVio()
     // Fill options of visual frontend.
     vio.options().frontend.image_rows = 480;
     vio.options().frontend.image_cols = 752;
-    vio.options().frontend.max_feature_number = 121;
-    vio.options().frontend.min_feature_number = 40;
+    vio.options().frontend.max_feature_number = 144;
+    vio.options().frontend.min_feature_number = 60;
     vio.options().frontend.select_keyframe = false;
     vio.options().frontend.enable_drawing_track_result = false;
     vio.options().frontend.enable_recording_curve_binlog = true;
@@ -203,8 +203,8 @@ void ConfigAllComponentsOfVio()
     vio.options().frontend.log_file_name = "frontend.binlog";
     // Fill options of feature detector.
     vio.options().frontend.feature_detector.min_valid_feature_distance = 25;
-    vio.options().frontend.feature_detector.grid_filter_rows = 11;
-    vio.options().frontend.feature_detector.grid_filter_cols = 11;
+    vio.options().frontend.feature_detector.grid_filter_rows = 12;
+    vio.options().frontend.feature_detector.grid_filter_cols = 12;
     // Fill options of feature tracker.
     vio.options().frontend.feature_tracker.half_row_size_of_patch = 6;
     vio.options().frontend.feature_tracker.half_col_size_of_patch = 6;
