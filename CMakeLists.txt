@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 3.10 )
+cmake_minimum_required( VERSION 3.0 )
 
 project( test_vio_stereo_vins )
 
