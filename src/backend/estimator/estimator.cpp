@@ -43,8 +43,9 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     SolverLm<DorF> solver;
     solver.options().kEnableReportEachIteration = false;
     solver.options().kOnlyUseFirstEstimatedJacobian = false;
+    solver.options().kEnableDegenerateElimination = true;
     solver.options().kLinearFunctionSolverType = LinearFunctionSolverType::kPcgSolver;
-    solver.options().kMaxConvergedSquaredStepLength = static_cast<DorF>(1e-6);
+    solver.options().kMaxConvergedSquaredStepLength = static_cast<DorF>(1e-4);
     solver.options().kMaxCostTimeInSecond = options_.kMaxToleranceTimeCostForEstimationInSecond;
     solver.problem() = &graph_optimization_problem;
     solver.Solve(states_.prior.is_valid);

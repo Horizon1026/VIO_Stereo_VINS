@@ -20,13 +20,13 @@ RgbPixel DataManager::GetFeatureColor(const FeatureType &feature) {
     switch (feature.status()) {
         case FeatureSolvedStatus::kSolved:
             if (feature.final_frame_id() == visual_local_map_->frames().back().id()) {
-                pixel_color = RgbColor::kCyan;
+                pixel_color = RgbColor::kYellow;
             } else {
                 pixel_color = RgbColor::kGreen;
             }
             break;
         case FeatureSolvedStatus::kMarginalized:
-            pixel_color = RgbColor::kYellow;
+            pixel_color = RgbColor::kBlue;
             break;
         default:
         case FeatureSolvedStatus::kUnsolved:
@@ -239,12 +239,16 @@ void DataManager::ShowLocalMapInWorldFrame() {
         p_wi0 = p_wi;
         is_p_wi0_valid = true;
 
-        // Add camera frames in local map for newest frame.
         if (frame.id() == visual_local_map_->frames().back().id()) {
+            // Add camera frames in local map for newest frame.
             for (const auto &extrinsic : camera_extrinsics_) {
                 Utility::ComputeTransformTransform(p_wi, q_wi, extrinsic.p_ic, extrinsic.q_ic, p_wc, q_wc);
                 Visualizor3D::camera_poses().emplace_back(CameraPoseType{ .p_wc = p_wc, .q_wc = q_wc, .scale = 0.03f });
             }
+
+            // Link newest frame origin to world frame origin.
+            Visualizor3D::dashed_lines().emplace_back(DashedLineType{
+                .p_w_i = p_wi, .p_w_j = Vec3::Zero(), .dot_step = 10, .color = RgbColor::kSlateGray });
         }
     }
 }

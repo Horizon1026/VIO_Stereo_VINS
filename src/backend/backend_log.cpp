@@ -10,11 +10,10 @@ namespace {
     constexpr uint32_t kBackendStatusLogIndex = 3;
     constexpr uint32_t kBackendCostTimeLogIndex = 4;
     constexpr uint32_t kBackendPriorHessianLogIndex = 5;
-    constexpr uint32_t kBackendPriorJacobianLogIndex = 6;
-    constexpr uint32_t kBackendPriorResidualLogIndex = 7;
-    constexpr uint32_t kBackendPredictionReprojectionErrorLogIndex = 8;
-    constexpr uint32_t kBackendFeatureParallexAngleLogIndex = 9;
-    constexpr uint32_t kBackendMapOfOldestFrameLogIndex = 10;
+    constexpr uint32_t kBackendPriorResidualLogIndex = 6;
+    constexpr uint32_t kBackendPredictionReprojectionErrorLogIndex = 7;
+    constexpr uint32_t kBackendFeatureParallexAngleLogIndex = 8;
+    constexpr uint32_t kBackendMapOfOldestFrameLogIndex = 9;
 }
 
 bool Backend::Configuration(const std::string &log_file_name) {
@@ -117,14 +116,6 @@ void Backend::RegisterLogPackages() {
     package_prior_hessian_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "hessian"});
     if (!logger_.RegisterPackage(package_prior_hessian_ptr)) {
         ReportError("[Backend] Failed to register package for backend prior hessian log.");
-    }
-
-    std::unique_ptr<PackageInfo> package_prior_jacobian_ptr = std::make_unique<PackageInfo>();
-    package_prior_jacobian_ptr->id = kBackendPriorJacobianLogIndex;
-    package_prior_jacobian_ptr->name = "backend prior jacobian ";
-    package_prior_jacobian_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "jacobian"});
-    if (!logger_.RegisterPackage(package_prior_jacobian_ptr)) {
-        ReportError("[Backend] Failed to register package for backend prior jacobian log.");
     }
 
     std::unique_ptr<PackageInfo> package_prior_residual_ptr = std::make_unique<PackageInfo>();
@@ -286,7 +277,6 @@ void Backend::RecordBackendLogPriorInformation() {
     RETURN_IF(!options().kEnableRecordBinaryCurveLog);
     if (states_.prior.is_valid) {
         logger_.RecordPackage(kBackendPriorHessianLogIndex, states_.prior.hessian.cast<float>(), states_.motion.time_stamp_s);
-        logger_.RecordPackage(kBackendPriorJacobianLogIndex, states_.prior.jacobian.cast<float>(), states_.motion.time_stamp_s);
         logger_.RecordPackage(kBackendPriorResidualLogIndex, states_.prior.residual.cast<float>(), states_.motion.time_stamp_s);
     }
 }
