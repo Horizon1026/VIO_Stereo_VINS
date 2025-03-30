@@ -39,9 +39,6 @@ void Backend::RegisterLogPackages() {
     package_states_ptr->name = "backend states";
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "time_stamp_s"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kPose6Dof, .name = "T_wi"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_pitch"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_roll"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_yaw"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "v_wi"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_a"});
     package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_g"});
@@ -54,9 +51,6 @@ void Backend::RegisterLogPackages() {
     package_predict_states_ptr->name = "backend predict states";
     package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "time_stamp_s"});
     package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kPose6Dof, .name = "T_wi"});
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_pitch"});
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_roll"});
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "q_wi_yaw"});
     package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "v_wi"});
     package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_a"});
     package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_g"});
@@ -160,11 +154,6 @@ void Backend::RecordBackendLogStates() {
     log_package_states_.p_wi_y = states_.motion.p_wi.y();
     log_package_states_.p_wi_z = states_.motion.p_wi.z();
 
-    const Vec3 euler = Utility::QuaternionToEuler(states_.motion.q_wi);
-    log_package_states_.q_wi_pitch = euler.x();
-    log_package_states_.q_wi_roll = euler.y();
-    log_package_states_.q_wi_yaw = euler.z();
-
     log_package_states_.q_wi_w = states_.motion.q_wi.w();
     log_package_states_.q_wi_x = states_.motion.q_wi.x();
     log_package_states_.q_wi_y = states_.motion.q_wi.y();
@@ -200,11 +189,6 @@ void Backend::UpdateBackendLogPredictStates() {
     log_package_predict_states_.p_wi_x = newest_imu_based_frame.p_wi.x();
     log_package_predict_states_.p_wi_y = newest_imu_based_frame.p_wi.y();
     log_package_predict_states_.p_wi_z = newest_imu_based_frame.p_wi.z();
-
-    const Vec3 euler = Utility::QuaternionToEuler(newest_imu_based_frame.q_wi);
-    log_package_predict_states_.q_wi_pitch = euler.x();
-    log_package_predict_states_.q_wi_roll = euler.y();
-    log_package_predict_states_.q_wi_yaw = euler.z();
 
     log_package_predict_states_.q_wi_w = newest_imu_based_frame.q_wi.w();
     log_package_predict_states_.q_wi_x = newest_imu_based_frame.q_wi.x();

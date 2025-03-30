@@ -16,9 +16,6 @@ struct BackendLogStates {
     float q_wi_x = 0.0f;
     float q_wi_y = 0.0f;
     float q_wi_z = 0.0f;
-    float q_wi_pitch = 0.0f;
-    float q_wi_roll = 0.0f;
-    float q_wi_yaw = 0.0f;
     float v_wi_x = 0.0f;
     float v_wi_y = 0.0f;
     float v_wi_z = 0.0f;
