@@ -48,12 +48,8 @@ void DataLoader::RegisterLogPackages() {
         imu_package_ptr->id = kImuRawDataLogIndex;
         imu_package_ptr->name = "imu_raw_data";
         imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "time_stamp_s"});
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "accel_x_ms2"});
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "accel_y_ms2"});
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "accel_z_ms2"});
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "gyro_x_rads"});
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "gyro_y_rads"});
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "gyro_z_rads"});
+        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "accel(ms2)"});
+        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "gyro(rads)"});
         if (!logger_.RegisterPackage(imu_package_ptr)) {
             ReportError("[DataLoader] Failed to register package for imu raw data.");
         }
