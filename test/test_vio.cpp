@@ -196,7 +196,7 @@ void ConfigAllComponentsOfVio()
     vio.options().frontend.image_cols = 752;
     vio.options().frontend.max_feature_number = 144;
     vio.options().frontend.min_feature_number = 60;
-    vio.options().frontend.select_keyframe = false;
+    vio.options().frontend.select_keyframe = true;
     vio.options().frontend.enable_drawing_track_result = false;
     vio.options().frontend.enable_recording_curve_binlog = true;
     vio.options().frontend.enable_recording_image_binlog = false;
