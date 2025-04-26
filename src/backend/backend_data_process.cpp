@@ -157,7 +157,7 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     using namespace VISION_GEOMETRY;
     PointTriangulator solver;
     solver.options().kMaxToleranceReprojectionError = options_.kMaxToleranceReprojectionErrorInNormPlane;
-    solver.options().kMethod = PointTriangulator::TriangulationMethod::kAnalytic;
+    solver.options().kMethod = PointTriangulator::Method::kAnalytic;
     Vec3 p_w = Vec3::Zero();
     if (solver.Triangulate(all_q_wc, all_p_wc, all_norm_xy, p_w)) {
         feature_ptr->param() = p_w;
