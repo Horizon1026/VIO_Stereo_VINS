@@ -130,7 +130,7 @@ void Backend::RegisterLogPackages() {
 
     std::unique_ptr<PackageInfo> package_parallex_angle_ptr = std::make_unique<PackageInfo>();
     package_parallex_angle_ptr->id = kBackendFeatureCosineParallexAngleLogIndex;
-    package_parallex_angle_ptr->name = "parallex angle map(cosine(rad))";
+    package_parallex_angle_ptr->name = "parallex angle map(sine(rad))";
     package_parallex_angle_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "feature | frame [col | row]"});
     if (!logger_.RegisterPackage(package_parallex_angle_ptr)) {
         ReportError("[Backend] Failed to register package for backend parallex angle map error log.");
@@ -287,9 +287,9 @@ void Backend::RecordBackendLogParallexAngleMap() {
     for (const auto &pair : features) {
         const uint32_t feature_id = pair.first;
         const auto &feature = pair.second;
-        const float max_cosine_parallex_angle = ComputeMaxParallexAngleOfFeature(feature_id);
+        const float max_sine_parallex_angle = ComputeMaxParallexAngleOfFeature(feature_id);
         map.col(col_index).segment(feature.first_frame_id() - oldest_frame_id,
-            feature.final_frame_id() - feature.first_frame_id() + 1).setConstant(max_cosine_parallex_angle);
+            feature.final_frame_id() - feature.first_frame_id() + 1).setConstant(max_sine_parallex_angle);
         ++col_index;
     }
 

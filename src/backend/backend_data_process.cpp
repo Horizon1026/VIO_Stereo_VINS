@@ -175,19 +175,19 @@ float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
     RETURN_FALSE_IF(feature_ptr->observes().size() < 2);
     RETURN_FALSE_IF(feature_ptr->observes().size() == 1 && feature_ptr->observes().front().size() < 2);
 
-    float max_cosine_parallex_angle = 0.0f;
+    float max_sine_parallex_angle = 0.0f;
     const int32_t min_frame_id = feature_ptr->first_frame_id();
 
     // Select first frame to be anchor.
     const auto anchor_frame_ptr = data_manager_->visual_local_map()->frame(min_frame_id);
     if (anchor_frame_ptr == nullptr) {
-        return max_cosine_parallex_angle;
+        return max_sine_parallex_angle;
     }
     const Vec3 p_wc0 = anchor_frame_ptr->p_wc();
     const Quat q_wc0 = anchor_frame_ptr->q_wc();
     const auto &obv0 = feature_ptr->observe(anchor_frame_ptr->id());
     if (obv0.empty()) {
-        return max_cosine_parallex_angle;
+        return max_sine_parallex_angle;
     }
     const Vec2 norm_xy0 = obv0[0].rectified_norm_xy;
 
@@ -206,7 +206,7 @@ float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
         const auto &obv = feature_ptr->observe(frame_id);
         CONTINUE_IF(obv.empty());
         const Vec2 norm_xy = obv[0].rectified_norm_xy;
-        max_cosine_parallex_angle = std::max(max_cosine_parallex_angle, PointTriangulator::GetCosineOfParallexAngle(q_wc0, p_wc0, q_wc, p_wc, norm_xy0, norm_xy));
+        max_sine_parallex_angle = std::max(max_sine_parallex_angle, PointTriangulator::GetSineOfParallexAngle(q_wc0, p_wc0, q_wc, p_wc, norm_xy0, norm_xy));
 
         // Add multi-view observations.
         CONTINUE_IF(data_manager_->camera_extrinsics().size() < obv.size());
@@ -226,11 +226,11 @@ float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
             const Quat q_wci = q_wi * q_ici;
             const Vec3 p_wci = q_wi * p_ici - q_wi * p_ic0 + p_wc;
             const Vec2 norm_xy_i = obv[i].rectified_norm_xy;
-            max_cosine_parallex_angle = std::max(max_cosine_parallex_angle, PointTriangulator::GetCosineOfParallexAngle(q_wc0, p_wc0, q_wci, p_wci, norm_xy0, norm_xy_i));
+            max_sine_parallex_angle = std::max(max_sine_parallex_angle, PointTriangulator::GetSineOfParallexAngle(q_wc0, p_wc0, q_wci, p_wci, norm_xy0, norm_xy_i));
         }
     }
 
-    return max_cosine_parallex_angle;
+    return max_sine_parallex_angle;
 }
 
 bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
