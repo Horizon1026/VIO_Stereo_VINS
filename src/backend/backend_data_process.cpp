@@ -60,7 +60,7 @@ bool Backend::TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id,
     std::vector<uint8_t> status;
     using namespace VISION_GEOMETRY;
     PnpSolver solver;
-    solver.options().kMethod = PnpSolver::Method::kHuber;
+    solver.options().kMethod = PnpSolver::Method::kOptimizeHuber;
     RETURN_FALSE_IF(!solver.EstimatePose(all_p_w, all_norm_xy, q_wc, p_wc, status));
 
     frame_ptr->p_wc() = p_wc;

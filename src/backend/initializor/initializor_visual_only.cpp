@@ -83,12 +83,12 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
     for (const auto &feature_ptr : covisible_features) {
         std::vector<Quat> all_q_wc = std::vector<Quat>{first_frame->q_wc(), corr_frame->q_wc()};
         std::vector<Vec3> all_p_wc = std::vector<Vec3>{first_frame->p_wc(), corr_frame->p_wc()};
-        std::vector<Vec2> all_norm_uv = std::vector<Vec2>{
+        std::vector<Vec2> all_norm_xy = std::vector<Vec2>{
             feature_ptr->observe(ref_frame_id).front().rectified_norm_xy,
             feature_ptr->observe(cur_frame_id).front().rectified_norm_xy};
 
         PointTriangulator solver;
-        if (solver.Triangulate(all_q_wc, all_p_wc, all_norm_uv, feature_ptr->param())) {
+        if (solver.Triangulate(all_q_wc, all_p_wc, all_norm_xy, feature_ptr->param())) {
             feature_ptr->status() = FeatureSolvedStatus::kSolved;
         } else {
             feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
