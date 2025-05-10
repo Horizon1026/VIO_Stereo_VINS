@@ -49,7 +49,11 @@ class DataLoader final {
 
 public:
     DataLoader() = default;
-    ~DataLoader() = default;
+    ~DataLoader() {
+        imu_buffer_.clear();
+        left_image_buffer_.clear();
+        right_image_buffer_.clear();
+    }
 
     void Clear();
 
