@@ -33,7 +33,7 @@ bool Vio::RunOnce() {
     }
 
     // Store feature and imu measurements into data_manager_->imu_based_frames().
-    std::unique_ptr<FrontendOutputData> visual_measure = std::make_unique<FrontendOutputData>(std::move(frontend_->output_data()));
+    std::unique_ptr<VisualPointsMeasure> visual_measure = std::make_unique<VisualPointsMeasure>(std::move(frontend_->output_data()));
     if (!data_manager_->ProcessMeasure(packed_measure, visual_measure)) {
         ReportWarn("[Vio] Data manager failed to store feature and imu measurements at " << vio_sys_timer_.TockInSecond() << " s.");
         return false;

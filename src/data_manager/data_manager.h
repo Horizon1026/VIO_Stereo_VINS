@@ -29,7 +29,7 @@ struct DataManagerOptions {
 
 /* Definition of Covisible Graph for Local Map. */
 using FeatureParameter = Vec3;
-using FeatureObserve = std::vector<ObservePerView>; // Use std::vector to store observations of left and right camera.
+using FeatureObserve = std::vector<PointsObservePerView>; // Use std::vector to store observations of left and right camera.
 using FeatureType = VisualFeature<FeatureParameter, FeatureObserve>;
 using CovisibleGraphType = CovisibleGraph<FeatureParameter, FeatureObserve>;
 
@@ -41,7 +41,7 @@ struct ImuBasedFrame {
     float time_stamp_s = 0.0f;
     // Measurement of raw imu(gyro, acc), raw image(left, right) and visual features.
     std::unique_ptr<PackedMeasurement> packed_measure = nullptr;
-    std::unique_ptr<FrontendOutputData> visual_measure = nullptr;
+    std::unique_ptr<VisualPointsMeasure> visual_measure = nullptr;
     // States based on imu.
     Vec3 p_wi = Vec3::Zero();
     Quat q_wi = Quat::Identity();
@@ -83,7 +83,7 @@ public:
 
     // Transform packed measurements to a new frame.
     bool ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure,
-                        std::unique_ptr<FrontendOutputData> &new_visual_measure);
+                        std::unique_ptr<VisualPointsMeasure> &new_visual_measure);
 
     // Convert all frames with bias into visual local map.
     bool ConvertAllImuBasedFramesToLocalMap();
