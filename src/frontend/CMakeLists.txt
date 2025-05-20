@@ -2,7 +2,7 @@ aux_source_directory( . AUX_SRC_VIO_STEREO_VINS_FRONTEND )
 
 # Add stereo visual frontend.
 set( VISUAL_FRONTEND_PATH ${PROJECT_SOURCE_DIR}/../Visual_Frontend/src/frontend_stereo )
-if ( NOT TARGET lib_visual_frontend_stereo )
+if( NOT TARGET lib_visual_frontend_stereo )
     add_subdirectory( ${VISUAL_FRONTEND_PATH} ${PROJECT_SOURCE_DIR}/build/lib_visual_frontend_stereo )
 endif()
 
