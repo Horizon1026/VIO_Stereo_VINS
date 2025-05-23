@@ -274,7 +274,7 @@ int main(int argc, char **argv) {
     }
 
     // Fill configuration of vio.
-    ReportInfo(YELLOW ">> Test vio on " << dataset_root_dir << "." RESET_COLOR);
+    ReportColorWarn(">> Test vio on " << dataset_root_dir << ".");
     ConfigAllComponentsOfVio();
 
     // Config visualizor 3d.
