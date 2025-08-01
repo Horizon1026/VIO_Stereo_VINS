@@ -87,7 +87,7 @@ bool Backend::StatisReprojectionErrorInOneFrame(const int32_t frame_id,
         const Vec3 &p_w = feature_ptr->param();
         const Vec2 &norm_xy = feature_ptr->observe(frame_id).front().rectified_norm_xy;
         const Vec3 p_c = q_cw * p_w + p_cw;
-        CONTINUE_IF(p_c.z() < kZerofloat);
+        CONTINUE_IF(p_c.z() < kZeroFloat);
         const Vec2 residual = norm_xy - p_c.head<2>() / p_c.z();
         repro_err_with_feature_id.emplace_back(std::make_pair(feature_ptr->id(), residual));
     }
