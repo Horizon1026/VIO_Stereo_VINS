@@ -40,6 +40,9 @@ make -j
 ```bash
 sh run.sh
 ```
+- 在Euroc数据集上跑的结果：
+
+![vio_test_on_euroc](./assets/vio_test_on_euroc.jpg)
 
 # Tips
 - 这是为了学习开源的 VINS-FUSION 而创建的用于复现/魔改 paper 的代码仓库，欢迎一起交流学习，不同意商用；
