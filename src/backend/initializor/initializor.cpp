@@ -1,7 +1,7 @@
 #include "backend.h"
 #include "slam_log_reporter.h"
 
-namespace VIO {
+namespace vio {
 
 namespace {
     const float kMinValidImuAccelVarianceForMonoInitialization = 0.4f;
@@ -113,4 +113,4 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
     return true;
 }
 
-}  // namespace VIO
+}  // namespace vio

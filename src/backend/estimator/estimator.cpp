@@ -10,7 +10,7 @@
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
 
-namespace VIO {
+namespace vio {
 
 bool Backend::TryToEstimate(const bool use_multi_view) {
     // Clear all vectors of vertices and edges.
@@ -54,4 +54,4 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     return true;
 }
 
-}  // namespace VIO
+}  // namespace vio

@@ -2,7 +2,7 @@
 #include "memory"
 #include "slam_log_reporter.h"
 
-namespace VIO {
+namespace vio {
 
 namespace {
     constexpr uint32_t kDataLoaderLogIndex = 0;
@@ -28,7 +28,7 @@ bool DataLoader::Configuration(const std::string &log_file_name) {
 }
 
 void DataLoader::RegisterLogPackages() {
-    using namespace SLAM_DATA_LOG;
+    using namespace slam_data_log;
 
     std::unique_ptr<PackageInfo> package_ptr = std::make_unique<PackageInfo>();
     package_ptr->id = kDataLoaderLogIndex;
@@ -103,4 +103,4 @@ void DataLoader::RecordPackedMeasurementLog(const PackedMeasurement &measure) {
     }
 }
 
-}  // namespace VIO
+}  // namespace vio

@@ -8,7 +8,7 @@
 #include "vertex.h"
 #include "vertex_quaternion.h"
 
-namespace VIO {
+namespace vio {
 
 /* Class Edge reprojection. Project feature 3-dof position on visual norm plane. */
 template <typename Scalar>
@@ -52,7 +52,7 @@ public:
 
         this->GetJacobian(0) = jacobian_2d_3d * (q_wc_.inverse().matrix());
         this->GetJacobian(1) = -this->GetJacobian(0);
-        this->GetJacobian(2) = jacobian_2d_3d * SLAM_UTILITY::Utility::Utility::SkewSymmetricMatrix(p_c_);
+        this->GetJacobian(2) = jacobian_2d_3d * slam_utility::Utility::Utility::SkewSymmetricMatrix(p_c_);
     }
 
 private:
@@ -109,7 +109,7 @@ public:
 
         this->GetJacobian(0) = jacobian_2d_3d * (q_wc_.inverse().matrix());
         this->GetJacobian(1) = -this->GetJacobian(0);
-        this->GetJacobian(2) = jacobian_2d_3d * SLAM_UTILITY::Utility::SkewSymmetricMatrix(p_c_);
+        this->GetJacobian(2) = jacobian_2d_3d * slam_utility::Utility::SkewSymmetricMatrix(p_c_);
     }
 
     // Set tangent base.
@@ -208,6 +208,6 @@ private:
     TVec3<Scalar> p_w_ = TVec3<Scalar>::Zero();
 };
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _VISUAL_EDGES_H_

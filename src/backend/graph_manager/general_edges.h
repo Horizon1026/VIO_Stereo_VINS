@@ -12,7 +12,7 @@
 #include "vertex.h"
 #include "vertex_quaternion.h"
 
-namespace VIO {
+namespace vio {
 
 /* Class Edge pose prior. This can be used to fix a pose with specified weight. */
 template <typename Scalar>
@@ -63,6 +63,6 @@ private:
     TQuat<Scalar> obv_q_wc_ = TQuat<Scalar>::Identity();
 };
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _GENERAL_EDGES_H_

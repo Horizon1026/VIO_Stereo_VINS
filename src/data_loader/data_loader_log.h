@@ -3,7 +3,7 @@
 
 #include "basic_type.h"
 
-namespace VIO {
+namespace vio {
 
 /* Packages of log to be recorded. */
 #pragma pack(1)
@@ -26,6 +26,6 @@ struct ImuRawDataLog {
 };
 #pragma pack()
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _VIO_STEREO_VINS_DATA_LOADER_LOG_H_

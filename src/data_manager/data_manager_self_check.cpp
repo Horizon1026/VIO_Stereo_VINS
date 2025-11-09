@@ -1,6 +1,6 @@
 #include "data_manager.h"
 
-namespace VIO {
+namespace vio {
 
 // Self check.
 bool DataManager::SelfCheckVisualLocalMap() {
@@ -77,4 +77,4 @@ bool DataManager::SelfCheckImuBasedFrames() {
     return true;
 }
 
-}  // namespace VIO
+}  // namespace vio

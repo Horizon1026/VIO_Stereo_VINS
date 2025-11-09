@@ -7,7 +7,7 @@
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
 
-namespace VIO {
+namespace vio {
 
 BackendMarginalizeType Backend::DecideMarginalizeType() {
     if (data_manager_->visual_local_map()->frames().size() < data_manager_->options().kMaxStoredKeyFrames) {
@@ -143,4 +143,4 @@ bool Backend::MarginalizeSubnewFrame(const bool use_multi_view) {
 }
 
 
-}  // namespace VIO
+}  // namespace vio

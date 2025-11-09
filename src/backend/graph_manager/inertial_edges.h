@@ -15,7 +15,7 @@
 #include "vertex.h"
 #include "vertex_quaternion.h"
 
-namespace VIO {
+namespace vio {
 
 /* Class Edge reprojection. Align imu preintegration between two imu pose. */
 template <typename Scalar>
@@ -182,6 +182,6 @@ private:
     Scalar integrate_time_s_ = static_cast<Scalar>(0);
 };
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _INERTIAL_EDGES_H_

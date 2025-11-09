@@ -1,6 +1,6 @@
 #include "backend.h"
 
-namespace VIO {
+namespace vio {
 
 bool Backend::EstimateGyroBias() {
     // Preintegrate all imu measurement block.
@@ -176,4 +176,4 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
     return true;
 }
 
-}  // namespace VIO
+}  // namespace vio

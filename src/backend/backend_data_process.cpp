@@ -6,7 +6,7 @@
 #include "geometry_pnp.h"
 #include "point_triangulator.h"
 
-namespace VIO {
+namespace vio {
 
 TMat2<DorF> Backend::GetVisualObserveInformationMatrix() {
     const auto &camera_model = visual_frontend_->camera_models().front();
@@ -51,7 +51,7 @@ bool Backend::TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id, cons
     Vec3 p_wc = init_p_wc;
     Quat q_wc = init_q_wc;
     std::vector<uint8_t> status;
-    using namespace VISION_GEOMETRY;
+    using namespace vision_geometry;
     PnpSolver solver;
     solver.options().kMethod = PnpSolver::Method::kOptimizeHuber;
     RETURN_FALSE_IF(!solver.EstimatePose(all_p_w, all_norm_xy, q_wc, p_wc, status));
@@ -144,7 +144,7 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     }
 
     // Triangulize feature.
-    using namespace VISION_GEOMETRY;
+    using namespace vision_geometry;
     PointTriangulator solver;
     solver.options().kMaxToleranceReprojectionError = options_.kMaxToleranceReprojectionErrorInNormPlane;
     solver.options().kMethod = PointTriangulator::Method::kAnalytic;
@@ -182,7 +182,7 @@ float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
     const Vec2 norm_xy0 = obv0[0].rectified_norm_xy;
 
     // Extract all observations.
-    using namespace VISION_GEOMETRY;
+    using namespace vision_geometry;
     const uint32_t max_observe_num = feature_ptr->observes().size();
     for (uint32_t id = 1; id < max_observe_num; ++id) {
         // Extract states of selected frame.
@@ -416,4 +416,4 @@ void Backend::UpdateBackendStates() {
     states_.motion.bg = newest_imu_based_frame.imu_preint_block.bias_gyro();
 }
 
-}  // namespace VIO
+}  // namespace vio

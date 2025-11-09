@@ -4,7 +4,7 @@
 #include "geometry_epipolar.h"
 #include "point_triangulator.h"
 
-namespace VIO {
+namespace vio {
 
 namespace {
     constexpr float kMinValidAverageParallaxForPureVisualSfm = 16.0f;
@@ -58,7 +58,7 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
     }
 
     // Solve relative pose between these two frames.
-    using namespace VISION_GEOMETRY;
+    using namespace vision_geometry;
     EpipolarSolver solver;
     solver.options().kModel = EpipolarSolver::EpipolarModel::kFivePoints;
     solver.options().kMethod = EpipolarSolver::EpipolarMethod::kRansac;
@@ -210,4 +210,4 @@ bool Backend::PerformPureVisualBundleAdjustment(const bool use_multi_view) {
     return true;
 }
 
-}  // namespace VIO
+}  // namespace vio

@@ -11,9 +11,9 @@
 
 #include "enable_stack_backward.h"
 
-using namespace SLAM_VISUALIZOR;
+using namespace slam_visualizor;
 
-VIO::Vio vio;
+vio::Vio vio;
 std::mutex g_mutex_load_image;
 double time_stamp_offset = 1403636579.0;
 
@@ -156,7 +156,7 @@ void TestRunVio(const uint32_t max_wait_ticks) {
 void ConfigAllComponentsOfVio() {
     /* VioOptionsOfCamera */
     // Fill left and right camera intrinsics.
-    const VIO::VioOptionsOfCamera left_camera_intrinsics {
+    const vio::VioOptionsOfCamera left_camera_intrinsics {
         .fx = 458.654f,
         .fy = 457.296f,
         .cx = 367.215f,
@@ -168,7 +168,7 @@ void ConfigAllComponentsOfVio() {
         .p2 = 1.76187114e-05f,
     };
     vio.options().cameras.emplace_back(left_camera_intrinsics);
-    const VIO::VioOptionsOfCamera right_camera_intrinsics {
+    const vio::VioOptionsOfCamera right_camera_intrinsics {
         .fx = 457.587f,
         .fy = 456.134f,
         .cx = 379.999,

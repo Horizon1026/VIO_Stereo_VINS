@@ -11,7 +11,7 @@
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
 
-namespace VIO {
+namespace vio {
 
 void Backend::ClearGraph() {
     graph_.vertices.all_cameras_p_ic.clear();
@@ -507,4 +507,4 @@ bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
     return true;
 }
 
-}  // namespace VIO
+}  // namespace vio

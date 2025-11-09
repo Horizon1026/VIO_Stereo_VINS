@@ -12,12 +12,12 @@
 #include "backend_log.h"
 #include "binary_data_log.h"
 
-namespace VIO {
+namespace vio {
 
-using namespace SLAM_UTILITY;
-using namespace SLAM_DATA_LOG;
-using namespace SLAM_SOLVER;
-using namespace SENSOR_MODEL;
+using namespace slam_utility;
+using namespace slam_data_log;
+using namespace slam_solver;
+using namespace sensor_model;
 using DorF = float;
 
 /* Options for Backend. */
@@ -246,6 +246,6 @@ private:
     BackendLogCostTime log_package_cost_time_;
 };
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _VIO_STEREO_VINS_BACKEND_H_

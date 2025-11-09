@@ -9,7 +9,7 @@
 #include "vertex.h"
 #include "vertex_quaternion.h"
 
-namespace VIO {
+namespace vio {
 
 /* Class Edge reprojection. Project feature 1-dof invdep on visual norm plane via imu pose. */
 template <typename Scalar>
@@ -334,6 +334,6 @@ private:
     TQuat<Scalar> q_ic_ = TQuat<Scalar>::Identity();
 };
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _VISUAL_INERTIAL_EDGES_H_

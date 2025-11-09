@@ -7,7 +7,7 @@
 #include "optical_flow_basic_klt.h"
 #include "pinhole.h"
 
-namespace VIO {
+namespace vio {
 
 bool Vio::ConfigAllComponents() {
     if (!ConfigComponentOfDataManager()) {
@@ -83,9 +83,9 @@ bool Vio::ConfigComponentOfDataLoader() {
 }
 
 bool Vio::ConfigComponentOfFrontend() {
-    using CameraType = SENSOR_MODEL::Pinhole;
-    using FeatureType = FEATURE_DETECTOR::FeaturePointDetector<FEATURE_DETECTOR::FastFeature>;
-    using KltType = FEATURE_TRACKER::OpticalFlowBasicKlt;
+    using CameraType = sensor_model::Pinhole;
+    using FeatureType = feature_detector::FeaturePointDetector<feature_detector::FastFeature>;
+    using KltType = feature_tracker::OpticalFlowBasicKlt;
 
     // Config visual frontend.
     frontend_ = std::make_unique<VisualFrontend>(options_.frontend.image_rows, options_.frontend.image_cols);
@@ -114,7 +114,7 @@ bool Vio::ConfigComponentOfFrontend() {
 
     // Config optical flow tracker.
     frontend_->feature_tracker() = std::make_unique<KltType>();
-    frontend_->feature_tracker()->options().kMethod = FEATURE_TRACKER::OpticalFlowMethod::kFast;
+    frontend_->feature_tracker()->options().kMethod = feature_tracker::OpticalFlowMethod::kFast;
     frontend_->feature_tracker()->options().kPatchRowHalfSize = options_.frontend.feature_tracker.half_row_size_of_patch;
     frontend_->feature_tracker()->options().kPatchColHalfSize = options_.frontend.feature_tracker.half_col_size_of_patch;
     frontend_->feature_tracker()->options().kMaxIteration = options_.frontend.feature_tracker.max_iterations;
@@ -153,4 +153,4 @@ bool Vio::ConfigComponentOfBackend() {
     return true;
 }
 
-}  // namespace VIO
+}  // namespace vio

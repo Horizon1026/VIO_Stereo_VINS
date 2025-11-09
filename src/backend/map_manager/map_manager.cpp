@@ -2,7 +2,7 @@
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
 
-namespace VIO {
+namespace vio {
 
 bool Backend::LoadMapFromOldestKeyFrame() {
     RETURN_FALSE_IF(status_.marginalize_type != BackendMarginalizeType::kMarginalizeOldestFrame);
@@ -35,4 +35,4 @@ bool Backend::LoadMapFromOldestKeyFrame() {
     return true;
 }
 
-}  // namespace VIO
+}  // namespace vio

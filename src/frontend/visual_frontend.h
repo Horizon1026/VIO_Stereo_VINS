@@ -5,13 +5,13 @@
 #include "frontend_output.h"
 #include "frontend_stereo.h"
 
-namespace VIO {
+namespace vio {
 
-using namespace VISUAL_FRONTEND;
+using namespace visual_frontend;
 
 /* Class VisualFrontend Declaration. */
 using VisualFrontend = FrontendStereo;
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _VIO_STEREO_VINS_FRONTEND_H_

@@ -1,6 +1,6 @@
 #include "data_manager.h"
 
-namespace VIO {
+namespace vio {
 
 void DataManager::Clear() {
     if (visual_local_map_ != nullptr) {
@@ -163,4 +163,4 @@ FramesCorresbondence DataManager::GetCorresbondence(const int32_t frame_id_i, co
     return corres;
 }
 
-}  // namespace VIO
+}  // namespace vio

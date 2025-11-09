@@ -16,10 +16,10 @@
 #include "deque"
 #include "mutex"
 
-namespace VIO {
+namespace vio {
 
-using namespace SLAM_UTILITY;
-using namespace SENSOR_MODEL;
+using namespace slam_utility;
+using namespace sensor_model;
 
 /* Measurement Definition. */
 struct SingleMeasurement {
@@ -108,11 +108,11 @@ private:
     std::mutex right_image_mutex_;
 
     // Record log.
-    SLAM_DATA_LOG::BinaryDataLog logger_;
+    slam_data_log::BinaryDataLog logger_;
     DataLoaderLog log_package_data_;
     ImuRawDataLog imu_raw_package_data_;
 };
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _VIO_STEREO_VINS_DATA_LOADER_H_

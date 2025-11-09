@@ -4,7 +4,7 @@
 #include "basic_type.h"
 #include "string"
 
-namespace VIO {
+namespace vio {
 
 struct VioOptionsOfCamera {
     float fx = 0.0f;
@@ -108,6 +108,6 @@ struct VioOptions {
     std::string log_file_root_name;
 };
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _VIO_STEREO_VINS_CONFIG_H_

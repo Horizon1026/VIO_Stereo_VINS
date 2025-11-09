@@ -14,10 +14,10 @@
 #include "deque"
 #include "memory"
 
-namespace VIO {
+namespace vio {
 
-using namespace SLAM_UTILITY;
-using namespace SENSOR_MODEL;
+using namespace slam_utility;
+using namespace sensor_model;
 using DorF = float;
 
 /* Options for Data Manager. */
@@ -130,10 +130,10 @@ private:
     std::vector<CameraExtrinsic> camera_extrinsics_;
 
     // Record log.
-    SLAM_DATA_LOG::BinaryDataLog logger_;
+    slam_data_log::BinaryDataLog logger_;
     float latest_record_point_cloud_time_s_ = 0.0f;
 };
 
-}  // namespace VIO
+}  // namespace vio
 
 #endif  // end of _VIO_STEREO_VINS_DATA_MANAGER_H_

@@ -2,7 +2,7 @@
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
 
-namespace VIO {
+namespace vio {
 
 bool Backend::RunOnce() {
     TickTock timer;
@@ -114,4 +114,4 @@ void Backend::ResetToReintialize() {
     states_.prior.is_valid = false;
 }
 
-}  // namespace VIO
+}  // namespace vio
