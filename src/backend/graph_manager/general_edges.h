@@ -4,24 +4,25 @@
 #include "basic_type.h"
 #include "slam_basic_math.h"
 
-#include "vertex.h"
-#include "vertex_quaternion.h"
 #include "edge.h"
 #include "kernel.h"
-#include "kernel_huber.h"
 #include "kernel_cauchy.h"
+#include "kernel_huber.h"
 #include "kernel_tukey.h"
+#include "vertex.h"
+#include "vertex_quaternion.h"
 
 namespace VIO {
 
 /* Class Edge pose prior. This can be used to fix a pose with specified weight. */
 template <typename Scalar>
 class EdgePriorPose : public Edge<Scalar> {
-// Vertices are [position, p_wc]
-//              [rotation, q_wc]
+    // Vertices are [position, p_wc]
+    //              [rotation, q_wc]
 
 public:
-    EdgePriorPose() : Edge<Scalar>(6, 2) {}
+    EdgePriorPose()
+        : Edge<Scalar>(6, 2) {}
     virtual ~EdgePriorPose() = default;
 
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
@@ -62,6 +63,6 @@ private:
     TQuat<Scalar> obv_q_wc_ = TQuat<Scalar>::Identity();
 };
 
-}
+}  // namespace VIO
 
-#endif // end of _GENERAL_EDGES_H_
+#endif  // end of _GENERAL_EDGES_H_

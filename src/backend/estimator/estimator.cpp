@@ -3,12 +3,12 @@
 #include "inertial_edges.h"
 #include "visual_inertial_edges.h"
 
-#include "solver_lm.h"
 #include "solver_dogleg.h"
+#include "solver_lm.h"
 
+#include "slam_basic_math.h"
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
-#include "slam_basic_math.h"
 
 namespace VIO {
 
@@ -54,4 +54,4 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     return true;
 }
 
-}
+}  // namespace VIO

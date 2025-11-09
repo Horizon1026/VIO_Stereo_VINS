@@ -8,11 +8,11 @@
 #include "data_loader.h"
 #include "visual_frontend.h"
 
-#include "data_manager_log.h"
 #include "binary_data_log.h"
+#include "data_manager_log.h"
 
-#include "memory"
 #include "deque"
+#include "memory"
 
 namespace VIO {
 
@@ -29,7 +29,7 @@ struct DataManagerOptions {
 
 /* Definition of Covisible Graph for Local Map. */
 using FeatureParameter = Vec3;
-using FeatureObserve = std::vector<PointsObservePerView>; // Use std::vector to store observations of left and right camera.
+using FeatureObserve = std::vector<PointsObservePerView>;  // Use std::vector to store observations of left and right camera.
 using FeatureType = VisualFeature<FeatureParameter, FeatureObserve>;
 using CovisibleGraphType = CovisibleGraph<FeatureParameter, FeatureObserve>;
 
@@ -82,8 +82,7 @@ public:
     bool SelfCheckImuBasedFrames();
 
     // Transform packed measurements to a new frame.
-    bool ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure,
-                        std::unique_ptr<VisualPointsMeasure> &new_visual_measure);
+    bool ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure, std::unique_ptr<VisualPointsMeasure> &new_visual_measure);
 
     // Convert all frames with bias into visual local map.
     bool ConvertAllImuBasedFramesToLocalMap();
@@ -133,9 +132,8 @@ private:
     // Record log.
     SLAM_DATA_LOG::BinaryDataLog logger_;
     float latest_record_point_cloud_time_s_ = 0.0f;
-
 };
 
-}
+}  // namespace VIO
 
-#endif // end of _VIO_STEREO_VINS_DATA_MANAGER_H_
+#endif  // end of _VIO_STEREO_VINS_DATA_MANAGER_H_

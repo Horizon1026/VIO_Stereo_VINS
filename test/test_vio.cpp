@@ -1,13 +1,13 @@
-#include "string"
 #include "fstream"
 #include "sstream"
-#include "unistd.h"
+#include "string"
 #include "thread"
+#include "unistd.h"
 
+#include "tick_tock.h"
+#include "vio.h"
 #include "visualizor_2d.h"
 #include "visualizor_3d.h"
-#include "vio.h"
-#include "tick_tock.h"
 
 #include "enable_stack_backward.h"
 
@@ -17,8 +17,7 @@ VIO::Vio vio;
 std::mutex g_mutex_load_image;
 double time_stamp_offset = 1403636579.0;
 
-void PublishImuData(const std::string &csv_file_path,
-                    const float period_ms) {
+void PublishImuData(const std::string &csv_file_path, const float period_ms) {
     std::ifstream file(csv_file_path.c_str());
     if (!file.is_open()) {
         ReportError("Failed to load imu data file " << csv_file_path);
@@ -67,10 +66,7 @@ void PublishImuData(const std::string &csv_file_path,
     file.close();
 }
 
-void PublishCameraData(const std::string &csv_file_path,
-                       const std::string &image_file_root,
-                       const float period_ms,
-                       const bool is_left_camera) {
+void PublishCameraData(const std::string &csv_file_path, const std::string &image_file_root, const float period_ms, const bool is_left_camera) {
     std::ifstream file(csv_file_path.c_str());
     if (!file.is_open()) {
         ReportError("Failed to load camera data file " << csv_file_path);
@@ -97,8 +93,10 @@ void PublishCameraData(const std::string &csv_file_path,
         camera_data >> time_stamp_s >> image_file_name;
         image_file_name.erase(std::remove(image_file_name.begin(), image_file_name.end(), ','), image_file_name.end());
 
-        GrayImage image; {
-            // This mutex is important for multi-thread loading image. Because Visualizor2D::LoadImage is a static function.
+        GrayImage image;
+        {
+            // This mutex is important for multi-thread loading image. Because Visualizor2D::LoadImage is a static
+            // function.
             std::unique_lock<std::mutex> lck(g_mutex_load_image);
             Visualizor2D::LoadImage(image_file_root + image_file_name, image);
         }
@@ -109,7 +107,8 @@ void PublishCameraData(const std::string &csv_file_path,
         }
 
         // Send data to dataloader of vio.
-        vio.data_loader()->PushImageMeasurement(image.data(), image.rows(), image.cols(), static_cast<float>(time_stamp_s * 1e-9 - time_stamp_offset), is_left_camera);
+        vio.data_loader()->PushImageMeasurement(image.data(), image.rows(), image.cols(), static_cast<float>(time_stamp_s * 1e-9 - time_stamp_offset),
+                                                is_left_camera);
 
         // Waiting for next timestamp.
         while (timer.TockInMillisecond() < period_ms || vio.data_loader()->IsImageBufferFull()) {
@@ -154,8 +153,7 @@ void TestRunVio(const uint32_t max_wait_ticks) {
     vio.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 20, true);
 }
 
-void ConfigAllComponentsOfVio()
-{
+void ConfigAllComponentsOfVio() {
     /* VioOptionsOfCamera */
     // Fill left and right camera intrinsics.
     const VIO::VioOptionsOfCamera left_camera_intrinsics {
@@ -236,16 +234,14 @@ void ConfigAllComponentsOfVio()
     /* VioOptionsOfDataManager */
     // Fill left and right camera extrinsics.
     Mat3 R_i_cl;
-    R_i_cl << 0.0148655429818,  -0.999880929698,  0.00414029679422,
-              0.999557249008,   0.0149672133247,  0.025715529948,
-              -0.0257744366974, 0.00375618835797, 0.999660727178;
-    const Vec3 p_i_cl = Vec3(-0.0216401454975,-0.064676986768, 0.00981073058949);
+    R_i_cl << 0.0148655429818, -0.999880929698, 0.00414029679422, 0.999557249008, 0.0149672133247, 0.025715529948, -0.0257744366974, 0.00375618835797,
+        0.999660727178;
+    const Vec3 p_i_cl = Vec3(-0.0216401454975, -0.064676986768, 0.00981073058949);
     vio.options().data_manager.all_R_ic.emplace_back(R_i_cl);
     vio.options().data_manager.all_t_ic.emplace_back(p_i_cl);
     Mat3 R_i_cr;
-    R_i_cr << 0.0125552670891,  -0.999755099723, 0.0182237714554,
-              0.999598781151,   0.0130119051815, 0.0251588363115,
-              -0.0253898008918, 0.0179005838253, 0.999517347078;
+    R_i_cr << 0.0125552670891, -0.999755099723, 0.0182237714554, 0.999598781151, 0.0130119051815, 0.0251588363115, -0.0253898008918, 0.0179005838253,
+        0.999517347078;
     const Vec3 p_i_cr = Vec3(-0.0198435579556, 0.0453689425024, 0.00786212447038);
     vio.options().data_manager.all_R_ic.emplace_back(R_i_cr);
     vio.options().data_manager.all_t_ic.emplace_back(p_i_cr);
@@ -284,9 +280,11 @@ int main(int argc, char **argv) {
     // Start threads for data pipeline and vio node.
     const float imu_timeout_ms = 0.5f;
     const float image_timeout_ms = 10.0f;
-    std::thread thread_pub_imu_data{PublishImuData, dataset_root_dir + "mav0/imu0/data.csv", imu_timeout_ms};
-    std::thread thread_pub_cam_left_data(PublishCameraData, dataset_root_dir + "mav0/cam0/data.csv", dataset_root_dir + "mav0/cam0/data/", image_timeout_ms, true);
-    std::thread thread_pub_cam_right_data(PublishCameraData, dataset_root_dir + "mav0/cam1/data.csv", dataset_root_dir + "mav0/cam1/data/", image_timeout_ms, false);
+    std::thread thread_pub_imu_data {PublishImuData, dataset_root_dir + "mav0/imu0/data.csv", imu_timeout_ms};
+    std::thread thread_pub_cam_left_data(PublishCameraData, dataset_root_dir + "mav0/cam0/data.csv", dataset_root_dir + "mav0/cam0/data/", image_timeout_ms,
+                                         true);
+    std::thread thread_pub_cam_right_data(PublishCameraData, dataset_root_dir + "mav0/cam1/data.csv", dataset_root_dir + "mav0/cam1/data/", image_timeout_ms,
+                                          false);
     std::thread thread_test_vio(TestRunVio, 1500);
 
     // Waiting for the end of the threads. Recovery their resources.

@@ -3,14 +3,14 @@
 
 #include "basic_type.h"
 
-#include "imu.h"
 #include "data_manager.h"
+#include "imu.h"
 
-#include "visual_frontend.h"
 #include "general_graph_optimizor.h"
+#include "visual_frontend.h"
 
-#include "binary_data_log.h"
 #include "backend_log.h"
+#include "binary_data_log.h"
 
 namespace VIO {
 
@@ -56,7 +56,7 @@ struct BackendStatus {
 
 struct BackendSignals {
     struct {
-        uint32_t should_quit : 1;   // You can kill all relative threads by checking this flag.
+        uint32_t should_quit : 1;  // You can kill all relative threads by checking this flag.
         uint32_t reserved : 31;
     };
 };
@@ -166,20 +166,13 @@ private:
     void RecordBackendLogMapOfOldestFrame();
 
     // Backend data processor.
-    bool TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id,
-                                               const Vec3 &init_p_wc = Vec3::Zero(),
-                                               const Quat &init_q_wc = Quat::Identity());
-    bool TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature_id,
-                                                      const int32_t min_frame_id = -1,
-                                                      const int32_t max_frame_id = kMaxInt32,
+    bool TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id, const Vec3 &init_p_wc = Vec3::Zero(), const Quat &init_q_wc = Quat::Identity());
+    bool TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature_id, const int32_t min_frame_id = -1, const int32_t max_frame_id = kMaxInt32,
                                                       const bool use_multi_view = false);
-    bool StatisReprojectionErrorInOneFrame(const int32_t frame_id,
-                                           std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id);
+    bool StatisReprojectionErrorInOneFrame(const int32_t frame_id, std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id);
     float ComputeMaxParallexAngleOfFeature(const uint32_t feature_id);
     TMat2<DorF> GetVisualObserveInformationMatrix();
-    void RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
-                                         const Vec3 &bias_gyro,
-                                         ImuBasedFrame &imu_based_frame);
+    void RecomputeImuPreintegrationBlock(const Vec3 &bias_accel, const Vec3 &bias_gyro, ImuBasedFrame &imu_based_frame);
     bool AddNewestFrameWithStatesPredictionToLocalMap();
     bool ControlSizeOfLocalMap();
     void UpdateBackendStates();
@@ -193,18 +186,11 @@ private:
     void AddAllImuPosesInLocalMapToGraph();
     void AddAllImuMotionStatesInLocalMapToGraph();
     void RemoveNewestTwoFramesFromGraph();
-    bool AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const FeatureType &feature,
-                                                              const float invdep,
-                                                              const TMat2<DorF> &visual_info_matrix,
-                                                              const uint32_t max_frame_id,
-                                                              const bool use_multi_view = false);
-    bool AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureType &feature,
-                                                           const float invdep,
-                                                           const TMat2<DorF> &visual_info_matrix,
-                                                           const uint32_t max_frame_id,
-                                                           const bool use_multi_view = false);
-    bool AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex,
-                                                     const bool use_multi_view = false);
+    bool AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const FeatureType &feature, const float invdep, const TMat2<DorF> &visual_info_matrix,
+                                                              const uint32_t max_frame_id, const bool use_multi_view = false);
+    bool AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureType &feature, const float invdep, const TMat2<DorF> &visual_info_matrix,
+                                                           const uint32_t max_frame_id, const bool use_multi_view = false);
+    bool AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors_with_cam_ex, const bool use_multi_view = false);
     bool AddFeatureFirstObserveInOldestFrameAndVisualFactorsToGraph(const bool use_multi_view = false);
     bool AddImuFactorsToGraph(const bool only_add_oldest_one = false);
     bool AddPriorFactorForFirstImuPoseAndCameraExtrinsicsToGraph();
@@ -260,6 +246,6 @@ private:
     BackendLogCostTime log_package_cost_time_;
 };
 
-}
+}  // namespace VIO
 
-#endif // end of _VIO_STEREO_VINS_BACKEND_H_
+#endif  // end of _VIO_STEREO_VINS_BACKEND_H_

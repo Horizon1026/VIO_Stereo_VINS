@@ -3,40 +3,33 @@
 #include "tick_tock.h"
 
 #include "geometry_epipolar.h"
-#include "point_triangulator.h"
 #include "geometry_pnp.h"
+#include "point_triangulator.h"
 
 namespace VIO {
 
 TMat2<DorF> Backend::GetVisualObserveInformationMatrix() {
     const auto &camera_model = visual_frontend_->camera_models().front();
     const DorF residual_in_pixel = 1.0;
-    const TVec2<DorF> visual_observe_info_vec = TVec2<DorF>(camera_model->fx() * camera_model->fx(),
-        camera_model->fy() * camera_model->fy()) / residual_in_pixel;
+    const TVec2<DorF> visual_observe_info_vec =
+        TVec2<DorF>(camera_model->fx() * camera_model->fx(), camera_model->fy() * camera_model->fy()) / residual_in_pixel;
     return visual_observe_info_vec.asDiagonal();
 }
 
-void Backend::RecomputeImuPreintegrationBlock(const Vec3 &bias_accel,
-                                              const Vec3 &bias_gyro,
-                                              ImuBasedFrame &imu_based_frame) {
+void Backend::RecomputeImuPreintegrationBlock(const Vec3 &bias_accel, const Vec3 &bias_gyro, ImuBasedFrame &imu_based_frame) {
     imu_based_frame.imu_preint_block.Reset();
     imu_based_frame.imu_preint_block.bias_accel() = bias_accel;
     imu_based_frame.imu_preint_block.bias_gyro() = bias_gyro;
-    imu_based_frame.imu_preint_block.SetImuNoiseSigma(imu_model_->options().kAccelNoiseSigma,
-                                                      imu_model_->options().kGyroNoiseSigma,
-                                                      imu_model_->options().kAccelRandomWalkSigma,
-                                                      imu_model_->options().kGyroRandomWalkSigma);
+    imu_based_frame.imu_preint_block.SetImuNoiseSigma(imu_model_->options().kAccelNoiseSigma, imu_model_->options().kGyroNoiseSigma,
+                                                      imu_model_->options().kAccelRandomWalkSigma, imu_model_->options().kGyroRandomWalkSigma);
 
     const uint32_t max_idx = imu_based_frame.packed_measure->imus.size();
     for (uint32_t i = 1; i < max_idx; ++i) {
-        imu_based_frame.imu_preint_block.Propagate(*imu_based_frame.packed_measure->imus[i - 1],
-            *imu_based_frame.packed_measure->imus[i]);
+        imu_based_frame.imu_preint_block.Propagate(*imu_based_frame.packed_measure->imus[i - 1], *imu_based_frame.packed_measure->imus[i]);
     }
 }
 
-bool Backend::TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id,
-                                                    const Vec3 &init_p_wc,
-                                                    const Quat &init_q_wc) {
+bool Backend::TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id, const Vec3 &init_p_wc, const Quat &init_q_wc) {
     auto frame_ptr = data_manager_->visual_local_map()->frame(frame_id);
     RETURN_FALSE_IF(frame_ptr == nullptr);
     RETURN_FALSE_IF(frame_ptr->features().empty());
@@ -46,7 +39,7 @@ bool Backend::TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id,
     std::vector<Vec2> all_norm_xy;
     all_p_w.reserve(frame_ptr->features().size());
     all_norm_xy.reserve(frame_ptr->features().size());
-    for (const auto &pair : frame_ptr->features()) {
+    for (const auto &pair: frame_ptr->features()) {
         const auto &feature_ptr = pair.second;
         CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kSolved)
         all_p_w.emplace_back(feature_ptr->param());
@@ -69,19 +62,18 @@ bool Backend::TryToSolveFramePoseByFeaturesObserved(const int32_t frame_id,
     return true;
 }
 
-bool Backend::StatisReprojectionErrorInOneFrame(const int32_t frame_id,
-                                                std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id) {
+bool Backend::StatisReprojectionErrorInOneFrame(const int32_t frame_id, std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id) {
     const auto frame_ptr = data_manager_->visual_local_map()->frame(frame_id);
     RETURN_FALSE_IF(frame_ptr == nullptr);
     RETURN_FALSE_IF(frame_ptr->features().empty());
     const Vec3 &p_wc = frame_ptr->p_wc();
     const Quat &q_wc = frame_ptr->q_wc();
     const Quat q_cw = q_wc.inverse();
-    const Vec3 p_cw = - (q_cw * p_wc);
+    const Vec3 p_cw = -(q_cw * p_wc);
 
     repro_err_with_feature_id.clear();
     repro_err_with_feature_id.reserve(frame_ptr->features().size());
-    for (const auto &pair : frame_ptr->features()) {
+    for (const auto &pair: frame_ptr->features()) {
         const auto &feature_ptr = pair.second;
         CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kSolved);
         const Vec3 &p_w = feature_ptr->param();
@@ -94,9 +86,7 @@ bool Backend::StatisReprojectionErrorInOneFrame(const int32_t frame_id,
     return true;
 }
 
-bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature_id,
-                                                           const int32_t min_frame_id,
-                                                           const int32_t max_frame_id,
+bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature_id, const int32_t min_frame_id, const int32_t max_frame_id,
                                                            const bool use_multi_view) {
     auto feature_ptr = data_manager_->visual_local_map()->feature(feature_id);
     RETURN_FALSE_IF(feature_ptr == nullptr);
@@ -226,7 +216,8 @@ float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
             const Quat q_wci = q_wi * q_ici;
             const Vec3 p_wci = q_wi * p_ici - q_wi * p_ic0 + p_wc;
             const Vec2 norm_xy_i = obv[i].rectified_norm_xy;
-            max_sine_parallex_angle = std::max(max_sine_parallex_angle, PointTriangulator::GetSineOfParallexAngle(q_wc0, p_wc0, q_wci, p_wci, norm_xy0, norm_xy_i));
+            max_sine_parallex_angle =
+                std::max(max_sine_parallex_angle, PointTriangulator::GetSineOfParallexAngle(q_wc0, p_wc0, q_wci, p_wci, norm_xy0, norm_xy_i));
         }
     }
 
@@ -236,9 +227,8 @@ float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
 bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
     // Check validation. imu_based_frames must have one more frame than visual_local_map.
     if (data_manager_->visual_local_map()->frames().size() + 1 != data_manager_->imu_based_frames().size()) {
-        ReportError("[Backend] Size of frames in local map and in imu_based_frames is not match. [" <<
-            data_manager_->visual_local_map()->frames().size() + 1 << "] != [" <<
-            data_manager_->imu_based_frames().size() << "].");
+        ReportError("[Backend] Size of frames in local map and in imu_based_frames is not match. ["
+                    << data_manager_->visual_local_map()->frames().size() + 1 << "] != [" << data_manager_->imu_based_frames().size() << "].");
         return false;
     }
 
@@ -262,11 +252,11 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
 
     // Predict pose and velocity of newest frame based on imu frame.
     const float dt = newest_imu_based_frame.imu_preint_block.integrate_time_s();
-    newest_imu_based_frame.p_wi = subnew_imu_based_frame.q_wi * newest_imu_based_frame.imu_preint_block.p_ij() +
-        subnew_imu_based_frame.p_wi + subnew_imu_based_frame.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
+    newest_imu_based_frame.p_wi = subnew_imu_based_frame.q_wi * newest_imu_based_frame.imu_preint_block.p_ij() + subnew_imu_based_frame.p_wi +
+                                  subnew_imu_based_frame.v_wi * dt - 0.5f * options_.kGravityInWordFrame * dt * dt;
     newest_imu_based_frame.q_wi = subnew_imu_based_frame.q_wi * newest_imu_based_frame.imu_preint_block.q_ij();
-    newest_imu_based_frame.v_wi = subnew_imu_based_frame.q_wi * newest_imu_based_frame.imu_preint_block.v_ij() +
-        subnew_imu_based_frame.v_wi - options_.kGravityInWordFrame * dt;
+    newest_imu_based_frame.v_wi =
+        subnew_imu_based_frame.q_wi * newest_imu_based_frame.imu_preint_block.v_ij() + subnew_imu_based_frame.v_wi - options_.kGravityInWordFrame * dt;
 
     // Add new frame into visual_local_map.
     std::vector<MatImg> raw_images;
@@ -280,16 +270,14 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
     }
     const auto &newest_cam_frame_id = data_manager_->visual_local_map()->frames().back().id() + 1;
     data_manager_->visual_local_map()->AddNewFrameWithFeatures(newest_imu_based_frame.visual_measure->features_id,
-                                                               newest_imu_based_frame.visual_measure->observes_per_frame,
-                                                               newest_imu_based_frame.time_stamp_s,
+                                                               newest_imu_based_frame.visual_measure->observes_per_frame, newest_imu_based_frame.time_stamp_s,
                                                                newest_cam_frame_id, raw_images);
 
     // Sync imu pose to camera pose.
     const Quat &q_ic = data_manager_->camera_extrinsics().front().q_ic;
     const Vec3 &p_ic = data_manager_->camera_extrinsics().front().p_ic;
     auto &newest_cam_frame = data_manager_->visual_local_map()->frames().back();
-    Utility::ComputeTransformTransform(newest_imu_based_frame.p_wi, newest_imu_based_frame.q_wi,
-        p_ic, q_ic, newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
+    Utility::ComputeTransformTransform(newest_imu_based_frame.p_wi, newest_imu_based_frame.q_wi, p_ic, q_ic, newest_cam_frame.p_wc(), newest_cam_frame.q_wc());
 
     // Statis reprojection error in newest frame. Record it.
     std::vector<std::pair<uint32_t, Vec2>> repro_err_with_feature_id;
@@ -301,12 +289,11 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
     UpdateBackendLogPredictStates();
 
     // Try to triangulize all new features observed in newest frame.
-    for (auto &pair : newest_cam_frame.features()) {
+    for (auto &pair: newest_cam_frame.features()) {
         const auto &feature_id = pair.first;
         const auto &feature_ptr = pair.second;
         CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved || feature_ptr->status() == FeatureSolvedStatus::kMarginalized);
-        TryToSolveFeaturePositionByFramesObservingIt(feature_id, feature_ptr->first_frame_id(),
-            feature_ptr->final_frame_id(), true);
+        TryToSolveFeaturePositionByFramesObservingIt(feature_id, feature_ptr->first_frame_id(), feature_ptr->final_frame_id(), true);
     }
 
     return true;
@@ -323,7 +310,7 @@ bool Backend::ControlSizeOfLocalMap() {
             data_manager_->visual_local_map()->RemoveFrame(oldest_frame_id);
             data_manager_->imu_based_frames().pop_front();
             // Remove marginalized features.
-            for (const auto &id : graph_.vertices.all_features_id) {
+            for (const auto &id: graph_.vertices.all_features_id) {
                 data_manager_->visual_local_map()->RemoveFeature(id);
             }
             break;
@@ -350,8 +337,7 @@ bool Backend::ControlSizeOfLocalMap() {
                 // If integration time is too long, only integrate the incremental part.
                 for (uint32_t i = 1; i < max_idx; ++i) {
                     // Only integration the new part of imu measurements.
-                    subnew_frame.imu_preint_block.Propagate(*newest_frame.packed_measure->imus[i - 1],
-                        *newest_frame.packed_measure->imus[i]);
+                    subnew_frame.imu_preint_block.Propagate(*newest_frame.packed_measure->imus[i - 1], *newest_frame.packed_measure->imus[i]);
                 }
                 for (uint32_t i = 1; i < max_idx; ++i) {
                     // Merge imu measurements. Skip the first imu measurements since it is the same.
@@ -362,9 +348,7 @@ bool Backend::ControlSizeOfLocalMap() {
                 for (uint32_t i = 1; i < max_idx; ++i) {
                     subnew_frame.packed_measure->imus.emplace_back(std::move(newest_frame.packed_measure->imus[i]));
                 }
-                RecomputeImuPreintegrationBlock(newest_frame.imu_preint_block.bias_accel(),
-                                                newest_frame.imu_preint_block.bias_gyro(),
-                                                subnew_frame);
+                RecomputeImuPreintegrationBlock(newest_frame.imu_preint_block.bias_accel(), newest_frame.imu_preint_block.bias_gyro(), subnew_frame);
             }
 
             // Remove subnew frame in visual_local_map and imu_based_frames.
@@ -385,7 +369,7 @@ bool Backend::ControlSizeOfLocalMap() {
     std::vector<uint32_t> features_id;
     features_id.reserve(100);
     const auto &newest_keyframe_id = data_manager_->visual_local_map()->frames().back().id() - 2;
-    for (const auto &pair : data_manager_->visual_local_map()->features()) {
+    for (const auto &pair: data_manager_->visual_local_map()->features()) {
         const auto &feature = pair.second;
         // Remove features that has no observations.
         if (feature.observes().empty()) {
@@ -401,7 +385,7 @@ bool Backend::ControlSizeOfLocalMap() {
         }
     }
     // Remove selected features.
-    for (const auto &id : features_id) {
+    for (const auto &id: features_id) {
         data_manager_->visual_local_map()->RemoveFeature(id);
     }
 
@@ -412,8 +396,7 @@ bool Backend::ControlSizeOfLocalMap() {
 }
 
 void Backend::UpdateBackendStates() {
-    states_.motion.time_stamp_s = data_manager_->imu_based_frames().empty() ? 0.0f :
-        data_manager_->imu_based_frames().back().time_stamp_s;
+    states_.motion.time_stamp_s = data_manager_->imu_based_frames().empty() ? 0.0f : data_manager_->imu_based_frames().back().time_stamp_s;
 
     if (!status_.is_initialized) {
         states_.prior.is_valid = false;
@@ -433,4 +416,4 @@ void Backend::UpdateBackendStates() {
     states_.motion.bg = newest_imu_based_frame.imu_preint_block.bias_gyro();
 }
 
-}
+}  // namespace VIO

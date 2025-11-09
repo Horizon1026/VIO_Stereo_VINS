@@ -7,11 +7,11 @@
 
 #include "object_pool.h"
 
-#include "imu_measurement.h"
 #include "camera_measurement.h"
+#include "imu_measurement.h"
 
-#include "data_loader_log.h"
 #include "binary_data_log.h"
+#include "data_loader_log.h"
 
 #include "deque"
 #include "mutex"
@@ -63,13 +63,8 @@ public:
     void RecordPackedMeasurementLog(const PackedMeasurement &measure);
 
     // Push measurements into dataloader.
-    bool PushImuMeasurement(const Vec3 &accel,
-                            const Vec3 &gyro,
-                            const float &time_stamp_s);
-    bool PushImageMeasurement(uint8_t *image_ptr,
-                              const int32_t image_rows,
-                              const int32_t image_cols,
-                              const float &time_stamp_s,
+    bool PushImuMeasurement(const Vec3 &accel, const Vec3 &gyro, const float &time_stamp_s);
+    bool PushImageMeasurement(uint8_t *image_ptr, const int32_t image_rows, const int32_t image_cols, const float &time_stamp_s,
                               const bool is_left_image = true);
 
     // Pop measurements from dataloader.
@@ -78,7 +73,9 @@ public:
 
     // Sync signal for imu and image buffer.
     bool IsImuBufferFull() const { return imu_buffer_.size() >= options_.kMaxSizeOfImuBuffer; }
-    bool IsImageBufferFull() const { return left_image_buffer_.size() >= options_.kMaxSizeOfImageBuffer || right_image_buffer_.size() >= options_.kMaxSizeOfImageBuffer; }
+    bool IsImageBufferFull() const {
+        return left_image_buffer_.size() >= options_.kMaxSizeOfImageBuffer || right_image_buffer_.size() >= options_.kMaxSizeOfImageBuffer;
+    }
 
     // Reference for member variables.
     DataLoaderOptions &options() { return options_; }
@@ -114,9 +111,8 @@ private:
     SLAM_DATA_LOG::BinaryDataLog logger_;
     DataLoaderLog log_package_data_;
     ImuRawDataLog imu_raw_package_data_;
-
 };
 
-}
+}  // namespace VIO
 
-#endif // end of _VIO_STEREO_VINS_DATA_LOADER_H_
+#endif  // end of _VIO_STEREO_VINS_DATA_LOADER_H_

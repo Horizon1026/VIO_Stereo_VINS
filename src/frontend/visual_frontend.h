@@ -12,6 +12,6 @@ using namespace VISUAL_FRONTEND;
 /* Class VisualFrontend Declaration. */
 using VisualFrontend = FrontendStereo;
 
-}
+}  // namespace VIO
 
-#endif // end of _VIO_STEREO_VINS_FRONTEND_H_
+#endif  // end of _VIO_STEREO_VINS_FRONTEND_H_

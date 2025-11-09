@@ -3,11 +3,11 @@
 
 #include "vio_config.h"
 
-#include "tick_tock.h"
-#include "data_manager.h"
-#include "data_loader.h"
-#include "visual_frontend.h"
 #include "backend.h"
+#include "data_loader.h"
+#include "data_manager.h"
+#include "tick_tock.h"
+#include "visual_frontend.h"
 
 #include "memory"
 
@@ -66,9 +66,8 @@ private:
     TickTock vio_sys_timer_;
     TickTock vio_heart_beat_timer_;
     TickTock measure_invalid_timer_;
-
 };
 
-}
+}  // namespace VIO
 
 #endif

@@ -28,11 +28,11 @@ void DataManager::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_ptr = std::make_unique<PackageInfo>();
     package_ptr->id = kDataManagerLocalMapLogIndex;
     package_ptr->name = "local map";
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_features"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_solved_features"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_marginalized_features"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_unsolved_features"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_frames"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_features"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_solved_features"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_marginalized_features"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_unsolved_features"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_frames"});
     if (!logger_.RegisterPackage(package_ptr)) {
         ReportError("[DataManager] Failed to register package for data manager local map log.");
     }
@@ -49,7 +49,7 @@ void DataManager::RecordLocalMap(const float time_stamp_s) {
     DataManagerLocalMapLog log_package;
 
     log_package.num_of_features = visual_local_map_->features().size();
-    for (const auto &pair : visual_local_map_->features()) {
+    for (const auto &pair: visual_local_map_->features()) {
         const auto &feature = pair.second;
         switch (feature.status()) {
             case FeatureSolvedStatus::kUnsolved: {
@@ -64,7 +64,8 @@ void DataManager::RecordLocalMap(const float time_stamp_s) {
                 ++log_package.num_of_marginalized_features;
                 break;
             }
-            default: break;
+            default:
+                break;
         }
     }
 
@@ -72,4 +73,4 @@ void DataManager::RecordLocalMap(const float time_stamp_s) {
     logger_.RecordPackage(kDataManagerLocalMapLogIndex, reinterpret_cast<const char *>(&log_package), time_stamp_s);
 }
 
-}
+}  // namespace VIO

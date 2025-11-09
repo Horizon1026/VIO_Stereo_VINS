@@ -1,6 +1,6 @@
 #include "vio.h"
-#include "slam_operations.h"
 #include "slam_log_reporter.h"
+#include "slam_operations.h"
 
 namespace VIO {
 
@@ -25,8 +25,7 @@ bool Vio::RunOnce() {
     }
 
     // Transform image measurement to be features measurement.
-    if (!frontend_->RunOnce(GrayImage(packed_measure->left_image->image),
-                            GrayImage(packed_measure->right_image->image),
+    if (!frontend_->RunOnce(GrayImage(packed_measure->left_image->image), GrayImage(packed_measure->right_image->image),
                             packed_measure->imus.back()->time_stamp_s)) {
         ReportWarn("[Vio] Visual frontend failed to run once at " << vio_sys_timer_.TockInSecond() << " s.");
         return false;
@@ -52,8 +51,7 @@ bool Vio::RunOnce() {
 
 void Vio::HeartBeat() {
     if (vio_heart_beat_timer_.TockInSecond() > options_.heart_beat_period_time_s) {
-        ReportInfo("[Vio] Heart beat for " << vio_heart_beat_timer_.TockTickInSecond() << " s. Vio has running for " <<
-            vio_sys_timer_.TockInSecond() << " s.");
+        ReportInfo("[Vio] Heart beat for " << vio_heart_beat_timer_.TockTickInSecond() << " s. Vio has running for " << vio_sys_timer_.TockInSecond() << " s.");
     }
 }
 
@@ -64,4 +62,4 @@ bool Vio::CheckPackedMeasurementValidation(const PackedMeasurement *measure) {
     return true;
 }
 
-}
+}  // namespace VIO

@@ -1,6 +1,6 @@
 #include "data_loader.h"
-#include "slam_log_reporter.h"
 #include "memory"
+#include "slam_log_reporter.h"
 
 namespace VIO {
 
@@ -9,7 +9,7 @@ namespace {
     constexpr uint32_t kImuRawDataLogIndex = 1;
     constexpr uint32_t kLeftImageRawDataLogIndex = 2;
     constexpr uint32_t kRightImageRawDataLogIndex = 3;
-}
+}  // namespace
 
 bool DataLoader::Configuration(const std::string &log_file_name) {
     // Register packages for log file.
@@ -33,12 +33,12 @@ void DataLoader::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_ptr = std::make_unique<PackageInfo>();
     package_ptr->id = kDataLoaderLogIndex;
     package_ptr->name = "data_loader";
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_imu_in_package"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_left_image_valid_in_package"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_right_image_valid_in_package"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_imu_in_buffer"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_left_image_in_buffer"});
-    package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_right_image_in_buffer"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_imu_in_package"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint8, .name = "is_left_image_valid_in_package"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint8, .name = "is_right_image_valid_in_package"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_imu_in_buffer"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_left_image_in_buffer"});
+    package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_right_image_in_buffer"});
     if (!logger_.RegisterPackage(package_ptr)) {
         ReportError("[DataLoader] Failed to register package for data loader log.");
     }
@@ -47,9 +47,9 @@ void DataLoader::RegisterLogPackages() {
         std::unique_ptr<PackageInfo> imu_package_ptr = std::make_unique<PackageInfo>();
         imu_package_ptr->id = kImuRawDataLogIndex;
         imu_package_ptr->name = "imu_raw_data";
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "time_stamp_s"});
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "accel(ms2)"});
-        imu_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "gyro(rads)"});
+        imu_package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "time_stamp_s"});
+        imu_package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "accel(ms2)"});
+        imu_package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "gyro(rads)"});
         if (!logger_.RegisterPackage(imu_package_ptr)) {
             ReportError("[DataLoader] Failed to register package for imu raw data.");
         }
@@ -57,7 +57,7 @@ void DataLoader::RegisterLogPackages() {
         std::unique_ptr<PackageInfo> left_image_package_ptr = std::make_unique<PackageInfo>();
         left_image_package_ptr->id = kLeftImageRawDataLogIndex;
         left_image_package_ptr->name = "raw_left_image";
-        left_image_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kImage, .name = "left image"});
+        left_image_package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kImage, .name = "left image"});
         if (!logger_.RegisterPackage(left_image_package_ptr)) {
             ReportError("[DataLoader] Failed to register package for left image raw data.");
         }
@@ -65,7 +65,7 @@ void DataLoader::RegisterLogPackages() {
         std::unique_ptr<PackageInfo> right_image_package_ptr = std::make_unique<PackageInfo>();
         right_image_package_ptr->id = kRightImageRawDataLogIndex;
         right_image_package_ptr->name = "raw_right_image";
-        right_image_package_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kImage, .name = "right image"});
+        right_image_package_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kImage, .name = "right image"});
         if (!logger_.RegisterPackage(right_image_package_ptr)) {
             ReportError("[DataLoader] Failed to register package for right image raw data.");
         }
@@ -103,4 +103,4 @@ void DataLoader::RecordPackedMeasurementLog(const PackedMeasurement &measure) {
     }
 }
 
-}
+}  // namespace VIO

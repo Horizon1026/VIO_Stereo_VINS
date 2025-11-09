@@ -15,7 +15,8 @@ bool Backend::TryToInitialize() {
 
     // If this is mono camera, some movement is neccessary for initialization.
     const float imu_accel_variance = data_manager_->ComputeImuAccelVariance();
-    if (imu_accel_variance < kMinValidImuAccelVarianceForMonoInitialization && (data_manager_->camera_extrinsics().size() < 2 || !options_.kEnableUseMultiViewObservation)) {
+    if (imu_accel_variance < kMinValidImuAccelVarianceForMonoInitialization &&
+        (data_manager_->camera_extrinsics().size() < 2 || !options_.kEnableUseMultiViewObservation)) {
         ReportWarn("[Backend] Backend cannot initialize for lack of imu motion in mono-view.");
         return false;
     }
@@ -87,7 +88,7 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
     const Quat q_wc0 = Utility::Exponent(axis_angle);
 
     // Recovery all camera states in visual_local_map.
-    for (auto &cam_frame : data_manager_->visual_local_map()->frames()) {
+    for (auto &cam_frame: data_manager_->visual_local_map()->frames()) {
         const Quat q_c0c = cam_frame.q_wc();
         const Vec3 p_c0c = cam_frame.p_wc();
         cam_frame.q_wc() = q_wc0 * q_c0c;
@@ -95,7 +96,7 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
     }
 
     // Recovery all feature states in visual_local_map.
-    for (auto &pair : data_manager_->visual_local_map()->features()) {
+    for (auto &pair: data_manager_->visual_local_map()->features()) {
         auto &feature = pair.second;
         CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved);
         feature.param() = q_wc0 * feature.param() * scale;
@@ -104,7 +105,7 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
     // Recovery all imu states in imu_based_frames.
     RETURN_FALSE_IF(!data_manager_->SyncTwcToTwiInLocalMap());
     uint32_t index = 0;
-    for (auto &imu_frame : data_manager_->imu_based_frames()) {
+    for (auto &imu_frame: data_manager_->imu_based_frames()) {
         imu_frame.v_wi = imu_frame.q_wi * all_v_ii.segment(index * 3, 3);
         ++index;
     }
@@ -112,4 +113,4 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
     return true;
 }
 
-}
+}  // namespace VIO

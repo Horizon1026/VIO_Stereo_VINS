@@ -11,14 +11,13 @@ void DataManager::Clear() {
 }
 
 // Transform packed measurements to a new frame.
-bool DataManager::ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure,
-                                 std::unique_ptr<VisualPointsMeasure> &new_visual_measure) {
+bool DataManager::ProcessMeasure(std::unique_ptr<PackedMeasurement> &new_packed_measure, std::unique_ptr<VisualPointsMeasure> &new_visual_measure) {
     if (new_packed_measure == nullptr || new_visual_measure == nullptr) {
         ReportError("[DataManager] Input new_packed_measure or new_visual_measure is nullptr.");
         return false;
     }
 
-    imu_based_frames_.emplace_back(ImuBasedFrame{});
+    imu_based_frames_.emplace_back(ImuBasedFrame {});
     ImuBasedFrame &imu_based_frame = imu_based_frames_.back();
     imu_based_frame.time_stamp_s = new_packed_measure->left_image->time_stamp_s;
     imu_based_frame.packed_measure = std::move(new_packed_measure);
@@ -32,7 +31,7 @@ bool DataManager::ConvertAllImuBasedFramesToLocalMap() {
     visual_local_map_->Clear();
 
     int32_t frame_id = 1;
-    for (const auto &frame : imu_based_frames_) {
+    for (const auto &frame: imu_based_frames_) {
         if (frame.visual_measure == nullptr) {
             ReportError("[DataManager] Cannot find visual measurement in imu_based_frames_.");
             return false;
@@ -48,10 +47,8 @@ bool DataManager::ConvertAllImuBasedFramesToLocalMap() {
             }
         }
 
-        visual_local_map_->AddNewFrameWithFeatures(frame.visual_measure->features_id,
-                                                   frame.visual_measure->observes_per_frame,
-                                                   frame.time_stamp_s,
-                                                   frame_id, raw_images);
+        visual_local_map_->AddNewFrameWithFeatures(frame.visual_measure->features_id, frame.visual_measure->observes_per_frame, frame.time_stamp_s, frame_id,
+                                                   raw_images);
         ++frame_id;
     }
 
@@ -72,10 +69,10 @@ float DataManager::ComputeImuAccelVariance() {
     // Compute mean accel vector.
     Vec3 mean_accel = Vec3::Zero();
     int32_t sample_cnt = 0;
-    for (const auto &frame : imu_based_frames_) {
+    for (const auto &frame: imu_based_frames_) {
         CONTINUE_IF(frame.packed_measure == nullptr);
         CONTINUE_IF(frame.packed_measure->imus.empty());
-        for (const auto &imu : frame.packed_measure->imus) {
+        for (const auto &imu: frame.packed_measure->imus) {
             mean_accel += imu->accel;
             ++sample_cnt;
         }
@@ -88,10 +85,10 @@ float DataManager::ComputeImuAccelVariance() {
 
     // Compute accel variance.
     float variance = 0.0f;
-    for (const auto &frame : imu_based_frames_) {
+    for (const auto &frame: imu_based_frames_) {
         CONTINUE_IF(frame.packed_measure == nullptr);
         CONTINUE_IF(frame.packed_measure->imus.empty());
-        for (const auto &imu : frame.packed_measure->imus) {
+        for (const auto &imu: frame.packed_measure->imus) {
             const Vec3 diff = mean_accel - imu->accel;
             variance += diff.squaredNorm();
         }
@@ -113,7 +110,7 @@ bool DataManager::SyncTwcToTwiInLocalMap() {
 
     // T_wi = T_wc * T_ic.inv.
     auto it = imu_based_frames_.begin();
-    for (const auto &frame : visual_local_map_->frames()) {
+    for (const auto &frame: visual_local_map_->frames()) {
         RETURN_FALSE_IF(it == imu_based_frames_.end());
         Utility::ComputeTransformTransformInverse(frame.p_wc(), frame.q_wc(), p_ic, q_ic, it->p_wi, it->q_wi);
         ++it;
@@ -134,7 +131,7 @@ bool DataManager::SyncTwiToTwcInLocalMap() {
 
     // T_wc = T_wi * T_ic
     auto it = imu_based_frames_.cbegin();
-    for (auto &frame : visual_local_map_->frames()) {
+    for (auto &frame: visual_local_map_->frames()) {
         RETURN_FALSE_IF(it == imu_based_frames_.cend());
         Utility::ComputeTransformTransform(it->p_wi, it->q_wi, p_ic, q_ic, frame.p_wc(), frame.q_wc());
         ++it;
@@ -155,7 +152,7 @@ FramesCorresbondence DataManager::GetCorresbondence(const int32_t frame_id_i, co
     }
 
     // Compute average parallax.
-    for (const auto &feature_ptr : covisible_features) {
+    for (const auto &feature_ptr: covisible_features) {
         const auto observe_i = feature_ptr->observe(frame_id_i).front().raw_pixel_uv;
         const auto observe_j = feature_ptr->observe(frame_id_j).front().raw_pixel_uv;
         corres.average_parallax += (observe_i - observe_j).norm();
@@ -166,4 +163,4 @@ FramesCorresbondence DataManager::GetCorresbondence(const int32_t frame_id_i, co
     return corres;
 }
 
-}
+}  // namespace VIO

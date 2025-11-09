@@ -9,33 +9,33 @@ namespace VIO {
 namespace {
     constexpr float kMinValidAverageParallaxForPureVisualSfm = 16.0f;
     constexpr int32_t kMinValidCovisibleFeaturesNumberForPureVisualSfm = 30;
-}
+}  // namespace
 
 bool Backend::PrepareForPureVisualSfmByMonoView() {
     // Find the frame with best corresbondence with the first frame.
-    FramesCorresbondence best_corres = FramesCorresbondence{
+    FramesCorresbondence best_corres = FramesCorresbondence {
         .num_of_covisible_features = static_cast<int32_t>(visual_frontend_->options().kMaxStoredFeaturePointsNumber),
         .average_parallax = 0.0f,
     };
     const int32_t ref_frame_id = data_manager_->visual_local_map()->frames().front().id();
     int32_t cur_frame_id = ref_frame_id;
-    for (const auto &frame : data_manager_->visual_local_map()->frames()) {
+    for (const auto &frame: data_manager_->visual_local_map()->frames()) {
         cur_frame_id = frame.id();
         CONTINUE_IF(cur_frame_id == ref_frame_id);
         best_corres = data_manager_->GetCorresbondence(ref_frame_id, cur_frame_id);
         BREAK_IF(best_corres.num_of_covisible_features < kMinValidCovisibleFeaturesNumberForPureVisualSfm ||
-            best_corres.average_parallax > kMinValidAverageParallaxForPureVisualSfm);
+                 best_corres.average_parallax > kMinValidAverageParallaxForPureVisualSfm);
     }
 
     if (best_corres.average_parallax < kMinValidAverageParallaxForPureVisualSfm) {
-        ReportWarn("[Backend] Cannot find a frame with best corresbondence with the first frame." <<
-            " Number of covisible features [" << best_corres.num_of_covisible_features << "]," <<
-            " average parallax [" << best_corres.average_parallax << "/" << kMinValidAverageParallaxForPureVisualSfm << "].");
+        ReportWarn("[Backend] Cannot find a frame with best corresbondence with the first frame."
+                   << " Number of covisible features [" << best_corres.num_of_covisible_features << "]," << " average parallax ["
+                   << best_corres.average_parallax << "/" << kMinValidAverageParallaxForPureVisualSfm << "].");
         return false;
     } else {
-        ReportInfo("[Backend] Find frame " << cur_frame_id << " with best corresbondence with the first frame." <<
-            " Number of covisible features [" << best_corres.num_of_covisible_features << "]," <<
-            " average parallax [" << best_corres.average_parallax << "/" << kMinValidAverageParallaxForPureVisualSfm << "].");
+        ReportInfo("[Backend] Find frame " << cur_frame_id << " with best corresbondence with the first frame." << " Number of covisible features ["
+                                           << best_corres.num_of_covisible_features << "]," << " average parallax [" << best_corres.average_parallax << "/"
+                                           << kMinValidAverageParallaxForPureVisualSfm << "].");
     }
 
     // Extract covisible features and observations between these two frames.
@@ -50,7 +50,7 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
     ref_norm_xy.reserve(visual_frontend_->options().kMaxStoredFeaturePointsNumber);
     cur_norm_xy.reserve(visual_frontend_->options().kMaxStoredFeaturePointsNumber);
 
-    for (const auto &feature_ptr : covisible_features) {
+    for (const auto &feature_ptr: covisible_features) {
         const auto &observe_ref = feature_ptr->observe(ref_frame_id).front().rectified_norm_xy;
         const auto &observe_cur = feature_ptr->observe(cur_frame_id).front().rectified_norm_xy;
         ref_norm_xy.emplace_back(observe_ref);
@@ -76,16 +76,15 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
     auto corr_frame = data_manager_->visual_local_map()->frame(cur_frame_id);
     first_frame->p_wc().setZero();
     first_frame->q_wc().setIdentity();
-    corr_frame->p_wc() = - R_cr * t_cr;
+    corr_frame->p_wc() = -R_cr * t_cr;
     corr_frame->q_wc() = Quat(R_cr.transpose());
 
     // Triangulize all features observed by these two frames.
-    for (const auto &feature_ptr : covisible_features) {
-        std::vector<Quat> all_q_wc = std::vector<Quat>{first_frame->q_wc(), corr_frame->q_wc()};
-        std::vector<Vec3> all_p_wc = std::vector<Vec3>{first_frame->p_wc(), corr_frame->p_wc()};
-        std::vector<Vec2> all_norm_xy = std::vector<Vec2>{
-            feature_ptr->observe(ref_frame_id).front().rectified_norm_xy,
-            feature_ptr->observe(cur_frame_id).front().rectified_norm_xy};
+    for (const auto &feature_ptr: covisible_features) {
+        std::vector<Quat> all_q_wc = std::vector<Quat> {first_frame->q_wc(), corr_frame->q_wc()};
+        std::vector<Vec3> all_p_wc = std::vector<Vec3> {first_frame->p_wc(), corr_frame->p_wc()};
+        std::vector<Vec2> all_norm_xy =
+            std::vector<Vec2> {feature_ptr->observe(ref_frame_id).front().rectified_norm_xy, feature_ptr->observe(cur_frame_id).front().rectified_norm_xy};
 
         PointTriangulator solver;
         if (solver.Triangulate(all_q_wc, all_p_wc, all_norm_xy, feature_ptr->param())) {
@@ -105,7 +104,7 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
     }
 
     // Triangulize all features observed in other frames. And estimate pose of other frames.
-    for (auto &frame : data_manager_->visual_local_map()->frames()) {
+    for (auto &frame: data_manager_->visual_local_map()->frames()) {
         CONTINUE_IF(frame.id() <= static_cast<uint32_t>(cur_frame_id));
 
         if (!TryToSolveFramePoseByFeaturesObserved(frame.id())) {
@@ -113,12 +112,11 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
             return false;
         }
 
-        for (auto &pair : frame.features()) {
+        for (auto &pair: frame.features()) {
             auto feature_ptr = pair.second;
             CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
 
-            TryToSolveFeaturePositionByFramesObservingIt(feature_ptr->id(), feature_ptr->first_frame_id(),
-                std::min(feature_ptr->final_frame_id(), frame.id()));
+            TryToSolveFeaturePositionByFramesObservingIt(feature_ptr->id(), feature_ptr->first_frame_id(), std::min(feature_ptr->final_frame_id(), frame.id()));
         }
     }
 
@@ -136,13 +134,13 @@ bool Backend::PrepareForPureVisualSfmByMultiView() {
     first_frame->q_wc().setIdentity();
 
     // Triangulize all features observed in each frame. And estimate pose of each frame.
-    for (auto &frame : data_manager_->visual_local_map()->frames()) {
-        for (auto &pair : frame.features()) {
+    for (auto &frame: data_manager_->visual_local_map()->frames()) {
+        for (auto &pair: frame.features()) {
             auto feature_ptr = pair.second;
             CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
 
-            TryToSolveFeaturePositionByFramesObservingIt(feature_ptr->id(), feature_ptr->first_frame_id(),
-                std::min(feature_ptr->final_frame_id(), frame.id()), true);
+            TryToSolveFeaturePositionByFramesObservingIt(feature_ptr->id(), feature_ptr->first_frame_id(), std::min(feature_ptr->final_frame_id(), frame.id()),
+                                                         true);
         }
 
         // No need to estimate pose of first frame.
@@ -212,4 +210,4 @@ bool Backend::PerformPureVisualBundleAdjustment(const bool use_multi_view) {
     return true;
 }
 
-}
+}  // namespace VIO

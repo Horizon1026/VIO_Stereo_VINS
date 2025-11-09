@@ -3,9 +3,9 @@
 #include "inertial_edges.h"
 #include "visual_inertial_edges.h"
 
+#include "slam_basic_math.h"
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
-#include "slam_basic_math.h"
 
 namespace VIO {
 
@@ -80,7 +80,8 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
     const bool only_add_oldest_one = true;
     RETURN_FALSE_IF(!AddImuFactorsToGraph(only_add_oldest_one));
     // [Vertices] Newest and subnew frame is not including in prior information.
-    // If not remove them, too much zeros will fill prior information, which will perform bad when marginalize subnew frame.
+    // If not remove them, too much zeros will fill prior information, which will perform bad when marginalize subnew
+    // frame.
     RemoveNewestTwoFramesFromGraph();
     // Construct full visual-inertial problem.
     Graph<DorF> graph_optimization_problem;
@@ -89,11 +90,8 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
 
     // Set vertices to be marged.
     std::vector<Vertex<DorF> *> vertices_to_be_marged = {
-        graph_.vertices.all_frames_p_wi.front().get(),
-        graph_.vertices.all_frames_q_wi.front().get(),
-        graph_.vertices.all_frames_v_wi.front().get(),
-        graph_.vertices.all_frames_ba.front().get(),
-        graph_.vertices.all_frames_bg.front().get(),
+        graph_.vertices.all_frames_p_wi.front().get(), graph_.vertices.all_frames_q_wi.front().get(), graph_.vertices.all_frames_v_wi.front().get(),
+        graph_.vertices.all_frames_ba.front().get(),   graph_.vertices.all_frames_bg.front().get(),
     };
 
     // Do marginalization.
@@ -111,7 +109,7 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
     }
 
     // Mark the features that been marginalized. They will not be used in the following estimation.
-    for (const auto &id : graph_.vertices.all_features_id) {
+    for (const auto &id: graph_.vertices.all_features_id) {
         data_manager_->visual_local_map()->feature(id)->status() = FeatureSolvedStatus::kMarginalized;
     }
 
@@ -129,8 +127,7 @@ bool Backend::MarginalizeSubnewFrame(const bool use_multi_view) {
     }
 
     // Compute the size of prior information after discarding.
-    const int32_t min_size = (data_manager_->visual_local_map()->frames().size() - 2) * 15 +
-        6 * data_manager_->camera_extrinsics().size();
+    const int32_t min_size = (data_manager_->visual_local_map()->frames().size() - 2) * 15 + 6 * data_manager_->camera_extrinsics().size();
     if (states_.prior.hessian.cols() <= min_size) {
         return true;
     }
@@ -140,11 +137,10 @@ bool Backend::MarginalizeSubnewFrame(const bool use_multi_view) {
     // Prior information of frame to be discarded shoule be directly discarded.
     marger.DiscardPriorInformation(states_.prior.hessian, states_.prior.bias, min_size, 15);
     // Prior jacobian_t_inv and residual should be decomposed by hessian and bias.
-    marger.DecomposeHessianAndBias(states_.prior.hessian, states_.prior.bias,
-        states_.prior.jacobian, states_.prior.residual, states_.prior.jacobian_t_inv);
+    marger.DecomposeHessianAndBias(states_.prior.hessian, states_.prior.bias, states_.prior.jacobian, states_.prior.residual, states_.prior.jacobian_t_inv);
 
     return true;
 }
 
 
-}
+}  // namespace VIO

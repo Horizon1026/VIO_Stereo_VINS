@@ -1,6 +1,6 @@
 #include "data_loader.h"
-#include "slam_log_reporter.h"
 #include "memory"
+#include "slam_log_reporter.h"
 
 namespace VIO {
 
@@ -11,12 +11,10 @@ void DataLoader::Clear() {
 }
 
 // Push measurements into dataloader.
-bool DataLoader::PushImuMeasurement(const Vec3 &accel,
-                                    const Vec3 &gyro,
-                                    const float &time_stamp_s) {
+bool DataLoader::PushImuMeasurement(const Vec3 &accel, const Vec3 &gyro, const float &time_stamp_s) {
     if (!imu_buffer_.empty() && imu_buffer_.back()->time_stamp_s > time_stamp_s) {
-        ReportWarn("[DataLoader] Imu measurement pushed has invalid timestamp. Latest in buffer is "
-            << imu_buffer_.back()->time_stamp_s << " s, but pushed is " << time_stamp_s << " s.");
+        ReportWarn("[DataLoader] Imu measurement pushed has invalid timestamp. Latest in buffer is " << imu_buffer_.back()->time_stamp_s << " s, but pushed is "
+                                                                                                     << time_stamp_s << " s.");
         return false;
     }
 
@@ -31,17 +29,14 @@ bool DataLoader::PushImuMeasurement(const Vec3 &accel,
     return true;
 }
 
-bool DataLoader::PushImageMeasurement(uint8_t *image_ptr,
-                                      const int32_t image_rows,
-                                      const int32_t image_cols,
-                                      const float &time_stamp_s,
+bool DataLoader::PushImageMeasurement(uint8_t *image_ptr, const int32_t image_rows, const int32_t image_cols, const float &time_stamp_s,
                                       const bool is_left_image) {
     const auto image_buffer_ptr = is_left_image ? &left_image_buffer_ : &right_image_buffer_;
     auto &image_mutex = is_left_image ? left_image_mutex_ : right_image_mutex_;
 
     if (!image_buffer_ptr->empty() && image_buffer_ptr->back()->time_stamp_s > time_stamp_s) {
-        ReportWarn("[DataLoader] Camera measurement pushed has invalid timestamp. Latest in buffer is "
-            << image_buffer_ptr->back()->time_stamp_s << " s, but pushed is " << time_stamp_s << " s.");
+        ReportWarn("[DataLoader] Camera measurement pushed has invalid timestamp. Latest in buffer is " << image_buffer_ptr->back()->time_stamp_s
+                                                                                                        << " s, but pushed is " << time_stamp_s << " s.");
         return false;
     }
 
@@ -253,4 +248,4 @@ bool DataLoader::PopPackedMeasurement(PackedMeasurement &measure) {
     return true;
 }
 
-}
+}  // namespace VIO

@@ -21,7 +21,7 @@ bool Backend::LoadMapFromOldestKeyFrame() {
     map_of_marged_frame_.all_norm_xy_left.reserve(oldest_frame.features().size());
     map_of_marged_frame_.all_p_wf.reserve(oldest_frame.features().size());
 
-    for (const auto &pair : oldest_frame.features()) {
+    for (const auto &pair: oldest_frame.features()) {
         const auto &feature_id = pair.first;
         const auto &feature_ptr = pair.second;
         CONTINUE_IF(feature_ptr->status() != FeatureSolvedStatus::kMarginalized);
@@ -35,4 +35,4 @@ bool Backend::LoadMapFromOldestKeyFrame() {
     return true;
 }
 
-}
+}  // namespace VIO

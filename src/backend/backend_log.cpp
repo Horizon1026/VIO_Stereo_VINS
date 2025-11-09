@@ -14,7 +14,7 @@ namespace {
     constexpr uint32_t kBackendPredictionReprojectionErrorLogIndex = 7;
     constexpr uint32_t kBackendFeatureCosineParallexAngleLogIndex = 8;
     constexpr uint32_t kBackendMapOfOldestFrameLogIndex = 9;
-}
+}  // namespace
 
 bool Backend::Configuration(const std::string &log_file_name) {
     if (options_.kEnableRecordBinaryCurveLog) {
@@ -37,11 +37,11 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_states_ptr = std::make_unique<PackageInfo>();
     package_states_ptr->id = kBackendStatesLogIndex;
     package_states_ptr->name = "backend states";
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "time_stamp_s"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kPose6Dof, .name = "T_wi"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "v_wi"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_a"});
-    package_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_g"});
+    package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "time_stamp_s"});
+    package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kPose6Dof, .name = "T_wi"});
+    package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "v_wi"});
+    package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "bias_a"});
+    package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "bias_g"});
     if (!logger_.RegisterPackage(package_states_ptr)) {
         ReportError("[Backend] Failed to register package for backend states log.");
     }
@@ -49,11 +49,11 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_predict_states_ptr = std::make_unique<PackageInfo>();
     package_predict_states_ptr->id = kBackendPredictStatesLogIndex;
     package_predict_states_ptr->name = "backend predict states";
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "time_stamp_s"});
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kPose6Dof, .name = "T_wi"});
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "v_wi"});
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_a"});
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kVector3, .name = "bias_g"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "time_stamp_s"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kPose6Dof, .name = "T_wi"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "v_wi"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "bias_a"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "bias_g"});
     if (!logger_.RegisterPackage(package_predict_states_ptr)) {
         ReportError("[Backend] Failed to register package for backend predict states log.");
     }
@@ -61,21 +61,21 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_graph_ptr = std::make_unique<PackageInfo>();
     package_graph_ptr->id = kBackendGraphLogIndex;
     package_graph_ptr->name = "backend graph";
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_p_ic"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_q_ic"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_p_wi"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_q_wi"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_v_wi"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_bias_a"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_bias_g"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_p_wc"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_q_wc"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_feature_invdep"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_prior_factor"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_visual_factor"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "num_of_imu_factor"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_prior_valid"});
-    package_graph_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "prior_residual"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_p_ic"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_q_ic"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_p_wi"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_q_wi"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_v_wi"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_bias_a"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_bias_g"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_p_wc"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_q_wc"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_feature_invdep"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_prior_factor"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_visual_factor"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "num_of_imu_factor"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint8, .name = "is_prior_valid"});
+    package_graph_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "prior_residual"});
     if (!logger_.RegisterPackage(package_graph_ptr)) {
         ReportError("[Backend] Failed to register package for backend graph log.");
     }
@@ -83,9 +83,9 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_status_flags_ptr = std::make_unique<PackageInfo>();
     package_status_flags_ptr->id = kBackendStatusLogIndex;
     package_status_flags_ptr->name = "backend status";
-    package_status_flags_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "is_initialized"});
-    package_status_flags_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint8, .name = "marginalize_type"});
-    package_status_flags_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kUint32, .name = "valid_loop_count"});
+    package_status_flags_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint8, .name = "is_initialized"});
+    package_status_flags_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint8, .name = "marginalize_type"});
+    package_status_flags_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kUint32, .name = "valid_loop_count"});
     if (!logger_.RegisterPackage(package_status_flags_ptr)) {
         ReportError("[Backend] Failed to register package for backend status flags log.");
     }
@@ -93,13 +93,13 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_cost_time_ptr = std::make_unique<PackageInfo>();
     package_cost_time_ptr->id = kBackendCostTimeLogIndex;
     package_cost_time_ptr->name = "backend cost time";
-    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "total_loop(ms)"});
-    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "add_newest_frame_into_local_map(ms)"});
-    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "initialize(ms)"});
-    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "estimate(ms)"});
-    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "marginalize(ms)"});
-    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "update_state(ms)"});
-    package_cost_time_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kFloat, .name = "record_log(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "total_loop(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "add_newest_frame_into_local_map(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "initialize(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "estimate(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "marginalize(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "update_state(ms)"});
+    package_cost_time_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "record_log(ms)"});
     if (!logger_.RegisterPackage(package_cost_time_ptr)) {
         ReportError("[Backend] Failed to register package for backend cost time log.");
     }
@@ -107,7 +107,7 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_prior_hessian_ptr = std::make_unique<PackageInfo>();
     package_prior_hessian_ptr->id = kBackendPriorHessianLogIndex;
     package_prior_hessian_ptr->name = "backend prior hessian ";
-    package_prior_hessian_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "hessian"});
+    package_prior_hessian_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kMatrix, .name = "hessian"});
     if (!logger_.RegisterPackage(package_prior_hessian_ptr)) {
         ReportError("[Backend] Failed to register package for backend prior hessian log.");
     }
@@ -115,7 +115,7 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_prior_residual_ptr = std::make_unique<PackageInfo>();
     package_prior_residual_ptr->id = kBackendPriorResidualLogIndex;
     package_prior_residual_ptr->name = "backend prior residual ";
-    package_prior_residual_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "residual"});
+    package_prior_residual_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kMatrix, .name = "residual"});
     if (!logger_.RegisterPackage(package_prior_residual_ptr)) {
         ReportError("[Backend] Failed to register package for backend prior residual log.");
     }
@@ -123,7 +123,7 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_pred_repro_err_ptr = std::make_unique<PackageInfo>();
     package_pred_repro_err_ptr->id = kBackendPredictionReprojectionErrorLogIndex;
     package_pred_repro_err_ptr->name = "reprojection error in newest frame";
-    package_pred_repro_err_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "norm plane error [x | y]"});
+    package_pred_repro_err_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kMatrix, .name = "norm plane error [x | y]"});
     if (!logger_.RegisterPackage(package_pred_repro_err_ptr)) {
         ReportError("[Backend] Failed to register package for backend prediction reprojection error log.");
     }
@@ -131,7 +131,7 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_parallex_angle_ptr = std::make_unique<PackageInfo>();
     package_parallex_angle_ptr->id = kBackendFeatureCosineParallexAngleLogIndex;
     package_parallex_angle_ptr->name = "parallex angle map(sine(rad))";
-    package_parallex_angle_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kMatrix, .name = "feature | frame [col | row]"});
+    package_parallex_angle_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kMatrix, .name = "feature | frame [col | row]"});
     if (!logger_.RegisterPackage(package_parallex_angle_ptr)) {
         ReportError("[Backend] Failed to register package for backend parallex angle map error log.");
     }
@@ -139,7 +139,7 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_map_of_oldest_frame_ptr = std::make_unique<PackageInfo>();
     package_map_of_oldest_frame_ptr->id = kBackendMapOfOldestFrameLogIndex;
     package_map_of_oldest_frame_ptr->name = "map of oldest frame";
-    package_map_of_oldest_frame_ptr->items.emplace_back(PackageItemInfo{.type = ItemType::kPointCloud, .name = "all_p_wf"});
+    package_map_of_oldest_frame_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kPointCloud, .name = "all_p_wf"});
     if (!logger_.RegisterPackage(package_map_of_oldest_frame_ptr)) {
         ReportError("[Backend] Failed to register package for backend map point of oldest frame log.");
     }
@@ -215,7 +215,7 @@ void Backend::RecordBackendLogPredictStates() {
 
 void Backend::UpdateBackendLogGraph() {
     RETURN_IF(!options().kEnableRecordBinaryCurveLog);
-    log_package_graph_ = BackendLogGraph{};
+    log_package_graph_ = BackendLogGraph {};
 
     log_package_graph_.num_of_p_ic = graph_.vertices.all_cameras_p_ic.size();
     log_package_graph_.num_of_q_ic = graph_.vertices.all_cameras_q_ic.size();
@@ -265,8 +265,7 @@ void Backend::RecordBackendLogPriorInformation() {
     }
 }
 
-void Backend::RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id,
-                                                          const float time_stamp_s) {
+void Backend::RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id, const float time_stamp_s) {
     RETURN_IF(!options().kEnableRecordBinaryCurveLog);
     RETURN_IF(repro_err_with_feature_id.empty());
     Mat matrix = Mat::Zero(2, repro_err_with_feature_id.size());
@@ -284,12 +283,13 @@ void Backend::RecordBackendLogParallexAngleMap() {
 
     Mat map = Mat::Zero(frames.size(), features.size());
     uint32_t col_index = 0;
-    for (const auto &pair : features) {
+    for (const auto &pair: features) {
         const uint32_t feature_id = pair.first;
         const auto &feature = pair.second;
         const float max_sine_parallex_angle = ComputeMaxParallexAngleOfFeature(feature_id);
-        map.col(col_index).segment(feature.first_frame_id() - oldest_frame_id,
-            feature.final_frame_id() - feature.first_frame_id() + 1).setConstant(max_sine_parallex_angle);
+        map.col(col_index)
+            .segment(feature.first_frame_id() - oldest_frame_id, feature.final_frame_id() - feature.first_frame_id() + 1)
+            .setConstant(max_sine_parallex_angle);
         ++col_index;
     }
 
@@ -302,4 +302,4 @@ void Backend::RecordBackendLogMapOfOldestFrame() {
     logger_.RecordPackage(kBackendMapOfOldestFrameLogIndex, map_of_marged_frame_.all_p_wf, map_of_marged_frame_.time_stamp_s);
 }
 
-}
+}  // namespace VIO

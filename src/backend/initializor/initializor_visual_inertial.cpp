@@ -4,7 +4,7 @@ namespace VIO {
 
 bool Backend::EstimateGyroBias() {
     // Preintegrate all imu measurement block.
-    for (auto &imu_based_frame : data_manager_->imu_based_frames()) {
+    for (auto &imu_based_frame: data_manager_->imu_based_frames()) {
         RecomputeImuPreintegrationBlock(Vec3::Zero(), Vec3::Zero(), imu_based_frame);
     }
 
@@ -30,10 +30,8 @@ bool Backend::EstimateGyroBias() {
     ReportColorInfo("[Backend] Backend estimated bias of gyro " << LogVec(delta_bias_gyro) << ".");
 
     // Update bias of gyro and do preintegration.
-    for (auto &imu_based_frame : data_manager_->imu_based_frames()) {
-        RecomputeImuPreintegrationBlock(Vec3::Zero(),
-            imu_based_frame.imu_preint_block.bias_gyro() + delta_bias_gyro,
-            imu_based_frame);
+    for (auto &imu_based_frame: data_manager_->imu_based_frames()) {
+        RecomputeImuPreintegrationBlock(Vec3::Zero(), imu_based_frame.imu_preint_block.bias_gyro() + delta_bias_gyro, imu_based_frame);
     }
 
     return true;
@@ -67,10 +65,10 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale)
         Mat6 Q = Mat6::Identity();
 
         // Construct sub incremental function.
-        H.block<3, 3>(0, 0) = - dt * Mat3::Identity();
+        H.block<3, 3>(0, 0) = -dt * Mat3::Identity();
         H.block<3, 3>(0, 6) = 0.5f * R_iw_i * dt * dt;
         H.block<3, 1>(0, 9) = R_iw_i * (p_wc_j - p_wc_i);
-        H.block<3, 3>(3, 0) = - Mat3::Identity();
+        H.block<3, 3>(3, 0) = -Mat3::Identity();
         H.block<3, 3>(3, 3) = R_iw_i * R_wi_j;
         H.block<3, 3>(3, 6) = R_iw_i * dt;
         z.block<3, 1>(0, 0) = imu_frame_j.imu_preint_block.p_ij() - p_ic + R_iw_i * R_wi_j * p_ic;
@@ -94,8 +92,8 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale)
     const Vec x = A.ldlt().solve(b);
     gravity_c0 = x.segment<3>(size - 4);
     scale = x.tail<1>()[0];
-    ReportColorInfo("[Backend] Backend estimate scale [" << scale << "]" <<
-        ", gravity_c0 " << LogVec(gravity_c0) << " with norm [" << gravity_c0.norm() << "].");
+    ReportColorInfo("[Backend] Backend estimate scale [" << scale << "]" << ", gravity_c0 " << LogVec(gravity_c0) << " with norm [" << gravity_c0.norm()
+                                                         << "].");
 
     // Check invalidation.
     RETURN_FALSE_IF(scale < 0 || std::fabs(gravity_c0.norm() - options_.kGravityInWordFrame.norm()) > 1.0f);
@@ -139,10 +137,10 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
             Mat6 Q = Mat6::Identity();
 
             // Construct sub incremental function.
-            H.block<3, 3>(0, 0) = - dt * Mat3::Identity();
+            H.block<3, 3>(0, 0) = -dt * Mat3::Identity();
             H.block<3, 2>(0, 6) = 0.5 * R_iw_i * dt * dt * basic;
             H.block<3, 1>(0, 8) = R_iw_i * (p_wc_j - p_wc_i);
-            H.block<3, 3>(3, 0) = - Mat3::Identity();
+            H.block<3, 3>(3, 0) = -Mat3::Identity();
             H.block<3, 3>(3, 3) = R_iw_i * R_wi_j;
             H.block<3, 2>(3, 6) = R_iw_i * basic * dt;
             z.block<3, 1>(0, 0) = imu_frame_j.imu_preint_block.p_ij() - p_ic + R_iw_i * R_wi_j * p_ic;
@@ -178,4 +176,4 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
     return true;
 }
 
-}
+}  // namespace VIO

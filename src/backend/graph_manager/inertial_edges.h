@@ -4,36 +4,36 @@
 #include "basic_type.h"
 #include "slam_basic_math.h"
 
-#include "imu_state.h"
 #include "imu_preintegrate.h"
+#include "imu_state.h"
 
-#include "vertex.h"
-#include "vertex_quaternion.h"
 #include "edge.h"
 #include "kernel.h"
-#include "kernel_huber.h"
 #include "kernel_cauchy.h"
+#include "kernel_huber.h"
 #include "kernel_tukey.h"
+#include "vertex.h"
+#include "vertex_quaternion.h"
 
 namespace VIO {
 
 /* Class Edge reprojection. Align imu preintegration between two imu pose. */
 template <typename Scalar>
 class EdgeImuPreintegrationBetweenRelativePose : public Edge<Scalar> {
-// Vertices are [imu pose 0, p_wi0]
-//              [imu pose 0, q_wi0]
-//              [imu vel 0, v_wi0]
-//              [imu bias_a 0, bias_a0]
-//              [imu bias_g 0, bias_g0]
-//              [imu pose 1, p_wi1]
-//              [imu pose 1, q_wi1]
-//              [imu vel 1, v_wi1]
-//              [imu bias_a 1, bias_a1]
-//              [imu bias_g 1, bias_g1]
+    // Vertices are [imu pose 0, p_wi0]
+    //              [imu pose 0, q_wi0]
+    //              [imu vel 0, v_wi0]
+    //              [imu bias_a 0, bias_a0]
+    //              [imu bias_g 0, bias_g0]
+    //              [imu pose 1, p_wi1]
+    //              [imu pose 1, q_wi1]
+    //              [imu vel 1, v_wi1]
+    //              [imu bias_a 1, bias_a1]
+    //              [imu bias_g 1, bias_g1]
 
 public:
-    EdgeImuPreintegrationBetweenRelativePose(const ImuPreintegrateBlock<DorF> &imu_block,
-                                             const Vec3 &gravity_w) : Edge<Scalar>(15, 10) {
+    EdgeImuPreintegrationBetweenRelativePose(const ImuPreintegrateBlock<DorF> &imu_block, const Vec3 &gravity_w)
+        : Edge<Scalar>(15, 10) {
         linear_point_.p_ij = imu_block.p_ij().cast<Scalar>();
         linear_point_.q_ij = imu_block.q_ij().cast<Scalar>();
         linear_point_.v_ij = imu_block.v_ij().cast<Scalar>();
@@ -72,7 +72,8 @@ public:
 
         // Compute residual.
         this->residual().setZero(15);
-        this->residual().template block<3, 1>(ImuIndex::kPosition, 0) = q_wi0_.inverse() * (p_wi1_ - p_wi0_ - v_wi0_ * dt + static_cast<Scalar>(0.5) * gravity_w_ * dt * dt) - p_ij_;
+        this->residual().template block<3, 1>(ImuIndex::kPosition, 0) =
+            q_wi0_.inverse() * (p_wi1_ - p_wi0_ - v_wi0_ * dt + static_cast<Scalar>(0.5) * gravity_w_ * dt * dt) - p_ij_;
         this->residual().template block<3, 1>(ImuIndex::kRotation, 0) = static_cast<Scalar>(2) * (q_ij_.inverse() * (q_wi0_.inverse() * q_wi1_)).vec();
         this->residual().template block<3, 1>(ImuIndex::kVelocity, 0) = q_wi0_.inverse() * (v_wi1_ - v_wi0_ + gravity_w_ * dt) - v_ij_;
         this->residual().template block<3, 1>(ImuIndex::kBiasAccel, 0) = bias_a1_ - bias_a0_;
@@ -86,23 +87,26 @@ public:
 
         // Compute jacobian dr dp0.
         TMat15x3<Scalar> dr_dp0 = TMat15x3<Scalar>::Zero();
-        dr_dp0.template block<3, 3>(ImuIndex::kPosition, 0) = - R_i0w;
+        dr_dp0.template block<3, 3>(ImuIndex::kPosition, 0) = -R_i0w;
         TMat15x3<Scalar> dr_dq0 = TMat15x3<Scalar>::Zero();
-        dr_dq0.template block<3, 3>(ImuIndex::kPosition, 0) = Utility::SkewSymmetricMatrix(q_wi0_.inverse() * (static_cast<Scalar>(0.5) * gravity_w_ * dt2 + p_wi1_ - p_wi0_ - v_wi0_ * dt));
-        dr_dq0.template block<3, 3>(ImuIndex::kRotation, 0) = - (Utility::Qleft(q_wi1_.inverse() * q_wi0_) * Utility::Qright(q_ij_)).template bottomRightCorner<3, 3>();
+        dr_dq0.template block<3, 3>(ImuIndex::kPosition, 0) =
+            Utility::SkewSymmetricMatrix(q_wi0_.inverse() * (static_cast<Scalar>(0.5) * gravity_w_ * dt2 + p_wi1_ - p_wi0_ - v_wi0_ * dt));
+        dr_dq0.template block<3, 3>(ImuIndex::kRotation, 0) =
+            -(Utility::Qleft(q_wi1_.inverse() * q_wi0_) * Utility::Qright(q_ij_)).template bottomRightCorner<3, 3>();
         dr_dq0.template block<3, 3>(ImuIndex::kVelocity, 0) = Utility::SkewSymmetricMatrix(q_wi0_.inverse() * (gravity_w_ * dt + v_wi1_ - v_wi0_));
         TMat15x3<Scalar> dr_dv0 = TMat15x3<Scalar>::Zero();
-        dr_dv0.template block<3, 3>(ImuIndex::kPosition, 0) = - R_i0w * dt;
-        dr_dv0.template block<3, 3>(ImuIndex::kVelocity, 0) = - R_i0w;
+        dr_dv0.template block<3, 3>(ImuIndex::kPosition, 0) = -R_i0w * dt;
+        dr_dv0.template block<3, 3>(ImuIndex::kVelocity, 0) = -R_i0w;
         TMat15x3<Scalar> dr_dba0 = TMat15x3<Scalar>::Zero();
-        dr_dba0.template block<3, 3>(ImuIndex::kPosition, 0) = - imu_jacobians_.dp_dba;
-        dr_dba0.template block<3, 3>(ImuIndex::kVelocity, 0) = - imu_jacobians_.dv_dba;
-        dr_dba0.template block<3, 3>(ImuIndex::kBiasAccel, 0) = - TMat3<Scalar>::Identity();
+        dr_dba0.template block<3, 3>(ImuIndex::kPosition, 0) = -imu_jacobians_.dp_dba;
+        dr_dba0.template block<3, 3>(ImuIndex::kVelocity, 0) = -imu_jacobians_.dv_dba;
+        dr_dba0.template block<3, 3>(ImuIndex::kBiasAccel, 0) = -TMat3<Scalar>::Identity();
         TMat15x3<Scalar> dr_dbg0 = TMat15x3<Scalar>::Zero();
-        dr_dbg0.template block<3, 3>(ImuIndex::kPosition, 0) = - imu_jacobians_.dp_dbg;
-        dr_dbg0.template block<3, 3>(ImuIndex::kRotation, 0) = - Utility::Qleft(q_wi1_.inverse() * q_wi0_ * linear_point_.q_ij).template bottomRightCorner<3, 3>() * imu_jacobians_.dr_dbg;
-        dr_dbg0.template block<3, 3>(ImuIndex::kVelocity, 0) = - imu_jacobians_.dv_dbg;
-        dr_dbg0.template block<3, 3>(ImuIndex::kBiasGyro, 0) = - TMat3<Scalar>::Identity();
+        dr_dbg0.template block<3, 3>(ImuIndex::kPosition, 0) = -imu_jacobians_.dp_dbg;
+        dr_dbg0.template block<3, 3>(ImuIndex::kRotation, 0) =
+            -Utility::Qleft(q_wi1_.inverse() * q_wi0_ * linear_point_.q_ij).template bottomRightCorner<3, 3>() * imu_jacobians_.dr_dbg;
+        dr_dbg0.template block<3, 3>(ImuIndex::kVelocity, 0) = -imu_jacobians_.dv_dbg;
+        dr_dbg0.template block<3, 3>(ImuIndex::kBiasGyro, 0) = -TMat3<Scalar>::Identity();
 
         // Compute jacobian dr dp1.
         TMat15x3<Scalar> dr_dp1 = TMat15x3<Scalar>::Zero();
@@ -129,8 +133,7 @@ public:
         this->GetJacobian(9) = dr_dbg1;
     }
 
-    void CorrectObservation(const TVec3<Scalar> &bias_a,
-                            const TVec3<Scalar> &bias_g) {
+    void CorrectObservation(const TVec3<Scalar> &bias_a, const TVec3<Scalar> &bias_g) {
         const TVec3<Scalar> dba = bias_a - linear_point_.bias_a;
         const TVec3<Scalar> dbg = bias_g - linear_point_.bias_g;
         p_ij_ = linear_point_.p_ij + imu_jacobians_.dp_dba * dba + imu_jacobians_.dp_dbg * dbg;
@@ -177,9 +180,8 @@ private:
     } imu_jacobians_;
     TVec3<Scalar> gravity_w_ = TVec3<Scalar>(0, 0, 9.8);
     Scalar integrate_time_s_ = static_cast<Scalar>(0);
-
 };
 
-}
+}  // namespace VIO
 
-#endif // end of _INERTIAL_EDGES_H_
+#endif  // end of _INERTIAL_EDGES_H_
