@@ -19,7 +19,7 @@ namespace vio {
 
 /* Class Edge reprojection. Align imu preintegration between two imu pose. */
 template <typename Scalar>
-class EdgeImuPreintegrationBetweenRelativePose : public Edge<Scalar> {
+class EdgeImuPreintegrationBetweenRelativePose: public Edge<Scalar> {
     // Vertices are [imu pose 0, p_wi0]
     //              [imu pose 0, q_wi0]
     //              [imu vel 0, v_wi0]
@@ -32,8 +32,7 @@ class EdgeImuPreintegrationBetweenRelativePose : public Edge<Scalar> {
     //              [imu bias_g 1, bias_g1]
 
 public:
-    EdgeImuPreintegrationBetweenRelativePose(const ImuPreintegrateBlock<DorF> &imu_block, const Vec3 &gravity_w)
-        : Edge<Scalar>(15, 10) {
+    EdgeImuPreintegrationBetweenRelativePose(const ImuPreintegrateBlock<DorF> &imu_block, const Vec3 &gravity_w): Edge<Scalar>(15, 10) {
         linear_point_.p_ij = imu_block.p_ij().cast<Scalar>();
         linear_point_.q_ij = imu_block.q_ij().cast<Scalar>();
         linear_point_.v_ij = imu_block.v_ij().cast<Scalar>();

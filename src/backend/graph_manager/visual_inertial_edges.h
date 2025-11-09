@@ -13,7 +13,7 @@ namespace vio {
 
 /* Class Edge reprojection. Project feature 1-dof invdep on visual norm plane via imu pose. */
 template <typename Scalar>
-class EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesOneCamera : public Edge<Scalar> {
+class EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesOneCamera: public Edge<Scalar> {
     // Vertices are [feature, invdep]
     //              [first imu pose, p_wi0]
     //              [first imu pose, q_wi0]
@@ -23,8 +23,7 @@ class EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesOneCamera : public Edge<S
     //              [extrinsic, q_ic]
 
 public:
-    EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesOneCamera()
-        : Edge<Scalar>(2, 7) {}
+    EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesOneCamera(): Edge<Scalar>(2, 7) {}
     virtual ~EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesOneCamera() = default;
 
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
@@ -127,7 +126,7 @@ private:
 
 /* Class Edge reprojection. Project feature 1-dof invdep on visual norm plane via imu pose. */
 template <typename Scalar>
-class EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesTwoCamera : public Edge<Scalar> {
+class EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesTwoCamera: public Edge<Scalar> {
     // Vertices are [feature, invdep]
     //              [first imu pose, p_wi0]
     //              [first imu pose, q_wi0]
@@ -139,8 +138,7 @@ class EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesTwoCamera : public Edge<S
     //              [extrinsic, q_ic]
 
 public:
-    EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesTwoCamera()
-        : Edge<Scalar>(2, 9) {}
+    EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesTwoCamera(): Edge<Scalar>(2, 9) {}
     virtual ~EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesTwoCamera() = default;
 
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
@@ -250,7 +248,7 @@ private:
 
 /* Class Edge reprojection. Project feature 1-dof invdep on visual norm plane via imu pose. */
 template <typename Scalar>
-class EdgeFeatureInvdepToNormPlaneViaImuWithinOneFramesTwoCamera : public Edge<Scalar> {
+class EdgeFeatureInvdepToNormPlaneViaImuWithinOneFramesTwoCamera: public Edge<Scalar> {
     // Vertices are [feature, invdep]
     //              [extrinsic, p_ic0]
     //              [extrinsic, q_ic0]
@@ -258,8 +256,7 @@ class EdgeFeatureInvdepToNormPlaneViaImuWithinOneFramesTwoCamera : public Edge<S
     //              [extrinsic, q_ic]
 
 public:
-    EdgeFeatureInvdepToNormPlaneViaImuWithinOneFramesTwoCamera()
-        : Edge<Scalar>(2, 5) {}
+    EdgeFeatureInvdepToNormPlaneViaImuWithinOneFramesTwoCamera(): Edge<Scalar>(2, 5) {}
     virtual ~EdgeFeatureInvdepToNormPlaneViaImuWithinOneFramesTwoCamera() = default;
 
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.

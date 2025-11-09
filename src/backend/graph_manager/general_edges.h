@@ -16,13 +16,12 @@ namespace vio {
 
 /* Class Edge pose prior. This can be used to fix a pose with specified weight. */
 template <typename Scalar>
-class EdgePriorPose : public Edge<Scalar> {
+class EdgePriorPose: public Edge<Scalar> {
     // Vertices are [position, p_wc]
     //              [rotation, q_wc]
 
 public:
-    EdgePriorPose()
-        : Edge<Scalar>(6, 2) {}
+    EdgePriorPose(): Edge<Scalar>(6, 2) {}
     virtual ~EdgePriorPose() = default;
 
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
