@@ -2,7 +2,7 @@
 #include "slam_operations.h"
 #include "vio.h"
 
-#include "feature_fast.h"
+#include "feature_point_fast_detector.h"
 #include "feature_point_detector.h"
 #include "optical_flow_basic_klt.h"
 #include "pinhole.h"
@@ -84,7 +84,7 @@ bool Vio::ConfigComponentOfDataLoader() {
 
 bool Vio::ConfigComponentOfFrontend() {
     using CameraType = sensor_model::Pinhole;
-    using FeatureType = feature_detector::FeaturePointDetector<feature_detector::FastFeature>;
+    using FeatureType = feature_detector::FeaturePointFastDetector;
     using KltType = feature_tracker::OpticalFlowBasicKlt;
 
     // Config visual frontend.
