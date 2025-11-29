@@ -264,7 +264,7 @@ void DataManager::UpdateVisualizorCameraView() {
     euler.y() = 0.0f;
     Visualizor3D::camera_view().q_wc = Utility::EulerToQuaternion(euler);
 
-    const Vec3 p_c = Vec3(0, 0, 3);
+    const Vec3 p_c = Vec3(0, 0, 15);
     const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
     Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
 }
