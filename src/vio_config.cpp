@@ -83,7 +83,7 @@ bool Vio::ConfigComponentOfDataLoader() {
 }
 
 bool Vio::ConfigComponentOfFrontend() {
-    using CameraType = sensor_model::CameraPinholeRadtan;
+    using CameraType = sensor_model::CameraPinholeRadialTangential;
     using FeatureType = feature_detector::FeaturePointFastDetector;
     using KltType = feature_tracker::OpticalFlowBasicKlt;
 
