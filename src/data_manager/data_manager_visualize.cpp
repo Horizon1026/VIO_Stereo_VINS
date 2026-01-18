@@ -259,10 +259,10 @@ void DataManager::UpdateVisualizorCameraView() {
     RETURN_IF(visual_local_map_->frames().empty());
 
     // Set visualizor camera view by newest frame.
-    Vec3 euler = Utility::QuaternionToEuler(Visualizor3D::camera_view().q_wc);
-    euler.x() = -90.0f;
-    euler.y() = 0.0f;
-    Visualizor3D::camera_view().q_wc = Utility::EulerToQuaternion(euler);
+    Vec3 euler_rpy = Utility::QuaternionToEuler(Visualizor3D::camera_view().q_wc);
+    euler_rpy.x() = -90.0f;
+    euler_rpy.y() = 0.0f;
+    Visualizor3D::camera_view().q_wc = Utility::EulerToQuaternion(euler_rpy);
 
     const Vec3 p_c = Vec3(0, 0, 15);
     const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
