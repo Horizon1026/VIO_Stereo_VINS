@@ -64,8 +64,7 @@ public:
 
     // Push measurements into dataloader.
     bool PushImuMeasurement(const Vec3 &accel, const Vec3 &gyro, const float &time_stamp_s);
-    bool PushImageMeasurement(uint8_t *image_ptr, const int32_t image_rows, const int32_t image_cols, const float &time_stamp_s,
-                              const bool is_left_image = true);
+    bool PushImageMeasurement(GrayImage &&image, const float &time_stamp_s, const bool is_left_image = true);
 
     // Pop measurements from dataloader.
     bool PopSingleMeasurement(SingleMeasurement &measure);

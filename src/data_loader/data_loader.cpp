@@ -29,8 +29,7 @@ bool DataLoader::PushImuMeasurement(const Vec3 &accel, const Vec3 &gyro, const f
     return true;
 }
 
-bool DataLoader::PushImageMeasurement(uint8_t *image_ptr, const int32_t image_rows, const int32_t image_cols, const float &time_stamp_s,
-                                      const bool is_left_image) {
+bool DataLoader::PushImageMeasurement(GrayImage &&image, const float &time_stamp_s, const bool is_left_image) {
     const auto image_buffer_ptr = is_left_image ? &left_image_buffer_ : &right_image_buffer_;
     auto &image_mutex = is_left_image ? left_image_mutex_ : right_image_mutex_;
 
@@ -42,7 +41,7 @@ bool DataLoader::PushImageMeasurement(uint8_t *image_ptr, const int32_t image_ro
 
     auto object_ptr = image_pool_.Get();
     object_ptr->time_stamp_s = time_stamp_s;
-    object_ptr->image = Eigen::Map<MatImg>(image_ptr, image_rows, image_cols);
+    object_ptr->image = std::move(image);
 
     std::unique_lock<std::mutex> lck(image_mutex);
     image_buffer_ptr->emplace_back(std::move(object_ptr));

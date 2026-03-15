@@ -1,4 +1,5 @@
 #include "backend.h"
+#include "basic_type.h"
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
 
@@ -260,12 +261,15 @@ bool Backend::AddNewestFrameWithStatesPredictionToLocalMap() {
 
     // Add new frame into visual_local_map.
     std::vector<MatImg> raw_images;
+    MatImg temp_image_mat;
     if (options_.kEnableLocalMapStoreRawImages && newest_imu_based_frame.packed_measure != nullptr) {
         if (newest_imu_based_frame.packed_measure->left_image != nullptr) {
-            raw_images.emplace_back(newest_imu_based_frame.packed_measure->left_image->image);
+            newest_imu_based_frame.packed_measure->left_image->image.ToMatImg(temp_image_mat);
+            raw_images.emplace_back(temp_image_mat);
         }
         if (newest_imu_based_frame.packed_measure->right_image != nullptr) {
-            raw_images.emplace_back(newest_imu_based_frame.packed_measure->right_image->image);
+            newest_imu_based_frame.packed_measure->right_image->image.ToMatImg(temp_image_mat);
+            raw_images.emplace_back(temp_image_mat);
         }
     }
     const auto &newest_cam_frame_id = data_manager_->visual_local_map()->frames().back().id() + 1;

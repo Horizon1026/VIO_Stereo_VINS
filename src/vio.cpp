@@ -25,7 +25,7 @@ bool Vio::RunOnce() {
     }
 
     // Transform image measurement to be features measurement.
-    if (!frontend_->RunOnce(GrayImage(packed_measure->left_image->image), GrayImage(packed_measure->right_image->image),
+    if (!frontend_->RunOnce(packed_measure->left_image->image, packed_measure->right_image->image,
                             packed_measure->imus.back()->time_stamp_s)) {
         ReportWarn("[Vio] Visual frontend failed to run once at " << vio_sys_timer_.TockInSecond() << " s.");
         return false;

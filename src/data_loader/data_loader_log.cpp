@@ -96,10 +96,10 @@ void DataLoader::RecordPackedMeasurementLog(const PackedMeasurement &measure) {
 
     // Record image raw data log.
     if (measure.left_image != nullptr) {
-        logger_.RecordPackage(kLeftImageRawDataLogIndex, GrayImage(measure.left_image->image), measure.left_image->time_stamp_s);
+        logger_.RecordPackage(kLeftImageRawDataLogIndex, measure.left_image->image, measure.left_image->time_stamp_s);
     }
     if (measure.right_image != nullptr) {
-        logger_.RecordPackage(kRightImageRawDataLogIndex, GrayImage(measure.right_image->image), measure.right_image->time_stamp_s);
+        logger_.RecordPackage(kRightImageRawDataLogIndex, measure.right_image->image, measure.right_image->time_stamp_s);
     }
 }
 

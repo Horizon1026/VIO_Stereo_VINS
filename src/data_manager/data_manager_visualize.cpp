@@ -153,7 +153,9 @@ void DataManager::ShowAllImuBasedFrames(const int32_t delay_ms) {
         const int32_t row_offset = image_rows * (frame_id / cols_of_images);
         const int32_t col_offset = image_cols * (frame_id % cols_of_images);
         // Load image.
-        show_image_mat.block(row_offset, col_offset, image_rows, image_cols) = imu_based_frame.packed_measure->left_image->image;
+        MatImg temp_image_mat;
+        imu_based_frame.packed_measure->left_image->image.ToMatImg(temp_image_mat);
+        show_image_mat.block(row_offset, col_offset, image_rows, image_cols) = temp_image_mat;
         // Accumulate index.
         ++frame_id;
     }

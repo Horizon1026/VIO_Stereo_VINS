@@ -1,4 +1,5 @@
 #include "data_manager.h"
+#include "basic_type.h"
 
 namespace vio {
 
@@ -38,12 +39,15 @@ bool DataManager::ConvertAllImuBasedFramesToLocalMap() {
         }
 
         std::vector<MatImg> raw_images;
+        MatImg temp_image_mat;
         if (frame.packed_measure != nullptr) {
             if (frame.packed_measure->left_image != nullptr) {
-                raw_images.emplace_back(frame.packed_measure->left_image->image);
+                frame.packed_measure->left_image->image.ToMatImg(temp_image_mat);
+                raw_images.emplace_back(temp_image_mat);
             }
             if (frame.packed_measure->right_image != nullptr) {
-                raw_images.emplace_back(frame.packed_measure->right_image->image);
+                frame.packed_measure->right_image->image.ToMatImg(temp_image_mat);
+                raw_images.emplace_back(temp_image_mat);
             }
         }
 
