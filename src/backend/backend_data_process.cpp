@@ -135,11 +135,11 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
                                  [       0                        1                ]   [  0      1  ]
                                = [R_wc0 * R_ic0.t * R_ici  R_wc0 * R_ic0.t * t_ici - R_wc0 * R_ic0.t * t_ic0 + t_wc0]
                                  [           0                                          1                           ] */
-            const Quat q_wci = q_wi * q_ici;
             const Vec3 p_wci = q_wi * p_ici - q_wi * p_ic0 + p_wc;
+            const Quat q_wci = q_wi * q_ici;
             const Vec2 norm_xy_i = obv[i].rectified_norm_xy;
-            all_q_wc.emplace_back(q_wci);
             all_p_wc.emplace_back(p_wci);
+            all_q_wc.emplace_back(q_wci);
             all_norm_xy.emplace_back(norm_xy_i);
         }
     }
@@ -150,7 +150,7 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     solver.options().kMaxToleranceReprojectionError = options_.kMaxToleranceReprojectionErrorInNormPlane;
     solver.options().kMethod = PointTriangulator::Method::kAnalytic;
     Vec3 p_w = Vec3::Zero();
-    if (solver.Triangulate(all_q_wc, all_p_wc, all_norm_xy, p_w)) {
+    if (solver.Triangulate(all_p_wc, all_q_wc, all_norm_xy, p_w)) {
         feature_ptr->param() = p_w;
         feature_ptr->status() = FeatureSolvedStatus::kSolved;
     } else {
@@ -197,7 +197,7 @@ float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
         const auto &obv = feature_ptr->observe(frame_id);
         CONTINUE_IF(obv.empty());
         const Vec2 norm_xy = obv[0].rectified_norm_xy;
-        max_sine_parallex_angle = std::max(max_sine_parallex_angle, PointTriangulator::GetSineOfParallexAngle(q_wc0, p_wc0, q_wc, p_wc, norm_xy0, norm_xy));
+        max_sine_parallex_angle = std::max(max_sine_parallex_angle, PointTriangulator::GetSineOfParallexAngle(p_wc0, q_wc0, p_wc, q_wc, norm_xy0, norm_xy));
 
         // Add multi-view observations.
         CONTINUE_IF(data_manager_->camera_extrinsics().size() < obv.size());
@@ -214,11 +214,11 @@ float Backend::ComputeMaxParallexAngleOfFeature(const uint32_t feature_id) {
                                  [       0                        1                ]   [  0      1  ]
                                = [R_wc0 * R_ic0.t * R_ici  R_wc0 * R_ic0.t * t_ici - R_wc0 * R_ic0.t * t_ic0 + t_wc0]
                                  [           0                                          1                           ] */
-            const Quat q_wci = q_wi * q_ici;
             const Vec3 p_wci = q_wi * p_ici - q_wi * p_ic0 + p_wc;
+            const Quat q_wci = q_wi * q_ici;
             const Vec2 norm_xy_i = obv[i].rectified_norm_xy;
             max_sine_parallex_angle =
-                std::max(max_sine_parallex_angle, PointTriangulator::GetSineOfParallexAngle(q_wc0, p_wc0, q_wci, p_wci, norm_xy0, norm_xy_i));
+                std::max(max_sine_parallex_angle, PointTriangulator::GetSineOfParallexAngle(p_wc0, q_wc0, p_wci, q_wci, norm_xy0, norm_xy_i));
         }
     }
 
