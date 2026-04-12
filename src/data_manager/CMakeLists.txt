@@ -46,9 +46,9 @@ if( NOT TARGET lib_3d_visualizor )
 endif()
 
 # Add data loader.
-set( DATA_LOADER_PATH ${PROJECT_SOURCE_DIR}/../VIO_Stereo_VINS/src/data_loader )
-if( NOT TARGET lib_vio_stereo_vins_data_loader )
-    add_subdirectory( ${DATA_LOADER_PATH} ${PROJECT_SOURCE_DIR}/build/lib_vio_stereo_vins_data_loader )
+set( SLAM_DATALOADER_PATH ${PROJECT_SOURCE_DIR}/../Slam_Dataloader )
+if( NOT TARGET lib_general_data_loader )
+    add_subdirectory( ${SLAM_DATALOADER_PATH}/src/data_loader ${PROJECT_SOURCE_DIR}/build/lib_general_data_loader )
 endif()
 
 # Add visual frontend.
@@ -74,7 +74,7 @@ target_link_libraries( lib_vio_stereo_vins_data_manager
     lib_slam_utility_memory
     lib_slam_utility_tick_tock
 
-    lib_vio_stereo_vins_data_loader
+    lib_general_data_loader
     lib_vio_stereo_vins_frontend
 
     lib_covisible_graph
