@@ -18,6 +18,7 @@ namespace vio {
 
 using namespace slam_utility;
 using namespace sensor_model;
+using namespace dataloader;
 using DorF = float;
 
 /* Options for Data Manager. */
