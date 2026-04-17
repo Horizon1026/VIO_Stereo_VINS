@@ -38,14 +38,14 @@ void DataManager::RegisterLogPackages() {
     }
 }
 
-void DataManager::TriggerLogRecording(const float time_stamp_s) {
+void DataManager::TriggerLogRecording(const double time_stamp_s) {
     RETURN_IF(!options_.kEnableRecordBinaryCurveLog);
     RETURN_IF(visual_local_map_ == nullptr);
 
     RecordLocalMap(time_stamp_s);
 }
 
-void DataManager::RecordLocalMap(const float time_stamp_s) {
+void DataManager::RecordLocalMap(const double time_stamp_s) {
     DataManagerLocalMapLog log_package;
 
     log_package.num_of_features = visual_local_map_->features().size();

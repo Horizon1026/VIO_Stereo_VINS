@@ -37,7 +37,7 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_states_ptr = std::make_unique<PackageInfo>();
     package_states_ptr->id = kBackendStatesLogIndex;
     package_states_ptr->name = "backend states";
-    package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "time_stamp_s"});
+    package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kDouble, .name = "time_stamp_s"});
     package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kPose6Dof, .name = "T_wi"});
     package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "v_wi"});
     package_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "bias_a"});
@@ -49,7 +49,7 @@ void Backend::RegisterLogPackages() {
     std::unique_ptr<PackageInfo> package_predict_states_ptr = std::make_unique<PackageInfo>();
     package_predict_states_ptr->id = kBackendPredictStatesLogIndex;
     package_predict_states_ptr->name = "backend predict states";
-    package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kFloat, .name = "time_stamp_s"});
+    package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kDouble, .name = "time_stamp_s"});
     package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kPose6Dof, .name = "T_wi"});
     package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "v_wi"});
     package_predict_states_ptr->items.emplace_back(PackageItemInfo {.type = ItemType::kVector3, .name = "bias_a"});
@@ -265,7 +265,7 @@ void Backend::RecordBackendLogPriorInformation() {
     }
 }
 
-void Backend::RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id, const float time_stamp_s) {
+void Backend::RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id, const double time_stamp_s) {
     RETURN_IF(!options().kEnableRecordBinaryCurveLog);
     RETURN_IF(repro_err_with_feature_id.empty());
     Mat matrix = Mat::Zero(2, repro_err_with_feature_id.size());

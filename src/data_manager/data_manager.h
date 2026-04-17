@@ -39,7 +39,7 @@ using FrameType = VisualFrame<FeatureType>;
 struct ImuBasedFrame {
     // Imu bias of accel and gyro is inside imu_preint_block.
     ImuPreintegrateBlock<DorF> imu_preint_block;
-    float time_stamp_s = 0.0f;
+    double time_stamp_s = 0.0;
     // Measurement of raw imu(gyro, acc), raw image(left, right) and visual features.
     std::unique_ptr<PackedMeasurement> packed_measure = nullptr;
     std::unique_ptr<VisualPointsMeasure> visual_measure = nullptr;
@@ -74,9 +74,9 @@ public:
     // Record log.
     bool Configuration(const std::string &log_file_name);
     void RegisterLogPackages();
-    void TriggerLogRecording(const float time_stamp_s);
-    void RecordLocalMap(const float time_stamp_s);
-    void RecordPointCloud(const float time_stamp_s);
+    void TriggerLogRecording(const double time_stamp_s);
+    void RecordLocalMap(const double time_stamp_s);
+    void RecordPointCloud(const double time_stamp_s);
 
     // Self check.
     bool SelfCheckVisualLocalMap();
@@ -132,7 +132,7 @@ private:
 
     // Record log.
     slam_data_log::BinaryDataLog logger_;
-    float latest_record_point_cloud_time_s_ = 0.0f;
+    double latest_record_point_cloud_time_s_ = 0.0;
 };
 
 }  // namespace vio

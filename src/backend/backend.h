@@ -69,7 +69,7 @@ struct BackendStates {
         Vec3 v_wi = Vec3::Zero();
         Vec3 ba = Vec3::Zero();
         Vec3 bg = Vec3::Zero();
-        float time_stamp_s = 0.0f;
+        double time_stamp_s = 0.0;
     } motion;
 
     // Prior information.
@@ -84,7 +84,7 @@ struct BackendStates {
 };
 
 struct BackendMapPerFrame {
-    float time_stamp_s = 0.0f;
+    double time_stamp_s = 0.0;
     Vec3 p_wi = Vec3::Zero();
     Quat q_wi = Quat::Identity();
     std::vector<Vec2> all_norm_xy_left;
@@ -161,7 +161,7 @@ private:
     void RecordBackendLogStatus();
     void RecordBackendLogCostTime();
     void RecordBackendLogPriorInformation();
-    void RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id, const float time_stamp_s);
+    void RecordBackendLogPredictionReprojectionError(const std::vector<std::pair<uint32_t, Vec2>> &repro_err_with_feature_id, const double time_stamp_s);
     void RecordBackendLogParallexAngleMap();
     void RecordBackendLogMapOfOldestFrame();
 

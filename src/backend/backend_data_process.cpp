@@ -400,7 +400,7 @@ bool Backend::ControlSizeOfLocalMap() {
 }
 
 void Backend::UpdateBackendStates() {
-    states_.motion.time_stamp_s = data_manager_->imu_based_frames().empty() ? 0.0f : data_manager_->imu_based_frames().back().time_stamp_s;
+    states_.motion.time_stamp_s = data_manager_->imu_based_frames().empty() ? 0.0 : data_manager_->imu_based_frames().back().time_stamp_s;
 
     if (!status_.is_initialized) {
         states_.prior.is_valid = false;

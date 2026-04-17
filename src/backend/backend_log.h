@@ -8,7 +8,7 @@ namespace vio {
 /* Packages of log to be recorded. */
 #pragma pack(1)
 struct BackendLogStates {
-    float time_stamp_s = 0.0f;
+    double time_stamp_s = 0.0;
     float p_wi_x = 0.0f;
     float p_wi_y = 0.0f;
     float p_wi_z = 0.0f;

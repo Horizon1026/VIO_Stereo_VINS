@@ -37,12 +37,12 @@ bool DataManager::SelfCheckVisualLocalMap() {
 
 bool DataManager::SelfCheckImuBasedFrames() {
     // Iterate each imu based frame.
-    float prev_frame_time_stamp_s = 0.0f;
+    double prev_frame_time_stamp_s = 0.0;
     for (const auto &imu_based_frame: imu_based_frames_) {
         // Check timestamp of imu and images.
-        const auto latest_imu_time_stamp_s = imu_based_frame.packed_measure->imus.back()->time_stamp_s;
+        const double latest_imu_time_stamp_s = imu_based_frame.packed_measure->imus.back()->time_stamp_s;
         if (imu_based_frame.packed_measure->left_image != nullptr) {
-            const auto left_image_time_stamp_s = imu_based_frame.packed_measure->left_image->time_stamp_s;
+            const double left_image_time_stamp_s = imu_based_frame.packed_measure->left_image->time_stamp_s;
             if (latest_imu_time_stamp_s != left_image_time_stamp_s) {
                 ReportError("[DataManager] Frames with bias self check imu and left image, feature observe timestamp error ["
                             << latest_imu_time_stamp_s << "] != [" << left_image_time_stamp_s << "].");
@@ -50,10 +50,10 @@ bool DataManager::SelfCheckImuBasedFrames() {
             }
         }
         if (imu_based_frame.packed_measure->right_image != nullptr) {
-            const auto left_image_time_stamp_s = imu_based_frame.packed_measure->right_image->time_stamp_s;
-            if (latest_imu_time_stamp_s != left_image_time_stamp_s) {
+            const double right_image_time_stamp_s = imu_based_frame.packed_measure->right_image->time_stamp_s;
+            if (latest_imu_time_stamp_s != right_image_time_stamp_s) {
                 ReportError("[DataManager] Frames with bias self check imu and right image, feature observe timestamp error ["
-                            << latest_imu_time_stamp_s << "] != [" << left_image_time_stamp_s << "].");
+                            << latest_imu_time_stamp_s << "] != [" << right_image_time_stamp_s << "].");
                 return false;
             }
         }
