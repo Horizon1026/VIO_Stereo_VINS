@@ -12,13 +12,13 @@ namespace vio {
 
 /* Class Edge reprojection. Project feature 3-dof position on visual norm plane. */
 template <typename Scalar>
-class EdgeFeaturePosToNormPlane: public Edge<Scalar> {
+class EdgeFeaturePosToNormPlane: public slam_solver::Edge<Scalar> {
     // Vertices are [feature, p_w]
     //              [camera, p_wc]
     //              [camera, q_wc]
 
 public:
-    EdgeFeaturePosToNormPlane(): Edge<Scalar>(2, 3) {}
+    EdgeFeaturePosToNormPlane(): slam_solver::Edge<Scalar>(2, 3) {}
     virtual ~EdgeFeaturePosToNormPlane() = default;
 
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
@@ -68,13 +68,13 @@ private:
 
 /* Class Edge reprojection. Project feature 3-dof position on visual unit sphere. */
 template <typename Scalar>
-class EdgeFeaturePosToUnitSphere: public Edge<Scalar> {
+class EdgeFeaturePosToUnitSphere: public slam_solver::Edge<Scalar> {
     // Vertices are [feature, p_w]
     //              [camera, p_wc]
     //              [camera, q_wc]
 
 public:
-    EdgeFeaturePosToUnitSphere(): Edge<Scalar>(2, 3) {}
+    EdgeFeaturePosToUnitSphere(): slam_solver::Edge<Scalar>(2, 3) {}
     virtual ~EdgeFeaturePosToUnitSphere() = default;
 
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
@@ -126,7 +126,7 @@ private:
 
 /* Class Edge reprojection. Project feature 1-dof invdep on visual norm plane. */
 template <typename Scalar>
-class EdgeFeatureInvdepToNormPlane: public Edge<Scalar> {
+class EdgeFeatureInvdepToNormPlane: public slam_solver::Edge<Scalar> {
     // Vertices are [feature, invdep]
     //              [first camera, p_wc0]
     //              [first camera, q_wc0]
@@ -134,7 +134,7 @@ class EdgeFeatureInvdepToNormPlane: public Edge<Scalar> {
     //              [camera, q_wc]
 
 public:
-    EdgeFeatureInvdepToNormPlane(): Edge<Scalar>(2, 5) {}
+    EdgeFeatureInvdepToNormPlane(): slam_solver::Edge<Scalar>(2, 5) {}
     virtual ~EdgeFeatureInvdepToNormPlane() = default;
 
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
