@@ -97,7 +97,7 @@ bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
     // Do marginalization.
     Marginalizor<DorF> marger;
     marger.problem() = &graph_optimization_problem;
-    marger.options().kSortDirection = SortMargedVerticesDirection::kSortAtFront;
+    marger.options().kSortDirection = Marginalizor<DorF>::SortMargedVerticesDirection::kSortAtFront;
     states_.prior.is_valid = marger.Marginalize(vertices_to_be_marged, states_.prior.is_valid);
 
     // Store prior information.
