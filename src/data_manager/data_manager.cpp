@@ -77,7 +77,7 @@ float DataManager::ComputeImuAccelVariance() {
         CONTINUE_IF(frame.packed_measure == nullptr);
         CONTINUE_IF(frame.packed_measure->imus.empty());
         for (const auto &imu: frame.packed_measure->imus) {
-            mean_accel += imu->accel;
+            mean_accel += imu->accel_mps2;
             ++sample_cnt;
         }
     }
@@ -93,7 +93,7 @@ float DataManager::ComputeImuAccelVariance() {
         CONTINUE_IF(frame.packed_measure == nullptr);
         CONTINUE_IF(frame.packed_measure->imus.empty());
         for (const auto &imu: frame.packed_measure->imus) {
-            const Vec3 diff = mean_accel - imu->accel;
+            const Vec3 diff = mean_accel - imu->accel_mps2;
             variance += diff.squaredNorm();
         }
     }
