@@ -18,14 +18,13 @@ A simple visual-inertial odometry reconstructed from vins-fusion.
 
 ### Project repositories
 - Slam_Utility
-- Feature_Detector
-- Feature_Tracker
+- Slam_Dataloader
 - Sensor_Model
 - Vision_Geometry
-- Image_Processor
 - Slam_Solver
 - Visual_Frontend
 - Binary_Data_Log
+- Image_Painter
 - Visualizor2D
 - Visualizor3D
 
