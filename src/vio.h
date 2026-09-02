@@ -2,12 +2,12 @@
 #define _VIO_STEREO_VINS_H_
 
 #include "vio_config.h"
-
 #include "backend.h"
-#include "data_loader.h"
 #include "data_manager.h"
-#include "tick_tock.h"
 #include "visual_frontend.h"
+
+#include "data_loader.h"
+#include "tick_tock.h"
 
 #include "memory"
 

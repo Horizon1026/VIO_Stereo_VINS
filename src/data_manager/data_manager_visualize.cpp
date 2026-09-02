@@ -1,4 +1,5 @@
 #include "data_manager.h"
+
 #include "image_painter.h"
 #include "slam_basic_math.h"
 #include "slam_log_reporter.h"

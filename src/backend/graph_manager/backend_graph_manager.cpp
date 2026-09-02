@@ -6,7 +6,6 @@
 
 #include "solver_dogleg.h"
 #include "solver_lm.h"
-
 #include "slam_basic_math.h"
 #include "slam_log_reporter.h"
 #include "tick_tock.h"

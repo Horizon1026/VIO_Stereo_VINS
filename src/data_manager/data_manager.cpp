@@ -1,4 +1,5 @@
 #include "data_manager.h"
+
 #include "basic_type.h"
 
 namespace vio {

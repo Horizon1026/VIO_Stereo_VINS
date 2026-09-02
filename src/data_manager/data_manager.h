@@ -1,15 +1,14 @@
 #ifndef _VIO_STEREO_VINS_DATA_MANAGER_H_
 #define _VIO_STEREO_VINS_DATA_MANAGER_H_
 
+#include "visual_frontend.h"
+#include "data_manager_log.h"
+
 #include "basic_type.h"
 #include "covisible_graph.h"
 #include "imu.h"
-
 #include "data_loader.h"
-#include "visual_frontend.h"
-
 #include "binary_data_log.h"
-#include "data_manager_log.h"
 
 #include "deque"
 #include "memory"

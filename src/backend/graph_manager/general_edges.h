@@ -3,7 +3,6 @@
 
 #include "basic_type.h"
 #include "slam_basic_math.h"
-
 #include "edge.h"
 #include "kernel.h"
 #include "kernel_cauchy.h"

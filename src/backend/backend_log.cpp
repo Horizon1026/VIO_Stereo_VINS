@@ -1,4 +1,5 @@
 #include "backend.h"
+
 #include "slam_log_reporter.h"
 
 namespace vio {

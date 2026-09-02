@@ -3,7 +3,6 @@
 
 #include "basic_type.h"
 #include "slam_basic_math.h"
-
 #include "edge.h"
 #include "vertex.h"
 #include "vertex_quaternion.h"

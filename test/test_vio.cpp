@@ -1,15 +1,15 @@
+#include "vio.h"
+
+#include "unistd.h"
+#include "tick_tock.h"
+#include "visualizor_2d.h"
+#include "visualizor_3d.h"
+#include "enable_stack_backward.h"
+
 #include "fstream"
 #include "sstream"
 #include "string"
 #include "thread"
-#include "unistd.h"
-
-#include "tick_tock.h"
-#include "vio.h"
-#include "visualizor_2d.h"
-#include "visualizor_3d.h"
-
-#include "enable_stack_backward.h"
 
 using namespace slam_visualizor;
 

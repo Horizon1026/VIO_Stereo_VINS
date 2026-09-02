@@ -1,8 +1,8 @@
 #include "backend.h"
+
 #include "basic_type.h"
 #include "slam_log_reporter.h"
 #include "tick_tock.h"
-
 #include "geometry_epipolar.h"
 #include "geometry_pnp.h"
 #include "point_triangulator.h"
