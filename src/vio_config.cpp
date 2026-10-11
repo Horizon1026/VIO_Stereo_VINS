@@ -114,7 +114,7 @@ bool Vio::ConfigComponentOfFrontend() {
 
     // Config optical flow tracker.
     frontend_->feature_tracker() = std::make_unique<KltType>();
-    frontend_->feature_tracker()->options().kMethod = feature_tracker::OpticalFlowMethod::kFast;
+    frontend_->feature_tracker()->options().kMethod = feature_tracker::OpticalFlow::Method::kFast;
     frontend_->feature_tracker()->options().kPatchRowHalfSize = options_.frontend.feature_tracker.half_row_size_of_patch;
     frontend_->feature_tracker()->options().kPatchColHalfSize = options_.frontend.feature_tracker.half_col_size_of_patch;
     frontend_->feature_tracker()->options().kMaxIteration = options_.frontend.feature_tracker.max_iterations;
