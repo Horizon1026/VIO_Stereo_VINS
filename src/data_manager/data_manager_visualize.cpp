@@ -205,15 +205,16 @@ void DataManager::ShowLocalMapInWorldFrame() {
         .scale = 1.0f,
     });
 
-    RETURN_IF(visual_local_map_->features().empty());
-    RETURN_IF(visual_local_map_->frames().empty());
+    RETURN_IF(visual_local_map_->frames().empty() || camera_extrinsics_.empty());
 
-    // Add all features in locap map.
+    // Add solved landmarks only; unsolved points have no valid 3D position.
     for (const auto &pair: visual_local_map_->features()) {
         const auto &feature = pair.second;
+        CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved && feature.status() != FeatureSolvedStatus::kMarginalized);
+        CONTINUE_IF(!feature.param().allFinite());
         Visualizor3D::points().emplace_back(PointType {
             .p_w = feature.param(),
-            .color = GetFeatureColor(feature),
+            .color = RgbColor::Palette(0),
             .radius = 2,
         });
     }
@@ -228,7 +229,7 @@ void DataManager::ShowLocalMapInWorldFrame() {
     for (const auto &frame: visual_local_map_->frames()) {
         // Add imu frame in local map.
         Utility::ComputeTransformTransformInverse(frame.p_wc(), frame.q_wc(), camera_extrinsics_.front().p_ic, camera_extrinsics_.front().q_ic, p_wi, q_wi);
-        Visualizor3D::poses().emplace_back(PoseType {.p_wb = p_wi, .q_wb = q_wi, .scale = 0.02f});
+        Visualizor3D::poses().emplace_back(PoseType {.p_wb = p_wi, .q_wb = q_wi, .scale = 0.05f});
 
         // Link relative imu pose.
         if (is_p_wi0_valid) {
@@ -241,12 +242,31 @@ void DataManager::ShowLocalMapInWorldFrame() {
             // Add camera frames in local map for newest frame.
             for (const auto &extrinsic: camera_extrinsics_) {
                 Utility::ComputeTransformTransform(p_wi, q_wi, extrinsic.p_ic, extrinsic.q_ic, p_wc, q_wc);
-                Visualizor3D::camera_poses().emplace_back(CameraPoseType {.p_wc = p_wc, .q_wc = q_wc, .scale = 0.03f});
+                Visualizor3D::camera_poses().emplace_back(CameraPoseType {.p_wc = p_wc, .q_wc = q_wc, .scale = 0.05f});
             }
 
             // Link newest frame origin to world frame origin.
             Visualizor3D::dashed_lines().emplace_back(DashedLineType {.p_w_i = p_wi, .p_w_j = Vec3::Zero(), .dot_step = 10, .color = RgbColor::kSlateGray});
         }
+    }
+
+    // Highlight currently tracked landmarks and their links to the latest IMU pose.
+    const auto newest_frame_id = visual_local_map_->frames().back().id();
+    for (const auto &pair: visual_local_map_->features()) {
+        const auto &feature = pair.second;
+        CONTINUE_IF(feature.status() != FeatureSolvedStatus::kSolved || feature.final_frame_id() != newest_frame_id);
+        CONTINUE_IF(!feature.param().allFinite());
+        Visualizor3D::points().emplace_back(PointType {
+            .p_w = feature.param(),
+            .color = RgbColor::kLightGreen,
+            .radius = 3,
+        });
+        Visualizor3D::dashed_lines().emplace_back(DashedLineType {
+            .p_w_i = p_wi,
+            .p_w_j = feature.param(),
+            .dot_step = 10,
+            .color = RgbColor::kLightGreen,
+        });
     }
 }
 
@@ -258,30 +278,17 @@ void DataManager::ShowInformationWithStringsInVisualizor() {
     Visualizor3D::strings().emplace_back(std::string("<time stamp> ") + std::to_string(visual_local_map_->frames().back().time_stamp_s()) + std::string("s."));
 }
 
-void DataManager::UpdateVisualizorCameraView() {
-    RETURN_IF(visual_local_map_->frames().empty());
-
-    // Set visualizor camera view by newest frame.
-    Vec3 euler_rpy = Utility::QuaternionToEuler(Visualizor3D::camera_view().q_wc);
-    euler_rpy.x() = -90.0f;
-    euler_rpy.y() = 0.0f;
-    Visualizor3D::camera_view().q_wc = Utility::EulerToQuaternion(euler_rpy);
-
-    const Vec3 p_c = Vec3(0, 0, 15);
-    const Vec3 p_w = Visualizor3D::camera_view().q_wc * p_c + Visualizor3D::camera_view().p_wc;
-    Visualizor3D::camera_view().p_wc = visual_local_map_->frames().back().p_wc() - p_w + Visualizor3D::camera_view().p_wc;
-}
-
 void DataManager::ShowLocalMapInWorldFrame(const std::string &title, const int32_t delay_ms, const bool block_in_loop) {
     Visualizor3D::Clear();
     ShowLocalMapInWorldFrame();
     ShowInformationWithStringsInVisualizor();
 
     // Refresh screen.
-    UpdateVisualizorCameraView();
+    Visualizor3D::camera_view().cx = 720.0f;
+    Visualizor3D::camera_view().cy = 480.0f;
     const int32_t delay = delay_ms < 1 ? 0 : delay_ms;
     do {
-        Visualizor3D::Refresh(title, delay);
+        Visualizor3D::RefreshByGpu(title, delay);
     } while (!Visualizor3D::ShouldQuit() && block_in_loop);
 }
 

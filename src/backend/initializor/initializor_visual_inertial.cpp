@@ -37,7 +37,7 @@ bool Backend::EstimateGyroBias() {
     return true;
 }
 
-bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale) {
+bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale, bool fix_scale) {
     const int32_t size = data_manager_->imu_based_frames().size() * 3 + 3 + 1;
     Mat A = Mat::Zero(size, size);
     Vec b = Vec::Zero(size);
@@ -89,7 +89,14 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale)
     }
 
     // Solve incremental function.
-    const Vec x = A.ldlt().solve(b);
+    Vec x = Vec::Zero(size);
+    if (fix_scale) {
+        x.head(size - 1) = A.topLeftCorner(size - 1, size - 1).ldlt().solve(b.head(size - 1) - A.topRightCorner(size - 1, 1));
+        x(size - 1) = 1.0f;
+    } else {
+        x = A.ldlt().solve(b);
+    }
+    RETURN_FALSE_IF(!x.allFinite());
     gravity_c0 = x.segment<3>(size - 4);
     scale = x.tail<1>()[0];
     ReportColorInfo("[Backend] Backend estimate scale [" << scale << "]" << ", gravity_c0 " << LogVec(gravity_c0) << " with norm [" << gravity_c0.norm()
@@ -100,7 +107,7 @@ bool Backend::EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale)
     return true;
 }
 
-bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii) {
+bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii, float &scale, bool fix_scale) {
     const int32_t size = data_manager_->imu_based_frames().size() * 3 + 2 + 1;
     Mat A = Mat::Zero(size, size);
     Vec b = Vec::Zero(size);
@@ -112,12 +119,14 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
     // Fix 1-dof of gravity vector.
     const float gravity_norm = options_.kGravityInWordFrame.norm();
     Vec3 estimated_gravity_c0 = gravity_c0.normalized() * gravity_norm;
-    const Mat3x2 basic = Utility::TangentBase(estimated_gravity_c0);
 
     // Iterate severial times to estimate states.
     const int32_t max_iteration = 3;
     for (int32_t iter = 0; iter < max_iteration; ++iter) {
-        // Construct incremental function.
+        // Re-linearize around the latest gravity estimate without reusing old equations.
+        A.setZero();
+        b.setZero();
+        const Mat3x2 basic = Utility::TangentBase(estimated_gravity_c0);
         uint32_t frame_id_i = data_manager_->visual_local_map()->frames().front().id();
         for (auto it = data_manager_->imu_based_frames().cbegin(); std::next(it) != data_manager_->imu_based_frames().cend(); ++it) {
             const auto &cam_frame_i = data_manager_->visual_local_map()->frame(frame_id_i);
@@ -143,7 +152,8 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
             H.block<3, 3>(3, 0) = -Mat3::Identity();
             H.block<3, 3>(3, 3) = R_iw_i * R_wi_j;
             H.block<3, 2>(3, 6) = R_iw_i * basic * dt;
-            z.block<3, 1>(0, 0) = imu_frame_j.imu_preint_block.p_ij() - p_ic + R_iw_i * R_wi_j * p_ic;
+            z.block<3, 1>(0, 0) = imu_frame_j.imu_preint_block.p_ij() - p_ic + R_iw_i * R_wi_j * p_ic -
+                                     0.5f * R_iw_i * dt * dt * estimated_gravity_c0;
             z.block<3, 1>(3, 0) = imu_frame_j.imu_preint_block.v_ij() - R_iw_i * dt * estimated_gravity_c0;
             Mat sub_A = H.transpose() * Q * H;
             Vec sub_b = H.transpose() * Q * z;
@@ -161,7 +171,12 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
         }
 
         // Solve incremental function.
-        x = A.ldlt().solve(b);
+        if (fix_scale) {
+            x.head(size - 1) = A.topLeftCorner(size - 1, size - 1).ldlt().solve(b.head(size - 1) - A.topRightCorner(size - 1, 1));
+            x(size - 1) = 1.0f;
+        } else {
+            x = A.ldlt().solve(b);
+        }
         const Vec2 delta_gravity = x.segment<2>(size - 3);
         estimated_gravity_c0 = (estimated_gravity_c0 + basic * delta_gravity).normalized() * gravity_norm;
 
@@ -169,6 +184,8 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
     }
 
     // Extract estimation result.
+    RETURN_FALSE_IF(!x.allFinite() || x.tail<1>()[0] <= 0.0f);
+    scale = x.tail<1>()[0];
     all_v_ii = x.segment(0, size - 3);
     gravity_c0 = estimated_gravity_c0;
     ReportColorInfo("[Backend] Backend refined gravity_c0 " << LogVec(gravity_c0) << " with norm [" << gravity_c0.norm() << "].");

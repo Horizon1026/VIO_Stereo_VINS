@@ -34,7 +34,7 @@ struct BackendOptions {
     float kMaxToleranceReprojectionErrorInNormPlane = 0.0f;
 
     bool kEnableUseMultiViewObservation = true;
-    bool kFixCameraExtrinsics = true;
+    bool kFixCameraExtrinsics = false;
 };
 
 /* Status of Backend. */
@@ -200,8 +200,8 @@ private:
     bool PrepareForPureVisualSfmByMultiView();
     bool PerformPureVisualBundleAdjustment(const bool use_multi_view = false);
     bool EstimateGyroBias();
-    bool EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale);
-    bool EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii);
+    bool EstimateVelocityGravityScaleIn3Dof(Vec3 &gravity_c0, float &scale, bool fix_scale = false);
+    bool EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii, float &scale, bool fix_scale = false);
     bool SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii, const float &scale);
 
     // Backend estimator.

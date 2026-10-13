@@ -138,7 +138,11 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         if (vio_system.backend()->signals().should_quit) {
             break;
         } else {
-            vio_system.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 1, false);
+            vio_system.data_manager()->ShowLocalMapInWorldFrame("Vio stereo vins - visual local map", 1, false);
+            if (Visualizor3D::ShouldQuit()) {
+                vio_system.backend()->signals().should_quit = true;
+                break;
+            }
         }
 
         if (!res) {
@@ -149,7 +153,9 @@ void TestRunVio(const uint32_t max_wait_ticks) {
         cnt = max_wait_ticks;
     }
 
-    vio_system.data_manager()->ShowLocalMapInWorldFrame("Vio 3d local map", 20, true);
+    if (!Visualizor3D::ShouldQuit()) {
+        vio_system.data_manager()->ShowLocalMapInWorldFrame("Vio stereo vins - visual local map", 20, true);
+    }
 }
 
 void ConfigAllComponentsOfVio(const std::string &log_output_root_dir) {
@@ -216,7 +222,7 @@ void ConfigAllComponentsOfVio(const std::string &log_output_root_dir) {
     vio_system.options().backend.min_parallex_angle_of_feature_for_local_ba = 3.0f;
     vio_system.options().backend.max_tolerence_time_for_estimation_in_second = 0.04f;
     vio_system.options().backend.use_multi_view_observation = true;
-    vio_system.options().backend.fix_camera_extrinsics = true;
+    vio_system.options().backend.fix_camera_extrinsics = false;
     vio_system.options().backend.max_tolerence_reprojection_error_in_normal_plane = 0.03f;
     vio_system.options().backend.enable_local_map_store_raw_images = false;
     vio_system.options().backend.enable_recording_curve_binlog = true;
@@ -277,7 +283,7 @@ int main(int argc, char **argv) {
 
     // Config visualizor 3d.
     Visualizor3D::camera_view().q_wc = Quat(1.0, -1.0, 0, 0).normalized();
-    Visualizor3D::camera_view().p_wc.y() = -3.0f;
+    Visualizor3D::camera_view().p_wc = Vec3(0, -10, 0);
 
     // Start threads for data pipeline and vio node.
     const float imu_timeout_ms = 0.5f;

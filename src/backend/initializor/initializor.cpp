@@ -28,19 +28,14 @@ bool Backend::TryToInitialize() {
         return false;
     }
 
-    // Compute initialized value of visual local map.
-    if (!PrepareForPureVisualSfmByMonoView()) {
-        ReportWarn("[Backend] Backend failed to prepare for pure visual SFM in mono-view, try to use multi-view.");
-        if (!PrepareForPureVisualSfmByMultiView()) {
-            ReportError("[Backend] Backend failed to prepare for pure visual SFM.");
-            return false;
-        }
-    }
-
-    // Perform pure visual bundle adjustment.
-    if (!PerformPureVisualBundleAdjustment(false)) {
-        ReportError("[Backend] Backend failed to perform pure visual bundle adjustment.");
-        return false;
+    // A calibrated stereo rig already provides metric scale. Avoid the random
+    // monocular essential-matrix initialization and its weak scale alignment.
+    const bool metric_stereo = options_.kEnableUseMultiViewObservation && data_manager_->camera_extrinsics().size() >= 2;
+    if (metric_stereo) {
+        RETURN_FALSE_IF(!PrepareForPureVisualSfmByMultiView());
+    } else {
+        RETURN_FALSE_IF(!PrepareForPureVisualSfmByMonoView());
+        RETURN_FALSE_IF(!PerformPureVisualBundleAdjustment(false));
     }
 
     // Sync motion states.
@@ -59,11 +54,11 @@ bool Backend::TryToInitialize() {
     Vec3 gravity_c0 = Vec3::Zero();
     Vec all_v_ii = Vec3::Zero();
     float scale = 0.0f;
-    if (!EstimateVelocityGravityScaleIn3Dof(gravity_c0, scale)) {
+    if (!EstimateVelocityGravityScaleIn3Dof(gravity_c0, scale, metric_stereo)) {
         ReportError("[Backend] Backend failed to estimate velocity, gravity and scale in 3-dof.");
         return false;
     }
-    if (!EstimateVelocityGravityScaleIn2Dof(gravity_c0, all_v_ii)) {
+    if (!EstimateVelocityGravityScaleIn2Dof(gravity_c0, all_v_ii, scale, metric_stereo)) {
         ReportError("[Backend] Backend failed to estimate velocity, gravity and scale in 2-dof.");
         return false;
     }
@@ -82,11 +77,8 @@ bool Backend::SyncInitializedResult(const Vec3 &gravity_c0, const Vec &all_v_ii,
     const Vec3 &g_w = options_.kGravityInWordFrame;
 
     // Compute rotation matrix from first camera frame to world frame.
-    const float norm = (g_c0.cross(g_w)).norm();
-    const Vec3 vec = g_c0.cross(g_w) / norm;
-    const float theta = std::atan2(norm, g_c0.dot(g_w));
-    const Vec3 axis_angle = vec * theta;
-    const Quat q_wc0 = Utility::Exponent(axis_angle);
+    RETURN_FALSE_IF(!g_c0.allFinite() || g_c0.norm() < kZeroFloat);
+    const Quat q_wc0 = Quat::FromTwoVectors(g_c0, g_w);
 
     // Recovery all camera states in visual_local_map.
     for (auto &cam_frame: data_manager_->visual_local_map()->frames()) {

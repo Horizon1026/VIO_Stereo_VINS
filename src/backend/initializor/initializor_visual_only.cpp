@@ -76,7 +76,7 @@ bool Backend::PrepareForPureVisualSfmByMonoView() {
     auto corr_frame = data_manager_->visual_local_map()->frame(cur_frame_id);
     first_frame->p_wc().setZero();
     first_frame->q_wc().setIdentity();
-    corr_frame->p_wc() = -R_cr * t_cr;
+    corr_frame->p_wc() = -R_cr.transpose() * t_cr;
     corr_frame->q_wc() = Quat(R_cr.transpose());
 
     // Triangulize all features observed by these two frames.
@@ -133,22 +133,17 @@ bool Backend::PrepareForPureVisualSfmByMultiView() {
     first_frame->p_wc().setZero();
     first_frame->q_wc().setIdentity();
 
-    // Triangulize all features observed in each frame. And estimate pose of each frame.
+    // Estimate each camera pose from already triangulated landmarks before
+    // triangulating new landmarks using the stereo observations of that frame.
     for (auto &frame: data_manager_->visual_local_map()->frames()) {
-        for (auto &pair: frame.features()) {
-            auto feature_ptr = pair.second;
-            CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
-
-            TryToSolveFeaturePositionByFramesObservingIt(feature_ptr->id(), feature_ptr->first_frame_id(), std::min(feature_ptr->final_frame_id(), frame.id()),
-                                                         true);
+        if (frame.id() != static_cast<uint32_t>(ref_frame_id)) {
+            const auto *previous = data_manager_->visual_local_map()->frame(frame.id() - 1);
+            RETURN_FALSE_IF(!TryToSolveFramePoseByFeaturesObserved(frame.id(), previous->p_wc(), previous->q_wc()));
         }
-
-        // No need to estimate pose of first frame.
-        CONTINUE_IF(frame.id() == static_cast<uint32_t>(ref_frame_id));
-
-        if (!TryToSolveFramePoseByFeaturesObserved(frame.id())) {
-            ReportWarn("[Backend] Backend failed to estimate pose of frame [" << frame.id() << "].");
-            return false;
+        for (auto &pair: frame.features()) {
+            auto *feature_ptr = pair.second;
+            CONTINUE_IF(feature_ptr->status() == FeatureSolvedStatus::kSolved);
+            TryToSolveFeaturePositionByFramesObservingIt(feature_ptr->id(), feature_ptr->first_frame_id(), frame.id(), true);
         }
     }
 

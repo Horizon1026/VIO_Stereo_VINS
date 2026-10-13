@@ -91,8 +91,10 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
                                                            const bool use_multi_view) {
     auto feature_ptr = data_manager_->visual_local_map()->feature(feature_id);
     RETURN_FALSE_IF(feature_ptr == nullptr);
-    RETURN_FALSE_IF(feature_ptr->observes().size() < 2);
-    RETURN_FALSE_IF(feature_ptr->observes().size() == 1 && feature_ptr->observes().front().size() < 2);
+    RETURN_FALSE_IF(feature_ptr->observes().empty() || max_frame_id < min_frame_id);
+    RETURN_FALSE_IF(min_frame_id < static_cast<int32_t>(feature_ptr->first_frame_id()) ||
+                    min_frame_id > static_cast<int32_t>(feature_ptr->final_frame_id()));
+    RETURN_FALSE_IF(max_frame_id == min_frame_id && (!use_multi_view || feature_ptr->observe(min_frame_id).size() < 2));
 
     std::vector<Quat> all_q_wc;
     std::vector<Vec3> all_p_wc;
@@ -102,7 +104,7 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     all_norm_xy.reserve(max_frame_id - min_frame_id + 1);
 
     // Extract all observations.
-    const uint32_t max_observe_num = feature_ptr->observes().size();
+    const uint32_t max_observe_num = std::min<int32_t>(max_frame_id, feature_ptr->final_frame_id()) - min_frame_id + 1;
     for (uint32_t id = 0; id < max_observe_num; ++id) {
         // Extract states of selected frame.
         const uint32_t frame_id = min_frame_id + id;

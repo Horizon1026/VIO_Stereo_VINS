@@ -14,6 +14,18 @@ BackendMarginalizeType Backend::DecideMarginalizeType() {
         return BackendMarginalizeType::kNotMarginalize;
     }
 
+    // Keeping the subnew frame prevents its merged IMU interval from becoming
+    // too long to be included by AddImuFactorsToGraph on the next update.
+    const auto &imu_frames = data_manager_->imu_based_frames();
+    if (imu_frames.size() >= 2) {
+        const auto &newest = imu_frames.back();
+        const auto &subnew = *std::next(imu_frames.rbegin());
+        const float merged_time_s = subnew.imu_preint_block.integrate_time_s() + newest.imu_preint_block.integrate_time_s();
+        if (merged_time_s >= data_manager_->options().kMaxValidImuPreintegrationBlockTimeInSecond) {
+            return BackendMarginalizeType::kMarginalizeOldestFrame;
+        }
+    }
+
     // Visual frontend select keyframes.
     if (visual_frontend_->options().kSelfSelectKeyframe) {
         if (std::next(data_manager_->imu_based_frames().rbegin())->visual_measure->is_current_keyframe) {

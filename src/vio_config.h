@@ -68,7 +68,7 @@ struct VioOptionsOfBackend {
     float max_tolerence_reprojection_error_in_normal_plane = 0.0f;
 
     bool use_multi_view_observation = true;
-    bool fix_camera_extrinsics = true;
+    bool fix_camera_extrinsics = false;
 
     bool enable_local_map_store_raw_images = false;
     bool enable_recording_curve_binlog = false;

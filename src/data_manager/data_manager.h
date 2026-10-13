@@ -116,7 +116,6 @@ private:
     RgbPixel GetFeatureColor(const FeatureType &feature);
     void ShowLocalMapInWorldFrame();
     void ShowInformationWithStringsInVisualizor();
-    void UpdateVisualizorCameraView();
 
 private:
     // Options for data manager.
