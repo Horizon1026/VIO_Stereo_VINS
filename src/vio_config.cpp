@@ -100,8 +100,7 @@ bool Vio::ConfigComponentOfFrontend() {
     // Config camera model.
     frontend_->camera_models().clear();
     for (const auto &camera_options: options_.cameras) {
-        frontend_->camera_models().emplace_back(std::make_unique<CameraType>());
-        frontend_->camera_models().back()->SetIntrinsicParameter(camera_options.fx, camera_options.fy, camera_options.cx, camera_options.cy);
+        frontend_->camera_models().emplace_back(std::make_unique<CameraType>(camera_options.fx, camera_options.fy, camera_options.cx, camera_options.cy));
         frontend_->camera_models().back()->SetDistortionParameter(
             std::vector<float> {camera_options.k1, camera_options.k2, camera_options.k3, camera_options.p1, camera_options.p2});
     }
