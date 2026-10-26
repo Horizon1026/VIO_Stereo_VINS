@@ -121,7 +121,7 @@ void DataManager::ShowLocalMapFramesAndFeatures(const int32_t feature_id, const 
             const RgbPixel pixel_color = GetFeatureColor(*feature);
             const std::string feature_text =
                 feature->first_frame_id() == frame.id() ? std::to_string(feature->id()) + std::string("+") : std::to_string(feature->id());
-            ImagePainter::DrawSolidCircle(show_image, pixel_uv.x() + col_offset, pixel_uv.y() + row_offset, 3, pixel_color);
+            ImagePainter::DrawSolidCircle(show_image, pixel_uv.x() + col_offset, pixel_uv.y() + row_offset, 3.0f, pixel_color);
             ImagePainter::DrawString(show_image, feature_text, pixel_uv.x() + col_offset, pixel_uv.y() + row_offset, pixel_color);
         }
         // Accumulate index.
@@ -185,7 +185,7 @@ void DataManager::ShowAllImuBasedFrames(const int32_t delay_ms) {
         for (uint32_t i = 0; i < imu_based_frame.visual_measure->features_id.size(); ++i) {
             const Vec2 pixel_uv = imu_based_frame.visual_measure->observes_per_frame[i][0].raw_pixel_uv + Vec2(col_offset, row_offset);
             const RgbPixel pixel_color = RgbColor::kDeepSkyBlue;
-            ImagePainter::DrawSolidCircle(show_image, pixel_uv.x(), pixel_uv.y(), 3, pixel_color);
+            ImagePainter::DrawSolidCircle(show_image, pixel_uv.x(), pixel_uv.y(), 3.0f, pixel_color);
             ImagePainter::DrawString(show_image, std::to_string(imu_based_frame.visual_measure->features_id[i]), pixel_uv.x(), pixel_uv.y(), pixel_color);
         }
 
