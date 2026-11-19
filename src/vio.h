@@ -1,9 +1,9 @@
 #ifndef _VIO_STEREO_VINS_H_
 #define _VIO_STEREO_VINS_H_
 
-#include "vio_config.h"
 #include "backend.h"
 #include "data_manager.h"
+#include "vio_config.h"
 #include "visual_frontend.h"
 
 #include "data_loader.h"

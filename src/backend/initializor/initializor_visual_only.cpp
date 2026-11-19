@@ -1,8 +1,8 @@
 #include "backend.h"
 
-#include "slam_operations.h"
 #include "geometry_epipolar.h"
 #include "point_triangulator.h"
+#include "slam_operations.h"
 
 namespace vio {
 

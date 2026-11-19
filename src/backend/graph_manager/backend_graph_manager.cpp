@@ -4,10 +4,10 @@
 #include "visual_edges.h"
 #include "visual_inertial_edges.h"
 
-#include "solver_dogleg.h"
-#include "solver_lm.h"
 #include "slam_basic_math.h"
 #include "slam_log_reporter.h"
+#include "solver_dogleg.h"
+#include "solver_lm.h"
 #include "tick_tock.h"
 
 namespace vio {

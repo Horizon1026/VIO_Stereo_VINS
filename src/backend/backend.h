@@ -1,14 +1,14 @@
 #ifndef _VIO_STEREO_VINS_BACKEND_H_
 #define _VIO_STEREO_VINS_BACKEND_H_
 
+#include "backend_log.h"
 #include "data_manager.h"
 #include "visual_frontend.h"
-#include "backend_log.h"
 
 #include "basic_type.h"
-#include "imu.h"
-#include "general_graph_optimizor.h"
 #include "binary_data_log.h"
+#include "general_graph_optimizor.h"
+#include "imu.h"
 
 namespace vio {
 

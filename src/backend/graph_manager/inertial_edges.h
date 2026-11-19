@@ -2,14 +2,14 @@
 #define _INERTIAL_EDGES_H_
 
 #include "basic_type.h"
-#include "slam_basic_math.h"
+#include "edge.h"
 #include "imu_preintegrate.h"
 #include "imu_state.h"
-#include "edge.h"
 #include "kernel.h"
 #include "kernel_cauchy.h"
 #include "kernel_huber.h"
 #include "kernel_tukey.h"
+#include "slam_basic_math.h"
 #include "vertex.h"
 #include "vertex_quaternion.h"
 

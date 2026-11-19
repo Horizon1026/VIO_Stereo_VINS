@@ -1,11 +1,11 @@
 #include "backend.h"
 
 #include "basic_type.h"
-#include "slam_log_reporter.h"
-#include "tick_tock.h"
 #include "geometry_epipolar.h"
 #include "geometry_pnp.h"
 #include "point_triangulator.h"
+#include "slam_log_reporter.h"
+#include "tick_tock.h"
 
 namespace vio {
 
@@ -92,8 +92,7 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     auto feature_ptr = data_manager_->visual_local_map()->feature(feature_id);
     RETURN_FALSE_IF(feature_ptr == nullptr);
     RETURN_FALSE_IF(feature_ptr->observes().empty() || max_frame_id < min_frame_id);
-    RETURN_FALSE_IF(min_frame_id < static_cast<int32_t>(feature_ptr->first_frame_id()) ||
-                    min_frame_id > static_cast<int32_t>(feature_ptr->final_frame_id()));
+    RETURN_FALSE_IF(min_frame_id < static_cast<int32_t>(feature_ptr->first_frame_id()) || min_frame_id > static_cast<int32_t>(feature_ptr->final_frame_id()));
     RETURN_FALSE_IF(max_frame_id == min_frame_id && (!use_multi_view || feature_ptr->observe(min_frame_id).size() < 2));
 
     std::vector<Quat> all_q_wc;

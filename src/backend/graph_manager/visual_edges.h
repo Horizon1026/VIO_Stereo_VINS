@@ -2,8 +2,8 @@
 #define _VISUAL_EDGES_H_
 
 #include "basic_type.h"
-#include "slam_basic_math.h"
 #include "edge.h"
+#include "slam_basic_math.h"
 #include "vertex.h"
 #include "vertex_quaternion.h"
 

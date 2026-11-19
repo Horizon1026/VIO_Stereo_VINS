@@ -152,8 +152,7 @@ bool Backend::EstimateVelocityGravityScaleIn2Dof(Vec3 &gravity_c0, Vec &all_v_ii
             H.block<3, 3>(3, 0) = -Mat3::Identity();
             H.block<3, 3>(3, 3) = R_iw_i * R_wi_j;
             H.block<3, 2>(3, 6) = R_iw_i * basic * dt;
-            z.block<3, 1>(0, 0) = imu_frame_j.imu_preint_block.p_ij() - p_ic + R_iw_i * R_wi_j * p_ic -
-                                     0.5f * R_iw_i * dt * dt * estimated_gravity_c0;
+            z.block<3, 1>(0, 0) = imu_frame_j.imu_preint_block.p_ij() - p_ic + R_iw_i * R_wi_j * p_ic - 0.5f * R_iw_i * dt * dt * estimated_gravity_c0;
             z.block<3, 1>(3, 0) = imu_frame_j.imu_preint_block.v_ij() - R_iw_i * dt * estimated_gravity_c0;
             Mat sub_A = H.transpose() * Q * H;
             Vec sub_b = H.transpose() * Q * z;

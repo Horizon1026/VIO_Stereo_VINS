@@ -2,9 +2,9 @@
 #define _VISUAL_INERTIAL_EDGES_H_
 
 #include "basic_type.h"
-#include "slam_basic_math.h"
 #include "edge.h"
 #include "kernel.h"
+#include "slam_basic_math.h"
 #include "vertex.h"
 #include "vertex_quaternion.h"
 
