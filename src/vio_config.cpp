@@ -125,13 +125,13 @@ bool Vio::ConfigComponentOfBackend() {
     // Config backend.
     backend_ = std::make_unique<Backend>();
     backend_->options().kGravityInWordFrame = options_.backend.gravity_w;
-    backend_->options().kMaxValidFeatureDepthInMeter = options_.backend.max_valid_feature_depth_in_meter;
     backend_->options().kMinValidFeatureDepthInMeter = options_.backend.min_valid_feature_depth_in_meter;
     backend_->options().kDefaultFeatureDepthInMeter = options_.backend.default_feature_depth_in_meter;
     backend_->options().kMaxToleranceTimeCostForEstimationInSecond = options_.backend.max_tolerence_time_for_estimation_in_second;
     backend_->options().kMinParallexAngleOfFeatureToBundleAdjustmentInDegree = options_.backend.min_parallex_angle_of_feature_for_local_ba;
     backend_->options().kEnableUseMultiViewObservation = options_.backend.use_multi_view_observation;
     backend_->options().kFixCameraExtrinsics = options_.backend.fix_camera_extrinsics;
+    backend_->options().kDefaultCameraExtrinsics = data_manager_->camera_extrinsics();
     backend_->options().kMaxToleranceReprojectionErrorInNormPlane = options_.backend.max_tolerence_reprojection_error_in_normal_plane;
 
     backend_->options().kEnableLocalMapStoreRawImages = options_.backend.enable_local_map_store_raw_images;

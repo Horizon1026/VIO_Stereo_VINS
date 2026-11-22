@@ -152,6 +152,11 @@ bool Backend::TryToSolveFeaturePositionByFramesObservingIt(const int32_t feature
     solver.options().kMethod = PointTriangulator::Method::kAnalytic;
     Vec3 p_w = Vec3::Zero();
     if (solver.Triangulate(all_p_wc, all_q_wc, all_norm_xy, p_w)) {
+        const Vec3 p_c = all_q_wc.front().inverse() * (p_w - all_p_wc.front());
+        if (!p_c.allFinite() || p_c.z() < options_.kMinValidFeatureDepthInMeter) {
+            feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
+            return true;
+        }
         feature_ptr->param() = p_w;
         feature_ptr->status() = FeatureSolvedStatus::kSolved;
     } else {

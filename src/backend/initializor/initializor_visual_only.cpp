@@ -188,13 +188,13 @@ bool Backend::PerformPureVisualBundleAdjustment(const bool use_multi_view) {
         auto feature_ptr = data_manager_->visual_local_map()->feature(graph_.vertices.all_features_id[i]);
         const auto &frame_ptr = data_manager_->visual_local_map()->frame(feature_ptr->first_frame_id());
         const auto &norm_xy = feature_ptr->observes().front()[0].rectified_norm_xy;
-        const float invdep = graph_.vertices.all_features_invdep[i]->param()(0);
+        const float invdep = std::exp(graph_.vertices.all_features_invdep[i]->param()(0));
         Vec3 p_c = Vec3(norm_xy.x(), norm_xy.y(), 1.0f) / invdep;
 
         if (std::isnan(p_c.z()) || std::isinf(p_c.z())) {
             p_c = Vec3(norm_xy.x(), norm_xy.y(), 1.0f) * options_.kDefaultFeatureDepthInMeter;
             feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
-        } else if (p_c.z() < options_.kMinValidFeatureDepthInMeter) {
+        } else if (p_c.z() <= options_.kMinValidFeatureDepthInMeter) {
             feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
         } else {
             feature_ptr->status() = FeatureSolvedStatus::kSolved;

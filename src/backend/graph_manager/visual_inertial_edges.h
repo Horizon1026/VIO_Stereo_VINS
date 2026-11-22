@@ -13,7 +13,7 @@ namespace vio {
 /* Class Edge reprojection. Project feature 1-dof invdep on visual norm plane via imu pose. */
 template <typename Scalar>
 class EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesOneCamera: public slam_solver::Edge<Scalar> {
-    // Vertices are [feature, invdep]
+    // Vertices are [feature, log(invdep)]
     //              [first imu pose, p_wi0]
     //              [first imu pose, q_wi0]
     //              [imu pose, p_wi]
@@ -28,7 +28,7 @@ public:
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
     virtual void ComputeResidual() override {
         // Extract states.
-        inv_depth0_ = this->GetVertex(0)->param()(0);
+        inv_depth0_ = std::exp(this->GetVertex(0)->param()(0));
         p_wi0_ = this->GetVertex(1)->param();
         const TVec4<Scalar> &param_i0 = this->GetVertex(2)->param();
         q_wi0_ = TQuat<Scalar>(param_i0(0), param_i0(1), param_i0(2), param_i0(3));
@@ -44,14 +44,15 @@ public:
         norm_xy_ = this->observation().block(2, 0, 2, 1);
 
         // Compute projection.
-        p_c0_ = TVec3<Scalar>(norm_xy0_(0), norm_xy0_(1), static_cast<Scalar>(1)) / inv_depth0_;
-        p_i0_ = q_ic_ * p_c0_ + p_ic_;
-        p_w_ = q_wi0_ * p_i0_ + p_wi0_;
-        p_i_ = q_wi_.inverse() * (p_w_ - p_wi_);
-        p_c_ = q_ic_.inverse() * (p_i_ - p_ic_);
+        // Scale all 3D coordinates by anchor inverse depth to avoid overflow for distant points.
+        p_c0_ = TVec3<Scalar>(norm_xy0_(0), norm_xy0_(1), static_cast<Scalar>(1));
+        p_i0_ = q_ic_ * p_c0_ + inv_depth0_ * p_ic_;
+        p_w_ = q_wi0_ * p_i0_ + inv_depth0_ * p_wi0_;
+        p_i_ = q_wi_.inverse() * (p_w_ - inv_depth0_ * p_wi_);
+        p_c_ = q_ic_.inverse() * (p_i_ - inv_depth0_ * p_ic_);
         inv_depth_ = static_cast<Scalar>(1) / p_c_.z();
 
-        if (std::isinf(inv_depth_) || std::isnan(inv_depth_) || inv_depth_ < kZeroFloat) {
+        if (std::isinf(inv_depth_) || std::isnan(inv_depth_) || p_c_.z() <= inv_depth0_ * kZeroFloat) {
             this->residual().setZero(2);
         } else {
             this->residual() = (p_c_.template head<2>() * inv_depth_) - norm_xy_;
@@ -60,7 +61,7 @@ public:
 
     virtual void ComputeJacobians() override {
         TMat2x3<Scalar> jacobian_2d_3d = TMat2x3<Scalar>::Zero();
-        if (!std::isinf(inv_depth_) && !std::isnan(inv_depth_) && inv_depth_ > kZeroFloat) {
+        if (!std::isinf(inv_depth_) && !std::isnan(inv_depth_) && p_c_.z() > inv_depth0_ * kZeroFloat) {
             const Scalar inv_depth_2 = inv_depth_ * inv_depth_;
             jacobian_2d_3d << inv_depth_, 0, -p_c_(0) * inv_depth_2, 0, inv_depth_, -p_c_(1) * inv_depth_2;
         }
@@ -75,17 +76,18 @@ public:
         const TMat3<Scalar> R_ci0 = q_ci0.toRotationMatrix();
         const TMat3<Scalar> R_cc0 = q_cc0.toRotationMatrix();
 
-        const TMat3<Scalar> jacobian_cam0_p = R_cw;
+        const TMat3<Scalar> jacobian_cam0_p = inv_depth0_ * R_cw;
         const TMat3<Scalar> jacobian_cam0_q = -R_ci0 * Utility::SkewSymmetricMatrix(p_i0_);
 
-        const TMat3<Scalar> jacobian_cam_p = -R_cw;
+        const TMat3<Scalar> jacobian_cam_p = -inv_depth0_ * R_cw;
         const TMat3<Scalar> jacobian_cam_q = R_ci * Utility::SkewSymmetricMatrix(p_i_);
 
-        const TVec3<Scalar> jacobian_invdep = -R_cc0 * TVec3<Scalar>(norm_xy0_.x(), norm_xy0_.y(), static_cast<Scalar>(1)) / (inv_depth0_ * inv_depth0_);
+        const TVec3<Scalar> jacobian_invdep = inv_depth0_ * (q_ci * (q_wi_.inverse() * (q_wi0_ * p_ic_ + p_wi0_ - p_wi_) - p_ic_));
 
-        const TMat3<Scalar> jacobian_ex_p = R_ci * ((q_wi_.inverse() * q_wi0_).matrix() - TMat3<Scalar>::Identity());
-        const TMat3<Scalar> jacobian_ex_q = -R_cc0 * Utility::SkewSymmetricMatrix(p_c0_) + Utility::SkewSymmetricMatrix(R_cc0 * p_c0_) +
-                                            Utility::SkewSymmetricMatrix(q_ic_.inverse() * (q_wi_.inverse() * (q_wi0_ * p_ic_ + p_wi0_ - p_wi_) - p_ic_));
+        const TMat3<Scalar> jacobian_ex_p = inv_depth0_ * R_ci * ((q_wi_.inverse() * q_wi0_).matrix() - TMat3<Scalar>::Identity());
+        const TMat3<Scalar> jacobian_ex_q =
+            -R_cc0 * Utility::SkewSymmetricMatrix(p_c0_) + Utility::SkewSymmetricMatrix(R_cc0 * p_c0_) +
+            inv_depth0_ * Utility::SkewSymmetricMatrix(q_ic_.inverse() * (q_wi_.inverse() * (q_wi0_ * p_ic_ + p_wi0_ - p_wi_) - p_ic_));
 
         this->GetJacobian(0) = jacobian_2d_3d * jacobian_invdep;
         this->GetJacobian(1) = jacobian_2d_3d * jacobian_cam0_p;
@@ -126,7 +128,7 @@ private:
 /* Class Edge reprojection. Project feature 1-dof invdep on visual norm plane via imu pose. */
 template <typename Scalar>
 class EdgeFeatureInvdepToNormPlaneViaImuWithinTwoFramesTwoCamera: public slam_solver::Edge<Scalar> {
-    // Vertices are [feature, invdep]
+    // Vertices are [feature, log(invdep)]
     //              [first imu pose, p_wi0]
     //              [first imu pose, q_wi0]
     //              [imu pose, p_wi]
@@ -143,7 +145,7 @@ public:
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
     virtual void ComputeResidual() override {
         // Extract states.
-        inv_depth0_ = this->GetVertex(0)->param()(0);
+        inv_depth0_ = std::exp(this->GetVertex(0)->param()(0));
         p_wi0_ = this->GetVertex(1)->param();
         const TVec4<Scalar> &param_i0 = this->GetVertex(2)->param();
         q_wi0_ = TQuat<Scalar>(param_i0(0), param_i0(1), param_i0(2), param_i0(3));
@@ -162,14 +164,15 @@ public:
         norm_xy_ = this->observation().block(2, 0, 2, 1);
 
         // Compute projection.
-        p_c0_ = TVec3<Scalar>(norm_xy0_(0), norm_xy0_(1), static_cast<Scalar>(1)) / inv_depth0_;
-        p_i0_ = q_ic0_ * p_c0_ + p_ic0_;
-        p_w_ = q_wi0_ * p_i0_ + p_wi0_;
-        p_i_ = q_wi_.inverse() * (p_w_ - p_wi_);
-        p_c_ = q_ic_.inverse() * (p_i_ - p_ic_);
+        // Scale all 3D coordinates by anchor inverse depth to avoid overflow for distant points.
+        p_c0_ = TVec3<Scalar>(norm_xy0_(0), norm_xy0_(1), static_cast<Scalar>(1));
+        p_i0_ = q_ic0_ * p_c0_ + inv_depth0_ * p_ic0_;
+        p_w_ = q_wi0_ * p_i0_ + inv_depth0_ * p_wi0_;
+        p_i_ = q_wi_.inverse() * (p_w_ - inv_depth0_ * p_wi_);
+        p_c_ = q_ic_.inverse() * (p_i_ - inv_depth0_ * p_ic_);
         inv_depth_ = static_cast<Scalar>(1) / p_c_.z();
 
-        if (std::isinf(inv_depth_) || std::isnan(inv_depth_) || inv_depth_ < kZeroFloat) {
+        if (std::isinf(inv_depth_) || std::isnan(inv_depth_) || p_c_.z() <= inv_depth0_ * kZeroFloat) {
             this->residual().setZero(2);
         } else {
             this->residual() = (p_c_.template head<2>() * inv_depth_) - norm_xy_;
@@ -178,7 +181,7 @@ public:
 
     virtual void ComputeJacobians() override {
         TMat2x3<Scalar> jacobian_2d_3d = TMat2x3<Scalar>::Zero();
-        if (!std::isinf(inv_depth_) && !std::isnan(inv_depth_) && inv_depth_ > kZeroFloat) {
+        if (!std::isinf(inv_depth_) && !std::isnan(inv_depth_) && p_c_.z() > inv_depth0_ * kZeroFloat) {
             const Scalar inv_depth_2 = inv_depth_ * inv_depth_;
             jacobian_2d_3d << inv_depth_, 0, -p_c_(0) * inv_depth_2, 0, inv_depth_, -p_c_(1) * inv_depth_2;
         }
@@ -192,18 +195,18 @@ public:
         const TMat3<Scalar> R_ci0 = q_ci0.toRotationMatrix();
         const TMat3<Scalar> R_cc0 = q_cc0.toRotationMatrix();
 
-        const TMat3<Scalar> jacobian_cam0_p = R_cw;
+        const TMat3<Scalar> jacobian_cam0_p = inv_depth0_ * R_cw;
         const TMat3<Scalar> jacobian_cam0_q = -R_ci0 * Utility::SkewSymmetricMatrix(p_i0_);
 
-        const TMat3<Scalar> jacobian_cam_p = -R_cw;
+        const TMat3<Scalar> jacobian_cam_p = -inv_depth0_ * R_cw;
         const TMat3<Scalar> jacobian_cam_q = R_ci * Utility::SkewSymmetricMatrix(p_i_);
 
-        const TVec3<Scalar> jacobian_invdep = -R_cc0 * TVec3<Scalar>(norm_xy0_.x(), norm_xy0_.y(), static_cast<Scalar>(1)) / (inv_depth0_ * inv_depth0_);
+        const TVec3<Scalar> jacobian_invdep = inv_depth0_ * (q_ci * (q_wi_.inverse() * (q_wi0_ * p_ic0_ + p_wi0_ - p_wi_) - p_ic_));
 
-        const TMat3<Scalar> jacobian_ex0_p = R_ci0;
+        const TMat3<Scalar> jacobian_ex0_p = inv_depth0_ * R_ci0;
         const TMat3<Scalar> jacobian_ex0_q = -R_cc0 * Utility::SkewSymmetricMatrix(p_c0_);
 
-        const TMat3<Scalar> jacobian_ex_p = -R_ci;
+        const TMat3<Scalar> jacobian_ex_p = -inv_depth0_ * R_ci;
         const TMat3<Scalar> jacobian_ex_q = Utility::SkewSymmetricMatrix(p_c_);
 
         this->GetJacobian(0) = jacobian_2d_3d * jacobian_invdep;
@@ -248,7 +251,7 @@ private:
 /* Class Edge reprojection. Project feature 1-dof invdep on visual norm plane via imu pose. */
 template <typename Scalar>
 class EdgeFeatureInvdepToNormPlaneViaImuWithinOneFramesTwoCamera: public slam_solver::Edge<Scalar> {
-    // Vertices are [feature, invdep]
+    // Vertices are [feature, log(invdep)]
     //              [extrinsic, p_ic0]
     //              [extrinsic, q_ic0]
     //              [extrinsic, p_ic]
@@ -261,7 +264,7 @@ public:
     // Compute residual and jacobians for each vertex. These operations should be defined by subclass.
     virtual void ComputeResidual() override {
         // Extract states.
-        inv_depth0_ = this->GetVertex(0)->param()(0);
+        inv_depth0_ = std::exp(this->GetVertex(0)->param()(0));
         p_ic0_ = this->GetVertex(1)->param();
         const TVec4<Scalar> &param_ic0 = this->GetVertex(2)->param();
         q_ic0_ = TQuat<Scalar>(param_ic0(0), param_ic0(1), param_ic0(2), param_ic0(3));
@@ -274,12 +277,13 @@ public:
         norm_xy_ = this->observation().block(2, 0, 2, 1);
 
         // Compute projection.
-        p_c0_ = TVec3<Scalar>(norm_xy0_(0), norm_xy0_(1), static_cast<Scalar>(1)) / inv_depth0_;
-        p_i_ = q_ic0_ * p_c0_ + p_ic0_;
-        p_c_ = q_ic_.inverse() * (p_i_ - p_ic_);
+        // Scale all 3D coordinates by anchor inverse depth to avoid overflow for distant points.
+        p_c0_ = TVec3<Scalar>(norm_xy0_(0), norm_xy0_(1), static_cast<Scalar>(1));
+        p_i_ = q_ic0_ * p_c0_ + inv_depth0_ * p_ic0_;
+        p_c_ = q_ic_.inverse() * (p_i_ - inv_depth0_ * p_ic_);
         inv_depth_ = static_cast<Scalar>(1) / p_c_.z();
 
-        if (std::isinf(inv_depth_) || std::isnan(inv_depth_) || inv_depth_ < kZeroFloat) {
+        if (std::isinf(inv_depth_) || std::isnan(inv_depth_) || p_c_.z() <= inv_depth0_ * kZeroFloat) {
             this->residual().setZero(2);
         } else {
             this->residual() = (p_c_.template head<2>() * inv_depth_) - norm_xy_;
@@ -288,7 +292,7 @@ public:
 
     virtual void ComputeJacobians() override {
         TMat2x3<Scalar> jacobian_2d_3d = TMat2x3<Scalar>::Zero();
-        if (!std::isinf(inv_depth_) && !std::isnan(inv_depth_) && inv_depth_ > kZeroFloat) {
+        if (!std::isinf(inv_depth_) && !std::isnan(inv_depth_) && p_c_.z() > inv_depth0_ * kZeroFloat) {
             const Scalar inv_depth_2 = inv_depth_ * inv_depth_;
             jacobian_2d_3d << inv_depth_, 0, -p_c_(0) * inv_depth_2, 0, inv_depth_, -p_c_(1) * inv_depth_2;
         }
@@ -298,12 +302,12 @@ public:
         const TMat3<Scalar> R_ci = q_ci.toRotationMatrix();
         const TMat3<Scalar> R_cc0 = q_cc0.toRotationMatrix();
 
-        const TVec3<Scalar> jacobian_invdep = -R_cc0 * TVec3<Scalar>(norm_xy0_.x(), norm_xy0_.y(), static_cast<Scalar>(1)) / (inv_depth0_ * inv_depth0_);
+        const TVec3<Scalar> jacobian_invdep = inv_depth0_ * (q_ci * (p_ic0_ - p_ic_));
 
-        const TMat3<Scalar> jacobian_ex0_p = R_ci;
+        const TMat3<Scalar> jacobian_ex0_p = inv_depth0_ * R_ci;
         const TMat3<Scalar> jacobian_ex0_q = -R_cc0 * Utility::SkewSymmetricMatrix(p_c0_);
 
-        const TMat3<Scalar> jacobian_ex_p = -R_ci;
+        const TMat3<Scalar> jacobian_ex_p = -inv_depth0_ * R_ci;
         const TMat3<Scalar> jacobian_ex_q = Utility::SkewSymmetricMatrix(p_c_);
 
         this->GetJacobian(0) = jacobian_2d_3d * jacobian_invdep;

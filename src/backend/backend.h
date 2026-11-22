@@ -25,7 +25,6 @@ struct BackendOptions {
 
     Vec3 kGravityInWordFrame = Vec3(0.0f, 0.0f, 0.0f);
 
-    float kMaxValidFeatureDepthInMeter = 0.0f;
     float kMinValidFeatureDepthInMeter = 0.0f;
     float kDefaultFeatureDepthInMeter = 0.0f;
 
@@ -35,6 +34,7 @@ struct BackendOptions {
 
     bool kEnableUseMultiViewObservation = true;
     bool kFixCameraExtrinsics = false;
+    std::vector<CameraExtrinsic> kDefaultCameraExtrinsics;
 };
 
 /* Status of Backend. */
@@ -179,7 +179,7 @@ private:
     void ClearGraph();
     void ConstructVioGraphOptimizationProblem(Graph<DorF> &problem, float &prior_residual_norm);
     void ConstructPureVisualGraphOptimizationProblem(Graph<DorF> &problem);
-    void AddAllCameraExtrinsicsToGraph();
+    void AddAllCameraExtrinsicsWithFactorsToGraph(const bool add_constraints = true);
     void AddAllCameraPosesInLocalMapToGraph();
     void AddAllImuPosesInLocalMapToGraph();
     void AddAllImuMotionStatesInLocalMapToGraph();

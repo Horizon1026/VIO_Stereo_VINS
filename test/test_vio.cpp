@@ -216,7 +216,6 @@ void ConfigAllComponentsOfVio(const std::string &log_output_root_dir) {
     /* VioOptionsOfBackend */
     // Fill options of backend.
     vio_system.options().backend.gravity_w = Vec3(0.0f, 0.0f, 9.8f);
-    vio_system.options().backend.max_valid_feature_depth_in_meter = 30.0f;
     vio_system.options().backend.min_valid_feature_depth_in_meter = 0.05f;
     vio_system.options().backend.default_feature_depth_in_meter = 2.0f;
     vio_system.options().backend.min_parallex_angle_of_feature_for_local_ba = 3.0f;

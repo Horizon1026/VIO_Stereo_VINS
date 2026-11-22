@@ -15,7 +15,8 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     // Clear all vectors of vertices and edges.
     ClearGraph();
     // [Vertices] Camera extrinsics.
-    AddAllCameraExtrinsicsToGraph();
+    // [Edges] Calibrated stereo translation and single-frame epipolar factors.
+    AddAllCameraExtrinsicsWithFactorsToGraph();
     // [Vertices] Imu pose of each frame in local map.
     AddAllImuPosesInLocalMapToGraph();
     // [Vertices] Imu velocity of each frame.
@@ -47,7 +48,7 @@ bool Backend::TryToEstimate(const bool use_multi_view) {
     solver.options().kMaxConvergedSquaredStepLength = static_cast<DorF>(1e-4);
     solver.options().kMaxCostTimeInSecond = options_.kMaxToleranceTimeCostForEstimationInSecond;
     solver.problem() = &graph_optimization_problem;
-    solver.Solve(states_.prior.is_valid);
+    RETURN_FALSE_IF(!solver.Solve(states_.prior.is_valid));
     // Update all states in visual_local_map and imu_based_frames.
     RETURN_FALSE_IF(!SyncGraphVerticesToDataManager(graph_optimization_problem));
     return true;

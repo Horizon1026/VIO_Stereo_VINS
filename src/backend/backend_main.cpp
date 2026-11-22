@@ -48,6 +48,7 @@ bool Backend::RunOnce() {
         if (!estimate_res) {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to estimate. All states will be reset for reinitialization.");
+            return false;
         }
 
         // Decide marginalization type.
@@ -60,6 +61,7 @@ bool Backend::RunOnce() {
         if (!marginalize_res) {
             ResetToReintialize();
             ReportColorWarn("[Backend] Backend failed to marginalize. All states will be reset for reinitialization.");
+            return false;
         }
     }
 

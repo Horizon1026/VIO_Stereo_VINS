@@ -75,8 +75,8 @@ bool Backend::TryToMarginalize(const bool use_multi_view) {
 bool Backend::MarginalizeOldestFrame(const bool use_multi_view) {
     // Clear all vectors of vertices and edges.
     ClearGraph();
-    // [Vertices] Camera extrinsics.
-    AddAllCameraExtrinsicsToGraph();
+    // [Vertices] Camera extrinsics, without accumulating calibration factors in the prior.
+    AddAllCameraExtrinsicsWithFactorsToGraph(false);
     // [Vertices] Imu pose of each frame in local map.
     AddAllImuPosesInLocalMapToGraph();
     // [Vertices] Imu velocity of each frame.

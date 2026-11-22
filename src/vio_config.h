@@ -59,7 +59,6 @@ struct VioOptionsOfFrontend {
 
 struct VioOptionsOfBackend {
     Vec3 gravity_w = Vec3::Zero();
-    float max_valid_feature_depth_in_meter = 0.0f;
     float min_valid_feature_depth_in_meter = 0.0f;
     float default_feature_depth_in_meter = 0.0f;
 

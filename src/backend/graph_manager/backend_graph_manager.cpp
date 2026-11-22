@@ -3,6 +3,7 @@
 #include "inertial_edges.h"
 #include "visual_edges.h"
 #include "visual_inertial_edges.h"
+#include "visual_vertices.h"
 
 #include "slam_basic_math.h"
 #include "slam_log_reporter.h"
@@ -95,7 +96,7 @@ void Backend::ConstructPureVisualGraphOptimizationProblem(Graph<DorF> &problem) 
                                                 << graph_.edges.all_visual_factors.size() << " visual_reproj_factors.");
 }
 
-void Backend::AddAllCameraExtrinsicsToGraph() {
+void Backend::AddAllCameraExtrinsicsWithFactorsToGraph(const bool add_constraints) {
     // [Vertices] Extrinsics of each camera.
     for (const auto &extrinsic: data_manager_->camera_extrinsics()) {
         graph_.vertices.all_cameras_p_ic.emplace_back(std::make_unique<Vertex<DorF>>(3, 3));
@@ -105,6 +106,65 @@ void Backend::AddAllCameraExtrinsicsToGraph() {
         graph_.vertices.all_cameras_q_ic.emplace_back(std::make_unique<VertexQuat<DorF>>());
         graph_.vertices.all_cameras_q_ic.back()->param() << extrinsic.q_ic.w(), extrinsic.q_ic.x(), extrinsic.q_ic.y(), extrinsic.q_ic.z();
         graph_.vertices.all_cameras_q_ic.back()->name() = std::string("q_ic");
+    }
+    RETURN_IF(!add_constraints);
+
+    const uint32_t camera_num = graph_.vertices.all_cameras_p_ic.size();
+    RETURN_IF(camera_num < 2 || !options_.kEnableUseMultiViewObservation);
+    RETURN_IF(options_.kDefaultCameraExtrinsics.size() != camera_num);
+    RETURN_IF(data_manager_->imu_based_frames().empty());
+    const TMat2<DorF> visual_info_matrix = GetVisualObserveInformationMatrix();
+    const auto &default_extrinsic = options_.kDefaultCameraExtrinsics.front();
+
+    // Relative stereo factors do not constrain the common camera-to-IMU transform.
+    if (!options_.kFixCameraExtrinsics) {
+        graph_.edges.all_prior_factors.emplace_back(std::make_unique<EdgePriorPose<DorF>>());
+        auto &reference_factor = graph_.edges.all_prior_factors.back();
+        reference_factor->SetVertex(graph_.vertices.all_cameras_p_ic[0].get(), 0);
+        reference_factor->SetVertex(graph_.vertices.all_cameras_q_ic[0].get(), 1);
+        reference_factor->observation() = TVec7<DorF>::Zero();
+        reference_factor->observation().topRows(3) = default_extrinsic.p_ic.cast<DorF>();
+        reference_factor->observation().bottomRows(4) << default_extrinsic.q_ic.w(), default_extrinsic.q_ic.x(), default_extrinsic.q_ic.y(),
+            default_extrinsic.q_ic.z();
+        reference_factor->information() = TMat6<DorF>::Identity() * static_cast<DorF>(1e4);
+        reference_factor->name() = std::string("reference camera extrinsic");
+        RETURN_IF(!reference_factor->SelfCheck());
+    }
+
+    for (uint32_t i = 1; i < camera_num; ++i) {
+        const Vec3 p_c0ci = default_extrinsic.q_ic.inverse() * (options_.kDefaultCameraExtrinsics[i].p_ic - default_extrinsic.p_ic);
+        RETURN_IF(!p_c0ci.allFinite() || p_c0ci.norm() < kZeroFloat);
+
+        graph_.edges.all_prior_factors.emplace_back(std::make_unique<EdgeCameraRelativePosition<DorF>>());
+        auto &relative_position_factor = graph_.edges.all_prior_factors.back();
+        relative_position_factor->SetVertex(graph_.vertices.all_cameras_p_ic[0].get(), 0);
+        relative_position_factor->SetVertex(graph_.vertices.all_cameras_q_ic[0].get(), 1);
+        relative_position_factor->SetVertex(graph_.vertices.all_cameras_p_ic[i].get(), 2);
+        relative_position_factor->observation() = p_c0ci.cast<DorF>();
+        relative_position_factor->information() = TMat3<DorF>::Identity() * static_cast<DorF>(1e6);
+        relative_position_factor->name() = std::string("relative camera position ") + std::to_string(i);
+        RETURN_IF(!relative_position_factor->SelfCheck());
+
+        // Use single-frame stereo observations throughout the window, without accumulating them in the prior.
+        for (const auto &frame: data_manager_->imu_based_frames()) {
+            RETURN_IF(frame.visual_measure == nullptr);
+            for (const auto &observe: frame.visual_measure->observes_per_frame) {
+                CONTINUE_IF(observe.size() <= i);
+                const Vec2 &norm_xy0 = observe[0].rectified_norm_xy;
+                const Vec2 &norm_xyi = observe[i].rectified_norm_xy;
+                CONTINUE_IF(!norm_xy0.allFinite() || !norm_xyi.allFinite());
+
+                graph_.edges.all_visual_factors.emplace_back(std::make_unique<EdgeCameraRelativeRotation<DorF>>(p_c0ci.cast<DorF>()));
+                auto &epipolar_factor = graph_.edges.all_visual_factors.back();
+                epipolar_factor->SetVertex(graph_.vertices.all_cameras_q_ic[0].get(), 0);
+                epipolar_factor->SetVertex(graph_.vertices.all_cameras_q_ic[i].get(), 1);
+                epipolar_factor->observation() = TVec4<DorF>(norm_xy0.x(), norm_xy0.y(), norm_xyi.x(), norm_xyi.y());
+                epipolar_factor->information() = TVec1<DorF>(visual_info_matrix.trace() * static_cast<DorF>(0.5)).asDiagonal();
+                epipolar_factor->kernel() = std::make_unique<KernelHuber<DorF>>(static_cast<DorF>(0.2));
+                epipolar_factor->name() = std::string("stereo epipolar ") + std::to_string(i);
+                RETURN_IF(!epipolar_factor->SelfCheck());
+            }
+        }
     }
 }
 
@@ -177,8 +237,8 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfCameraPosesToGraph(const Feature
 
     // Add vertex of feature invdep.
     graph_.vertices.all_features_id.emplace_back(feature.id());
-    graph_.vertices.all_features_invdep.emplace_back(std::make_unique<Vertex<DorF>>(1, 1));
-    graph_.vertices.all_features_invdep.back()->param() = TVec1<DorF>(invdep);
+    graph_.vertices.all_features_invdep.emplace_back(std::make_unique<VertexFeatureLogInvdep<DorF>>(options_.kMinValidFeatureDepthInMeter));
+    graph_.vertices.all_features_invdep.back()->param() = TVec1<DorF>(std::log(invdep));
     graph_.vertices.all_features_invdep.back()->name() = std::string("invdep ") + std::to_string(feature.id());
 
     // Extract observation of this feature in first frame which observes it.
@@ -218,8 +278,8 @@ bool Backend::AllFeatureInvdepAndVisualFactorsOfImuPosesToGraph(const FeatureTyp
 
     // Add vertex of feature invdep.
     graph_.vertices.all_features_id.emplace_back(feature.id());
-    graph_.vertices.all_features_invdep.emplace_back(std::make_unique<Vertex<DorF>>(1, 1));
-    graph_.vertices.all_features_invdep.back()->param() = TVec1<DorF>(invdep);
+    graph_.vertices.all_features_invdep.emplace_back(std::make_unique<VertexFeatureLogInvdep<DorF>>(options_.kMinValidFeatureDepthInMeter));
+    graph_.vertices.all_features_invdep.back()->param() = TVec1<DorF>(std::log(invdep));
     graph_.vertices.all_features_invdep.back()->name() = std::string("invdep ") + std::to_string(feature.id());
 
     // Extract observation of this feature in first frame which observes it.
@@ -318,8 +378,8 @@ bool Backend::AddAllFeatureInvdepsAndVisualFactorsToGraph(const bool add_factors
         // Compute inverse depth by p_w of this feature.
         const auto &frame = data_manager_->visual_local_map()->frame(feature.first_frame_id());
         const Vec3 p_c = frame->q_wc().inverse() * (feature.param() - frame->p_wc());
-        const float depth = p_c.z() < options_.kMinValidFeatureDepthInMeter ? options_.kDefaultFeatureDepthInMeter : p_c.z();
-        const float invdep = 1.0f / depth;
+        CONTINUE_IF(!p_c.allFinite() || p_c.z() < options_.kMinValidFeatureDepthInMeter);
+        const float invdep = 1.0f / p_c.z();
         CONTINUE_IF(std::isinf(invdep) || std::isnan(invdep));
 
         // Convert feature invdep to vertices, and add visual factors.
@@ -360,7 +420,7 @@ bool Backend::AddFeatureFirstObserveInOldestFrameAndVisualFactorsToGraph(const b
         // Compute inverse depth by p_w of this feature.
         const auto &frame = data_manager_->visual_local_map()->frame(feature.first_frame_id());
         const Vec3 p_c = frame->q_wc().inverse() * (feature.param() - frame->p_wc());
-        CONTINUE_IF(p_c.z() < options_.kMinValidFeatureDepthInMeter);
+        CONTINUE_IF(!p_c.allFinite() || p_c.z() < options_.kMinValidFeatureDepthInMeter);
         const float invdep = 1.0f / p_c.z();
         CONTINUE_IF(std::isinf(invdep) || std::isnan(invdep));
 
@@ -481,13 +541,13 @@ bool Backend::SyncGraphVerticesToDataManager(const Graph<DorF> &problem) {
         auto feature_ptr = data_manager_->visual_local_map()->feature(graph_.vertices.all_features_id[i]);
         const auto &frame_ptr = data_manager_->visual_local_map()->frame(feature_ptr->first_frame_id());
         const auto &norm_xy = feature_ptr->observes().front()[0].rectified_norm_xy;
-        const float invdep = graph_.vertices.all_features_invdep[i]->param()(0);
+        const float invdep = std::exp(graph_.vertices.all_features_invdep[i]->param()(0));
         Vec3 p_c = Vec3(norm_xy.x(), norm_xy.y(), 1.0f) / invdep;
 
         if (std::isnan(p_c.z()) || std::isinf(p_c.z())) {
             p_c = Vec3(norm_xy.x(), norm_xy.y(), 1.0f) * options_.kDefaultFeatureDepthInMeter;
             feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
-        } else if (p_c.z() < options_.kMinValidFeatureDepthInMeter) {
+        } else if (p_c.z() <= options_.kMinValidFeatureDepthInMeter) {
             feature_ptr->status() = FeatureSolvedStatus::kUnsolved;
         } else {
             feature_ptr->status() = FeatureSolvedStatus::kSolved;
